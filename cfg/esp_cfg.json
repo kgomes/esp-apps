@@ -1,0 +1,27 @@
+{
+    "logger_levels": {
+        "server": "info",
+        "ftpsync": "info",
+        "dataAccess": "info",
+        "logParser": "info"
+    },
+    "numAncillaryPointsToBatch":1000,
+    "espdir": "/Users/kgomes/Documents/Web/esp/services/espweb/static/data",
+    "espTempDir":"/tmp",
+    "couchdb": {
+        "host": "localhost",
+        "port": 5984,
+        "ssl": false,
+        "username": "espdba",
+        "password": "leghorn",
+        "database": "esp"
+    },
+    "postgresql": {
+        "protocol": "postgres",
+        "host": "localhost",
+        "port": 5432,
+        "username": "espdba",
+        "password": "leghorn",
+        "database": "esp_ancillary"
+    }
+}

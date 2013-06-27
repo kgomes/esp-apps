@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html ng-app="espApp">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="utf-8"/>
+    <title>ESP Web Application</title>
+
+    <!-- Any appropriate stylesheets -->
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-responsive.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/esp.css"/>
+
+    <!-- HTML 5 Shim for IE backwards compatibility -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+<!-- The navigation bar at the top -->
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <!-- ?? -->
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- The banner title -->
+            <div class="brand">ESP Portal</div>
+
+            <!-- This navigation section with clickable menu items -->
+            <div ng-controller="HeaderController" class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle"
+                           data-toggle="dropdown"
+                           href="#">
+                            Deployments
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
+                            <li ng-repeat="name in deploymentNames" ng-click="selectDeployment($index)">
+                                <a tabindex="-1" href="#">{{name}}</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- The div to wrap everything -->
+<div class="container">
+    <!-- This is the row for the selection panel on the left and the grid panel -->
+    <div class="row">
+        <!-- The selection panel -->
+        <div ng-controller="SelectionController" class="span2 accordion well" id="accordion2">
+            <div ng-repeat="deployment in deployments" class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
+                       href="#collapse{{$index}}">
+                        {{deployment.esp.name}}
+                    </a>
+                </div>
+                <div id="collapse{{$index}}" class="accordion-body collapse">
+                    <div class="accordion-inner">
+                        <label class="checkbox">
+                            <input type="checkbox" value="{{deployment._id}}:processruns"
+                                   ng-click="selectObjectForDisplay($event)">
+                            Protocol Runs
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" value="{{deployment._id}}:samples"
+                                   ng-click="selectObjectForDisplay($event)">
+                            Samples
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" value="{{deployment._id}}:images"
+                                   ng-click="selectObjectForDisplay($event)">
+                            Images
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" value="{{deployment._id}}:errors"
+                                   ng-click="selectObjectForDisplay($event)">
+                            Errors
+                        </label>
+
+                        <div ng-repeat="ancsource in deployment.anc_source_array">
+                            <label class="checkbox">
+                                <input type="checkbox" value="{{deployment._id}}:anc:{{ancsource.source_id}}"
+                                       ng-click="selectObjectForDisplay($event)">
+                                {{ancsource.source}} {{ancsource.var_name}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- The graph panel -->
+        <div ng-controller="GraphPanelController" id="graph-panel" class="span9 well">
+        </div>
+    </div>
+
+    <!-- Details Panel -->
+    <div class="row">
+        <div ng-controller="DetailPanelController" class="span12 well well-small tabbable">
+            <ul class="nav nav-tabs">
+                <li ng-repeat="detailTable in detailTables" ng-click="selectDetailsTab($index)" data-toggle="tab"
+                    class="{{detailTable.active}}">
+                    <a href="#details-tab-{{$index}}">{{detailTable.title}}</a>
+                </li>
+            </ul>
+            <div id="details-tab-content" class="tab-content">
+                <div id="details-tab-{{$index}}" ng-repeat="detailTable in detailTables"
+                     class="tab-pane {{detailTable.active}}">
+                    <table class="table table-bordered table-striped table-condensed">
+                        <thead>
+                        <tr>
+                            <th ng-repeat="header in detailTable.headers">
+                                {{header}}
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr open-detail-modal ng-repeat="row in detailTable.rows"
+                                ng-click="selectDetailRow($parent.$index, $index, row)">
+                                <td ng-repeat="col in row">
+                                    {{ col }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- This is the modal window for table row details -->
+            <div id="detailModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="myModalLabel">{{modal.header}}</h3>
+                </div>
+                <div class="modal-body">
+                    <img ng-src="{{modal.url}}" alt="Nothing available">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End wrapper div around everything -->
+
+<!-- Import the JavaScript -->
+<script src="js/lib/date.format.js"></script>
+<script src="js/lib/jquery-1.10.1.min.js"></script>
+<script src="js/lib/highstock.js"></script>
+<script src="js/lib/bootstrap.min.js"></script>
+<script src="js/lib/angular.min.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
