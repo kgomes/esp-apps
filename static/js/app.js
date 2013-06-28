@@ -85,7 +85,6 @@ function HeaderController($scope, $http, espSharedService) {
 
     // This is the event handler for the user selecting a deployment name
     $scope.selectDeployment = function (index) {
-        //console.log("Deployment " + $scope.deploymentNames[index] + " selected");
         espSharedService.setSelectedDeploymentName($scope.deploymentNames[index]);
     }
 }
@@ -96,12 +95,10 @@ function SelectionController($scope, $http, espSharedService) {
     // queries for the list of deployments with that name and assigns them to the
     // list of deployments associated with this scope
     $scope.$on("deploymentSelected", function () {
-        //console.log("SelectionController:deploymentSelected> " + espSharedService.getSelectedDeploymentName());
 
         // Need to grab the list of deployments by name
         $http.get('/deployments/getByName?key=' +
                 encodeURIComponent(espSharedService.getSelectedDeploymentName())).success(function (data, status, headers, config) {
-                //console.log(data);
                 $scope.deployments = data;
                 espSharedService.setSelectedDeployments(data);
             });
@@ -113,10 +110,10 @@ function SelectionController($scope, $http, espSharedService) {
         // Check to see if the user selected or deselected the checkbox
         if (event.target.checked) {
             // Add it to the list of things to display
-            console.log("User selected an object for display " + event.target.value);
+            //console.log("SELECTED " + event.target.value);
             espSharedService.addObjectToDisplay(event.target.value);
         } else {
-            console.log("User deselected object from display " + event.target.value);
+            //console.log("DESELECTED " + event.target.value);
             espSharedService.removeObjectFromDisplay(event.target.value);
         }
     }
@@ -186,7 +183,6 @@ function GraphPanelController($scope, $http, espSharedService) {
 
     // A mehthod to handle events where an object is to be added to the graph
     $scope.$on('added-object-to-display', function (event, objkey) {
-            console.log($scope.chart.series);
             // Now, depending on the object, get the data for the graph
             var objkeyParts = objkey.split(":");
 
@@ -265,8 +261,9 @@ function GraphPanelController($scope, $http, espSharedService) {
                         // Also, set the navigator series to be this new one
                         $scope.chart.series[0].setData(data);
 
-                        // Reset the X axis to the extremes of all the data
-                        $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
 
                         // And now hide the loading banner
                         $scope.chart.hideLoading();
@@ -317,8 +314,9 @@ function GraphPanelController($scope, $http, espSharedService) {
                             $scope.chart.series[0].setData(flagData);
                         }
 
-                        // Reset the xAxis to the time span of all the data
-                        $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
                 }
             } else if (type === "images") {
@@ -376,8 +374,9 @@ function GraphPanelController($scope, $http, espSharedService) {
                             $scope.chart.series[0].setData(flagData);
                         }
 
-                        // Reset the xAxis to the time span of all the data
-                        $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
                 }
             } else if (type === "processruns") {
@@ -433,8 +432,9 @@ function GraphPanelController($scope, $http, espSharedService) {
                             $scope.chart.series[0].setData(flagData);
                         }
 
-                        // Reset the xAxis to the time span of all the data
-                        $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
                 }
             } else if (type === "samples") {
@@ -487,8 +487,9 @@ function GraphPanelController($scope, $http, espSharedService) {
                             $scope.chart.series[0].setData(flagData);
                         }
 
-                        // Reset the xAxis to the time span of all the data
-                        $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
                 }
             }
@@ -497,8 +498,6 @@ function GraphPanelController($scope, $http, espSharedService) {
 
     // This is the method that handles removal of objects from the graph
     $scope.$on('removed-object-from-display', function (event, objkey) {
-        console.log("remove caught! with key " + objkey);
-
         // Loop over the data series and look for the one with the matching objkey
         var indexToRemove = -1;
         for (var i = 0; i < $scope.chart.series.length; i++) {
@@ -510,7 +509,6 @@ function GraphPanelController($scope, $http, espSharedService) {
         // Now if an indexed was matched,
         if (indexToRemove >= 0) {
             // Remove the yAxis first
-            console.log($scope.chart.yAxis);
             $scope.chart.series[indexToRemove].remove(true);
         }
 
@@ -518,13 +516,11 @@ function GraphPanelController($scope, $http, espSharedService) {
         var indexOfAxisToRemove = -1;
         for (var j = 0; j < $scope.chart.yAxis.length; j++) {
             if ($scope.chart.yAxis[j].options.id === objkey) {
-                console.log("Going to remove axis at index " + j);
                 indexOfAxisToRemove = j;
             }
         }
         if (indexOfAxisToRemove >= 0) {
             $scope.chart.yAxis[indexOfAxisToRemove].remove(true);
-            console.log("OK, should be removed");
         }
     });
 }
@@ -553,10 +549,6 @@ function DetailPanelController($scope, $http, espSharedService) {
 
     // This method handles the user selecting a row in the details table
     $scope.selectDetailRow = function (parentIndex, index, row) {
-        console.log("Detail row selected");
-        console.log(parentIndex);
-        console.log(index);
-        console.log(row);
         // Check to see if it is an image and if the image exists on disk
         if ($scope.detailTables[parentIndex] && $scope.detailTables[parentIndex].headers &&
             $scope.detailTables[parentIndex].headers[2] === "Exposure" &&
@@ -817,7 +809,6 @@ function DetailPanelController($scope, $http, espSharedService) {
     // This is the event handler that responds when the user de-selects something
     // from the checklist
     $scope.$on('removed-object-from-display', function (event, objkey) {
-        console.log("Remove clicked for " + objkey);
         // Grab the object key coming in and split it up to find out what the user selected
         var objkeyParts = objkey.split(":");
         var deploymentID = objkeyParts[0];
@@ -856,9 +847,9 @@ espAppModule.filter('detailCellContents', function () {
         // rendered as is.  If objects, we can apply custom rendering
         if (input) {
             // Check for objects first
-            if (typeof input === 'object'){
+            if (typeof input === 'object') {
                 // Now look for the 'imageUrl' attribute
-                if (input.imageUrl){
+                if (input.imageUrl) {
                     // Since it is an image URL, look to see if is on disk
                     if (input.downloaded) {
                         return '<a href="javascript:void(0)">' + input.imageFilename + '</a>';
