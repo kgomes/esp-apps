@@ -562,11 +562,14 @@ function DetailPanelController($scope, $http, espSharedService) {
             $scope.detailTables[parentIndex].headers[2] === "Exposure" &&
             $scope.detailTables[parentIndex].onDiskFlag &&
             $scope.detailTables[parentIndex].onDiskFlag[index]) {
-            console.log("The user clicked on an image that is on disk");
-            $scope.modal.header = $scope.detailTables[parentIndex].rows[index][1];
+            $scope.modal.header = $scope.detailTables[parentIndex].rows[index][1].imageFilename;
             $scope.modal.url = $scope.detailTables[parentIndex].imageUrls[index];
+            // Now show the modal
+            var element = angular.element('#detailModal');
+            element.modal('show');
         } else {
-            console.log("User clicked on something that has no image");
+            // Looks like there is no image associated with it so clear things and
+            // do not open the modal dialog
             $scope.modal.header = $scope.detailTables[parentIndex].rows[index][1];
             $scope.modal.url = "/image/nothing.jpg";
         }
@@ -654,7 +657,7 @@ function DetailPanelController($scope, $http, espSharedService) {
                     Object.keys(espSharedService.getSelectedDeployments()[i].images).forEach(function (imagests) {
                             var tempDate = new Date(parseInt(imagests));
                             imageTable.rows.push([tempDate.format("mm/dd/yy HH:MM:ss"),
-                                espSharedService.getSelectedDeployments()[i].images[imagests].imageFilename,
+                                espSharedService.getSelectedDeployments()[i].images[imagests],
                                 espSharedService.getSelectedDeployments()[i].images[imagests].exposure,
                                 espSharedService.getSelectedDeployments()[i].images[imagests].xPixels + "x" +
                                     espSharedService.getSelectedDeployments()[i].images[imagests].yPixels
@@ -843,28 +846,39 @@ GraphPanelController.$inject = ['$scope', '$http', 'espSharedService'];
 DetailPanelController.$inject = ['$scope', '$http', 'espSharedService'];
 
 /* ************************************************* */
-/* *************** Define Directives *************** */
+/*                 Define Filters                    */
 /* ************************************************* */
-espAppModule.directive('openDetailModal',
-    function () {
-        var openDetailModal = {
-            link: function (scope, element, attrs) {
-                function openDetailModal(scope, element, attrs) {
-                    console.log("AAAAAAAA");
-                    console.log(scope);
-
-                    console.log(element);
-                    console.log(attrs);
-                    if (scope && scope.target && scope.target.innerText && scope.target.innerText.indexOf(".tif") !== -1) {
-                        var element = angular.element('#detailModal');
-//              var ctrl = element.controller();
-//              ctrl.setModel(scope.blub);
-                        element.modal('show');
+espAppModule.filter('detailCellContents', function () {
+    // This is the filter to return
+    var detailCellFilter = function (input) {
+        // The incoming in put will be the contents of the cell which can
+        // be primitives or objects.  If they are primitives, they are just
+        // rendered as is.  If objects, we can apply custom rendering
+        if (input) {
+            // Check for objects first
+            if (typeof input === 'object'){
+                // Now look for the 'imageUrl' attribute
+                if (input.imageUrl){
+                    // Since it is an image URL, look to see if is on disk
+                    if (input.downloaded) {
+                        return '<a href="javascript:void(0)">' + input.imageFilename + '</a>';
+                    } else {
+                        return input.imageFilename;
                     }
+                } else {
+                    // Not an image object
+                    return null;
                 }
-
-                element.bind('click', openDetailModal);
+            } else {
+                // Not an object, so just return it
+                return input;
             }
+        } else {
+            // There was nothing there, return nothing
+            return input;
         }
-        return openDetailModal;
-    });
+    };
+
+    // Now return the filter
+    return detailCellFilter;
+});

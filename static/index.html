@@ -127,10 +127,10 @@
                         </thead>
                         <tbody>
 
-                            <tr open-detail-modal ng-repeat="row in detailTable.rows"
+                            <tr ng-repeat="row in detailTable.rows"
                                 ng-click="selectDetailRow($parent.$index, $index, row)">
                                 <td ng-repeat="col in row">
-                                    {{ col }}
+                                    <div ng-bind-html-unsafe='col | detailCellContents'></div>
                                 </td>
                             </tr>
                         </tbody>
