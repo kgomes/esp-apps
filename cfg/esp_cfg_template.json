@@ -6,22 +6,22 @@
         "logParser": "info"
     },
     "numAncillaryPointsToBatch":1000,
-    "espdir": "/Users/kgomes/Documents/Web/esp/services/espweb/static/data",
-    "espTempDir":"/tmp",
+    "espdir": "path_to_directory_where_to_store_data",
+    "espTempDir":"path_to_temp_directory",
     "couchdb": {
-        "host": "localhost",
+        "host": "database_host",
         "port": 5984,
         "ssl": false,
-        "username": "espdba",
-        "password": "leghorn",
+        "username": "username",
+        "password": "password",
         "database": "esp"
     },
     "postgresql": {
         "protocol": "postgres",
-        "host": "localhost",
+        "host": "database_host",
         "port": 5432,
-        "username": "espdba",
-        "password": "leghorn",
+        "username": "username",
+        "password": "password",
         "database": "esp_ancillary"
     }
 }
