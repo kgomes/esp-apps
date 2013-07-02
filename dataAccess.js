@@ -532,7 +532,7 @@ dataAccess.prototype.insertAncillaryDataArray = function (deployment, ancillaryD
                                 // Bump the counter on the number of variables
                                 tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints++;
                             } else {
-                                // Intialize it to one
+                                // Initialize it to one
                                 tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints = 1;
                             }
 
