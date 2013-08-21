@@ -1,48 +1,49 @@
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/DeploymentRouter.log'), 'DeploymentRouter');
+log4js.addAppender(log4js.appenders.file('./logs/ESPRouter.log'), 'ESPRouter');
 
 // Grab the logger
-var logger = log4js.getLogger('DeploymentRouter');
+var logger = log4js.getLogger('ESPRouter');
 
 // The constructor function
-function DeploymentRouter(dataAccess, opts) {
+function ESPRouter(dataAccess, opts) {
     // If the options specify a logger level, set it
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
-    logger.debug("Creating DeploymentRouter");
+    logger.debug("Creating ESPRouter");
 
     // Grab a handle to this instance for scoping
     var me = this;
 
     // Grab the DataAccess
-    var dataAccess = dataAccess;
+    this.dataAccess = dataAccess;
 
-    // This is the handler for the route which requests all deployments
-    this.handleDeployments = function (req, res) {
-        logger.debug('handleDeployments called');
-        // There is an option to filter the results to only those deployments with a certain
-        // name.  Let's look at the parameters to see if there is a 'name' parameter
-        if (req.params.name) {
-            logger.debug("A name filter was requested and is " + req.params.name);
-            // Since a name filter was requested, query for deployments with that name
-            me.dataAccess.getDeploymentsByName(req.params.name, function (err, response) {
+    // *****************************************************************
+    // This is the handler for the route which requests all ESPs
+    // *****************************************************************
+    this.getESPs = function (req, res) {
+        logger.debug('getESPs called: ', req);
+
+        // Set the content type to JSON
+        res.contentType('application/json');
+
+        // There is an option to filter the results to only those ESPs that are part of a
+        // deployment specified by a filter parameter called 'deploymentName'
+        if (req.query.deploymentName) {
+            logger.debug("A deploymentName filter was requested and is " + req.query.deploymentName);
+            me.dataAccess.getESPsInDeployment(req.query.deploymentName, function (err, response) {
                 if (err) {
-                    // TODO kgomes: handle this error so client knows there was an error
-                    logger.error('Error trying to get deployments by name ' + req.query.key);
-                    logger.error(err);
+                    // TODO handle the error
                 } else {
-                    logger.debug('Should have the list of deployments with name: ' + req.params.name);
-                    logger.debug(response);
-                    res.json(response);
+                    logger.debug('Got the response:', response);
+                    res.send(response);
                 }
             });
         } else {
-            logger.debug("No filters, so all deployments will be returned")
-            // First thing to do is see if there is a parameter that is asking for just the names
-            me.dataAccess.getAllDeployments(function (err, response) {
+            logger.debug("No filters, so all ESPs will be returned")
+            me.dataAccess.getAllESPs(function (err, response) {
                 if (err) {
                     // TODO kgomes: handle the error properly
                 } else {
@@ -53,24 +54,41 @@ function DeploymentRouter(dataAccess, opts) {
         }
     }
 
-    // This is the handler to handle requests for the names of all deployments
-    this.handleDeploymentNames = function (req, res) {
-        logger.debug('handleDeploymentNames called');
-        me.dataAccess.getDeploymentNames(function (err, response) {
-            if (err) {
-                // TODO handle the error back to caller
-            } else {
-                logger.debug('Got response:');
-                logger.debug(response);
-                res.json(response);
-            }
-        })
+    // *****************************************************************
+    // This method handles the request for all the names of the ESPs
+    // *****************************************************************
+    this.getESPNames = function (req, res) {
+        logger.debug('getESPNames')
 
+        // Set the content type to JSON
+        res.contentType('application/json');
+
+        if (req.query.deploymentName) {
+            logger.debug('A deploymentName filter was requested and is ' + req.query.deploymentName);
+            me.dataAccess.getESPNamesInDeployment(req.query.deploymentName, function (err, response) {
+                if (err) {
+                    // TODO handle the error
+                } else {
+                    logger.debug('Got the response:', response);
+                    res.send(response);
+                }
+            });
+        } else {
+            logger.debug('No filters, so all ESP names will be returned')
+            me.dataAccess.getAllESPNames(function (err, response) {
+                if (err) {
+                    // TODO kgomes: handle the error properly
+                } else {
+                    // Send the results of the query
+                    res.json(response);
+                }
+            });
+        }
     }
 }
 
 // Export the factory method
-exports.createDeploymentRouter = function (dataAccess, opts) {
-    // Create the new DeploymentRouter
-    return new DeploymentRouter(dataAccess, opts);
+exports.createESPRouter = function (dataAccess, opts) {
+    // Create the new ESPRouter
+    return new ESPRouter(dataAccess, opts);
 }

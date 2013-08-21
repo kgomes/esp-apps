@@ -97,7 +97,7 @@ function SelectionController($scope, $http, espSharedService) {
     $scope.$on("deploymentSelected", function () {
 
         // Need to grab the list of deployments by name
-        $http.get('/deployments/getByName?key=' +
+        $http.get('/deployments?name=' +
                 encodeURIComponent(espSharedService.getSelectedDeploymentName())).success(function (data, status, headers, config) {
                 $scope.deployments = data;
                 espSharedService.setSelectedDeployments(data);
