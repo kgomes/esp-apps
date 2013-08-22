@@ -78,6 +78,9 @@ espAppModule.factory('espSharedService', function ($rootScope, $http) {
 
 // The controller for the header
 function HeaderController($scope, $http, espSharedService) {
+    // Set the default selected deployment name to "Select Deployment"
+    $scope.selectedDeploymentName = "Select Deployment";
+
     // Grab the names of the deployment and set to the items in the header
     $http.get('/deployments/names').success(function (data, status, headers, config) {
         $scope.deploymentNames = data;
@@ -86,6 +89,7 @@ function HeaderController($scope, $http, espSharedService) {
     // This is the event handler for the user selecting a deployment name
     $scope.selectDeployment = function (index) {
         espSharedService.setSelectedDeploymentName($scope.deploymentNames[index]);
+        $scope.selectedDeploymentName = $scope.deploymentNames[index];
     }
 }
 
@@ -129,11 +133,14 @@ function GraphPanelController($scope, $http, espSharedService) {
         }
     });
 
+    // This is a variable that specifies if new data series are to be lines or points
+    $scope.lineWidth = 1;
+
     // Create the HighCharts chart
     $scope.chart = new Highcharts.StockChart({
         chart: {
             renderTo: 'graph-panel',
-            type: 'spline'
+            type: 'line'
         },
         rangeSelector: {
             selected: 4,
@@ -245,7 +252,12 @@ function GraphPanelController($scope, $http, espSharedService) {
                             tooltip: {
                                 valueDecimals: 2
                             },
-                            data: data
+                            data: data,
+                            lineWidth: $scope.lineWidth,
+                            marker: {
+                                enabled: true,
+                                radius: 2
+                            }
                         };
 
                         // If a new axis was defined, set it to be the one for the new series
@@ -261,9 +273,13 @@ function GraphPanelController($scope, $http, espSharedService) {
                         // Also, set the navigator series to be this new one
                         $scope.chart.series[0].setData(data);
 
-                        // If this is the only series, set the X Axis to it's extremes
-                        if ($scope.chart.series.length <= 2)
-                            $scope.chart.xAxis[0].setExtremes();
+                        // If this is the only series, check the time width of the data and if it
+                        // is more than one week, set the extremes to the last week.
+                        if ($scope.chart.series.length <= 2) {
+                            if (data[data.length - 1][0] - data[0][0] > (1000 * 60 * 60 * 24 * 7)) {
+                                $scope.chart.xAxis[0].setExtremes(data[data.length - 1][0] - (1000 * 60 * 60 * 24 * 7), data[data.length - 1][0]);
+                            }
+                        }
 
                         // And now hide the loading banner
                         $scope.chart.hideLoading();
@@ -523,6 +539,34 @@ function GraphPanelController($scope, $http, espSharedService) {
             $scope.chart.yAxis[indexOfAxisToRemove].remove(true);
         }
     });
+
+    // This is the function to change the style of the lines
+    $scope.changePlot = function (style) {
+        console.log("changePlot requested with " + style);
+        // First thing is to change the default value so new charts are created with the
+        // correct styling
+        if (style === 'lines') {
+            $scope.lineWidth = 1;
+        } else {
+            $scope.lineWidth = 0;
+        }
+        // Now loop over the series that are already on the chart and set the
+        // style to that requested
+        for (var i = 1; i < $scope.chart.series.length; i++) {
+            if ($scope.chart.series[i].type !== 'flags') {
+                // Set the line width based on the input
+                if (style === 'lines') {
+                    $scope.chart.series[i].update({
+                        lineWidth:1
+                    });
+                } else {
+                    $scope.chart.series[i].update({
+                        lineWidth:0
+                    });
+                }
+            }
+        }
+    }
 }
 
 function DetailPanelController($scope, $http, espSharedService) {

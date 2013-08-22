@@ -44,6 +44,13 @@ function LogParser(dataAccess, dataDir, opts) {
     // The temporary directory from the configuration
     this.tempDirectory = opts.tempDir;
 
+    // Check for the flag about whether or not to try and use the timestamps from the ancillary instruments.
+    // Use a default of true however
+    this.useAncillaryTimestamps = true;
+    if (opts.useAncillaryTimestamps) {
+        this.useAncillaryTimestamps = opts.useAncillaryTimestamps;
+    }
+
     // Some regular expression patterns
     this.timestampPattern1 = new RegExp(/^@(\D+)(\d+\.\d+)/);
     this.timestampPattern2 = new RegExp(/^@(\d+\.\d+)(\D+)/);
@@ -490,7 +497,7 @@ function LogParser(dataAccess, dataDir, opts) {
                         // lines so split each instrument by line continuation character
                         var entries = bodyBuffer.toString().split("\\");
                         for (var i = 0; i < entries.length; i++) {
-                            logger.debug("Dealing with AncillaryData entry: " + entries[i]);
+                            logger.trace("Dealing with AncillaryData entry: " + entries[i]);
 
                             // Make sure the deployment has the appropriate ancillary sources attached
                             addAncillarySourcesToDeployment(deployment, entries[i]);
@@ -508,51 +515,76 @@ function LogParser(dataAccess, dataDir, opts) {
 
                                 // Grab the hours minutes and seconds from the ancillary record
                                 // NOTE THESE ARE IN THE TIMEZONE OF THE ESP, NOT UTC
-                                //var ancHour = ancillarySplitMatches[2];
-                                //var ancMinute = ancillarySplitMatches[3];
-                                //var ancSecond = ancillarySplitMatches[4];
+                                var ancHourLocal = ancillarySplitMatches[2];
+                                var ancMinuteLocal = ancillarySplitMatches[3];
+                                var ancSecondLocal = ancillarySplitMatches[4];
 
-                                // This is the timestamp to use for logging data
-                                //var momentToUseInLog = moment(lastTimestampUTC);
+                                // Let's convert that to local time
+                                var logTimestampLocal = moment(lastTimestampUTC);
+                                logTimestampLocal.zone(me.timezoneOffset);
+                                logTimestampLocal.local();
 
-                                // Copy the log time stamp (ancMoment is in UTC)
-                                //var ancMoment = moment(lastTimestampUTC);
+                                logger.trace("Log->UTC: " + lastTimestampUTC.format());
+                                logger.trace("Timezone: " + me.timezoneOffset);
+                                logger.trace("Log->Local: " + logTimestampLocal.format());
+                                logger.trace("Anc->HH:mm:ss = " + ancHourLocal + ":" + ancMinuteLocal + ":" + ancSecondLocal);
 
-                                // Grab a copy of the hour
-                                //var utcAncHour = ancHour;
+                                // Make another copy of the local timestamp so we can make sure the ancillary data
+                                // timestamp doesn't jump ahead of the log timestamp
+                                var ancillaryTimestamp = moment(logTimestampLocal);
 
-                                // Now we have to handle timezone offsets
-                                // First check to see if the timezone offset if specified (numerically)
-                                /*if (me.timezoneOffsetHours !== 0) {
+                                // Set the hours minutes and seconds from the ancillary data clock
+                                ancillaryTimestamp.hour(ancHourLocal);
+                                ancillaryTimestamp.minute(ancMinuteLocal);
+                                ancillaryTimestamp.second(ancSecondLocal);
+                                logger.trace("Anc->Local: " + ancillaryTimestamp.format());
 
-                                 // Now simply subtract the offset
-                                 utcAncHour -= me.timezoneOffsetHours;
+                                // Now convert the ancillary local timestamp to UTC
+                                ancillaryTimestamp.utc();
+                                logger.trace("Anc->UTC: " + ancillaryTimestamp.format());
 
-                                 // That will give us a number that can negative or greater than 24, first
-                                 // let's handle the case where the hours went over 24
-                                 if (utcAncHour > 23) {
-                                 // Subtract 24
-                                 utcAncHour -= 24;
-                                 } else if (utcAncHour < 0) {
-                                 // Add 24
-                                 utcAncHour += 24;
-                                 }
-                                 }*/
-                                // Set the ancillary log entry time
-                                //ancMoment.hour(utcAncHour);
-                                //ancMoment.minute(ancMinute);
-                                //ancMoment.second(ancSecond);
+                                // OK, let's calculate the difference in the ancillary timestamp and the log timestamp
+                                var diffSeconds = ancillaryTimestamp.diff(lastTimestampUTC, 'seconds');
+                                logger.trace("diff in seconds is " + diffSeconds);
 
-                                // If the ancillary timestamp is ahead of the log timestamp, don't use it as the
-                                // ESP clock should be more accurate
-                                /*
-                                 if ((ancMoment.unix() - lastTimestampUTC.unix()) > 0) {
-                                 logger.debug("Ancillary timestamp is " + (ancMoment.unix() - lastTimestampUTC.unix()) +
-                                 " seconds ahead of the log timestamp, will not use it");
-                                 } else {
-                                 momentToUseInLog = ancMoment;
-                                 }*/
+                                // Now here is some kludgy crap.  Instrument clocks can drift, but because they also
+                                // sample before the log entry happens, they can naturally be behind the log timestamp.
+                                // One thing is for sure, they should never be ahead, but if they are ahead, they
+                                // could be a day ahead if the log clock rolled over but the instrument sampled before
+                                // that time, or it could just be a little ahead if the instrument clock is drifting.
+                                // Also, if the instrument clock is WAY behind, it has drifted off (10 minutes) and we
+                                // should use the log clock.
 
+                                // Let's first look at the normal case where the instrument clock is behind the
+                                // log (ESP) clock.
+                                if (diffSeconds < 0) {
+                                    logger.trace("Instrument clock is " + diffSeconds + " behind ESP clock");
+                                    // If the clock is less than 10 minutes behind the ESP clock
+                                    if (Math.abs(diffSeconds) > (10 * 60)) {
+                                        logger.debug("Instrument clock is more than 10 seconds behind ESP clock, will use ESP timestamp");
+                                        logger.debug("Log->UTC: " + lastTimestampUTC.format());
+                                        logger.debug("Anc->UTC: " + ancillaryTimestamp.format());
+                                        ancillaryTimestamp = moment(lastTimestampUTC);
+                                    }
+                                } else if (diffSeconds > 0) {
+                                    logger.debug("Instrument clock is AHEAD of ESP clock");
+                                    logger.debug("Log->UTC: " + lastTimestampUTC.format());
+                                    logger.debug("Anc->UTC: " + ancillaryTimestamp.format());
+                                    // Now if the clock is more than 12 hours ahead, first subtract a day as this
+                                    // could be a day rollover
+                                    if (diffSeconds > (12 * 60 * 60)) {
+                                        ancillaryTimestamp.subtract('days', 1);
+                                        // Now check to see if the timestamp is within 10 minutes behind ESP time
+                                        if (ancillaryTimestamp.diff(lastTimestampUTC, 'seconds') > 0 ||
+                                            ancillaryTimestamp.diff(lastTimestampUTC, 'seconds') < (-10 * 60)) {
+                                            logger.debug("Ancillary timestamp is still out of whack after day adjustment, will use ESP clock");
+                                            ancillaryTimestamp = moment(lastTimestampUTC);
+                                        }
+                                    } else {
+                                        logger.debug("Clock seems to be drifting forward, will use ESP time");
+                                        ancillaryTimestamp = moment(lastTimestampUTC);
+                                    }
+                                }
 
                                 // Grab all the variables
                                 var data = ancillarySplitMatches[5];
@@ -575,11 +607,21 @@ function LogParser(dataAccess, dataDir, opts) {
 
                                         // Add the ancillary data to a local array for later processing
                                         // by the data access component
-                                        ancillaryDataStorageArray.push([source_name, varFromLookup.var_name,
-                                            varFromLookup.var_long_name, varFromLookup.units, logUnits, lastTimestampUTC.format(), logData]);
-                                        logger.trace("Pushed: " + source_name + ", " + varFromLookup.var_name + ", " +
-                                            varFromLookup.var_long_name + ", " + varFromLookup.units + ", " + logUnits +
-                                            ", " + lastTimestampUTC.format() + ", " + logData);
+
+                                        // Check if we are supposed to use the ancillary timestamps or not
+                                        if (me.useAncillaryTimestamps) {
+                                            ancillaryDataStorageArray.push([source_name, varFromLookup.var_name,
+                                                varFromLookup.var_long_name, varFromLookup.units, logUnits, ancillaryTimestamp.format(), logData]);
+                                            logger.trace("Pushed: " + source_name + ", " + varFromLookup.var_name + ", " +
+                                                varFromLookup.var_long_name + ", " + varFromLookup.units + ", " + logUnits +
+                                                ", " + ancillaryTimestamp.format() + ", " + logData);
+                                        } else {
+                                            ancillaryDataStorageArray.push([source_name, varFromLookup.var_name,
+                                                varFromLookup.var_long_name, varFromLookup.units, logUnits, lastTimestampUTC.format(), logData]);
+                                            logger.trace("Pushed: " + source_name + ", " + varFromLookup.var_name + ", " +
+                                                varFromLookup.var_long_name + ", " + varFromLookup.units + ", " + logUnits +
+                                                ", " + lastTimestampUTC.format() + ", " + logData);
+                                        }
 
                                         // Now make sure we bump the number of data points for the ancillary
                                         // data description on the deployment
@@ -861,6 +903,8 @@ function LogParser(dataAccess, dataDir, opts) {
         // This function takes in the deployment and an ancillaryDataEntry from the log file and writes
         // it to the appropriate file in the processed data location
         function writeAncillaryDataToFile(deployment, ancillaryDataEntry, processedDataLocation) {
+            //logger.debug("Going to write some ancillary data to a CSV file.");
+
             return;
         }
     }

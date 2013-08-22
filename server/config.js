@@ -62,7 +62,8 @@ module.exports = {
 
     // The LogParser options
     logParserOptions: {
-        loggerLevel: 'debug',
+        loggerLevel: 'info',
+        useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
         tempDir: '/tmp',
         // The timezone lookup table

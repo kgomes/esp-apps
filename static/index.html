@@ -7,6 +7,7 @@
     <!-- Any appropriate stylesheets -->
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/bootstrap-responsive.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/esp.css"/>
 
     <!-- HTML 5 Shim for IE backwards compatibility -->
@@ -37,7 +38,7 @@
                         <a class="dropdown-toggle"
                            data-toggle="dropdown"
                            href="#">
-                            Deployments
+                            {{ selectedDeploymentName }}
                             <b class="caret"></b>
                         </a>
                         <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
@@ -63,7 +64,7 @@
                 <div class="accordion-heading">
                     <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2"
                        href="#collapse{{$index}}">
-                        {{deployment.esp.name}} - {{deployment.name}}
+                        {{deployment.esp.name}}
                     </a>
                 </div>
                 <div id="collapse{{$index}}" class="accordion-body collapse">
@@ -101,7 +102,13 @@
             </div>
         </div>
         <!-- The graph panel -->
-        <div ng-controller="GraphPanelController" id="graph-panel" class="span9 well">
+        <div ng-controller="GraphPanelController" class="span9 well">
+            <div class="btn-group">
+                <a class="btn btn-mini" rel="tooltip" title="Plot with lines" ng-click="changePlot('lines')"><i class="icon-minus"></i></a>
+                <a class="btn btn-mini" rel="tooltip" title="Plot only points" ng-click="changePlot('points')"><i class="icon-ellipsis-horizontal"></i></a>
+            </div>
+            <div id="graph-panel">
+            </div>
         </div>
     </div>
 
@@ -127,12 +134,12 @@
                         </thead>
                         <tbody>
 
-                            <tr ng-repeat="row in detailTable.rows"
-                                ng-click="selectDetailRow($parent.$index, $index, row)">
-                                <td ng-repeat="col in row">
-                                    <div ng-bind-html-unsafe='col | detailCellContents'></div>
-                                </td>
-                            </tr>
+                        <tr ng-repeat="row in detailTable.rows"
+                            ng-click="selectDetailRow($parent.$index, $index, row)">
+                            <td ng-repeat="col in row">
+                                <div ng-bind-html-unsafe='col | detailCellContents'></div>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
