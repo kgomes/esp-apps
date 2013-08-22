@@ -618,14 +618,27 @@ function DataAccess(opts) {
                                 callback(err);
                             } else {
                                 // Now I have the deployment with all ancillary sources having ID's,
-                                // go ahead and persist the actual data point
-                                processDataArray(updatedUpdatedDeployment, ancillaryDataArray,
-                                    function (err, deploymentAfterDataInsert) {
-                                        // Update the deployment
-                                        self.persistDeployment(deploymentAfterDataInsert, function (err, lastUpdatedDeployment) {
-                                            callback(err, lastUpdatedDeployment);
+                                // go ahead and persist the actual data points.  First create the PostgreSQL
+                                // client and then pass it into the method to insert the data
+                                pg.connect(self.pgConnectionString, function (err, client, done) {
+                                    // Check for any error
+                                    if (err) {
+                                        logger.error('Error connection to the postgres DB');
+                                        logger.error(err);
+                                        callback(err);
+                                    } else {
+                                        // Client should be good to go, call the method to process the data
+                                        insertAncillaryDataArray(updatedUpdatedDeployment, client, ancillaryDataArray, function (err, deploymentAfterDataInsert) {
+                                            // Call done to clean up the DB
+                                            done();
+                                            // And persist the updated deployment
+                                            self.persistDeployment(deploymentAfterDataInsert, function (err, lastUpdatedDeployment) {
+                                                callback(err, lastUpdatedDeployment);
+                                            });
+
                                         });
-                                    });
+                                    }
+                                });
                             }
                         });
                     }
@@ -780,148 +793,76 @@ function DataAccess(opts) {
 
         }
 
-        // This function takes in a deployment an array of ancillary data and persists it to the
-        // postgres DB.
-        function processDataArray(deployment, ancillaryDataArray, callback) {
-            var tempDeployment = deployment;
-            var tempAncillaryDataArray = ancillaryDataArray;
+        // This is a recursive method that processes ancillary data from an array, inserts them into the PostgreSQL
+        // database and updates the deployment with the updated information
+        function insertAncillaryDataArray(deployment, pgClient, ancillaryDataArray, callback) {
+            logger.debug("insertAncillaryDataArray called with data array size of " + ancillaryDataArray.length);
+            logger.debug("Callback function is ", callback);
+            // Create a counter to count the current number of records that have been popped off the array
+            var numRecordsProcessed = 0;
 
-            // Grab the number of points to batch insert from the configuration file or assign a default
-            var numAncillaryPointsToBatch = self.numAncillaryPointsToBatch;
-            if (!numAncillaryPointsToBatch || numAncillaryPointsToBatch <= 0) numAncillaryPointsToBatch = 1000;
-            logger.debug('Will batch ' + numAncillaryPointsToBatch + ' for inserting');
+            // The value text clause that will be used in the insert
+            var valueText = '';
 
-            // Just make sure real conditions exist
-            if (tempDeployment && tempAncillaryDataArray && tempAncillaryDataArray.length && tempAncillaryDataArray.length > 0) {
-                logger.debug('processDataArray called to process ' + tempAncillaryDataArray.length +
-                    ' points into tempDeployment ' + tempDeployment.name + ' of ESP ' + tempDeployment.esp.name);
+            // Now loop until you have reached the batch size or until the array is empty
+            while (numRecordsProcessed < self.numAncillaryPointsToBatch && ancillaryDataArray.length > 0) {
+                // Pop a record off the array
+                var recordToProcess = ancillaryDataArray.pop();
+                // Look up the ancillary source ID from the deployment
+                if (deployment && deployment.ancillary_data && deployment.ancillary_data[recordToProcess[0]] &&
+                    deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]] &&
+                    deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id &&
+                    deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id > 0) {
 
-                // A variable to keep track of how many records have to be processed
-                var recordsProcessed = tempAncillaryDataArray.length;
-
-                // A variable to hold how many insert queries are currently running
-                var openInsertQueries = 0;
-
-                // A variable to hold the multiple rows that will be inserted at once
-                var valueText = '';
-
-                // Connect to the database
-                pg.connect(self.pgConnectionString, function (err, client, done) {
-                    // Check for any error
-                    if (err) {
-                        logger.error('Error connection to the postgres DB');
-                        logger.error(err);
-                        callback(err);
+                    // Make sure there is a field for number of points
+                    if (deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints &&
+                        deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints >= 0) {
+                        // Bump the counter on the number of variables
+                        deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints++;
                     } else {
-                        // Loop over the array of data records
-                        for (var i = 0; i < tempAncillaryDataArray.length; i++) {
-                            // Grab a record
-                            var recordToProcess = tempAncillaryDataArray[i];
-
-                            // Look up the ancillary source ID from the deployment
-                            if (tempDeployment && tempDeployment.ancillary_data && tempDeployment.ancillary_data[recordToProcess[0]] &&
-                                tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]] &&
-                                tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id &&
-                                tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id > 0) {
-
-                                // Make sure there is a field for number of points
-                                if (tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints &&
-                                    tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints >= 0) {
-                                    // Bump the counter on the number of variables
-                                    tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints++;
-                                } else {
-                                    // Initialize it to one
-                                    tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints = 1;
-                                }
-
-                                // Check to see if a comma is necessary
-                                if (valueText !== '') {
-                                    valueText += ',';
-                                }
-
-                                // Append the insert value
-                                valueText += '(' + tempDeployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id +
-                                    ',\'' + recordToProcess[5] + '\',' + recordToProcess[6] + ')';
-
-                                // After a fair number of records, do the insert
-                                if (i % numAncillaryPointsToBatch === 0) {
-                                    logger.debug('Processed ' + recordsProcessed +
-                                        ' records out of the array and will insert them');
-
-                                    // Bump the number of open queries
-                                    openInsertQueries++;
-
-                                    // Create the query and run it
-                                    client.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
-                                        'timestamp_utc, value) values ' + valueText, function (err, result) {
-
-                                        // Decrement the number of running queries
-                                        openInsertQueries--;
-
-                                        // Check for errors
-                                        if (err) {
-                                            logger.error('Error inserting bulk rows');
-                                            logger.error(err);
-                                            callback(err);
-                                        } else {
-                                            logger.debug('Done with bulk insert ');
-                                            logger.debug(result);
-                                        }
-
-                                        // Check to see if there are no more records and no more open queries
-                                        if (recordsProcessed === 0 && openInsertQueries === 0) {
-                                            logger.debug('Looks like we have processed all records in ...');
-                                            // Close the DB connection
-                                            done();
-
-                                            // Callback
-                                            callback(err, tempDeployment);
-                                        }
-                                    });
-                                    // Clear the valueText
-                                    valueText = '';
-                                }
-                            }
-                            // Decrement the counter
-                            recordsProcessed--;
-                        }
-
-                        // Check to see if there are is any value text that has not been written to the DB yet
-                        if (valueText !== '') {
-                            // Bump the number of running queries
-                            openInsertQueries++;
-
-                            // Insert the last section of data
-                            client.query('INSERT INTO ancillary_data(ancillary_source_id_fk, timestamp_utc, value) values ' + valueText, function (err, result) {
-                                // Decrement the number of queries that are running
-                                openInsertQueries--;
-
-                                // Check for errors
-                                if (err) {
-                                    logger.error('Error inserting bulk rows');
-                                    logger.error(err);
-                                    callback(err);
-                                } else {
-                                    logger.debug('Done with bulk insert');
-                                    logger.debug(result);
-                                }
-
-                                // Check to see if there are no more records and no more open queries
-                                if (recordsProcessed === 0 && openInsertQueries === 0) {
-                                    // Close the DB connection
-                                    done();
-
-                                    // Send to the callback
-                                    callback(err, tempDeployment);
-                                }
-                            });
-                        }
+                        // Initialize it to one
+                        deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].numPoints = 1;
                     }
-                });  // End DB connection call
-            } else {
-                logger.error('Not enough arguments');
-                callback(new Error('Not enough arguments specified'));
+
+                    // Check to see if a comma is necessary
+                    if (valueText !== '') {
+                        valueText += ',';
+                    }
+
+                    // Append the insert value
+                    valueText += '(' + deployment.ancillary_data[recordToProcess[0]][recordToProcess[4]].source_id +
+                        ',\'' + recordToProcess[5] + '\',' + recordToProcess[6] + ')';
+
+                }
+                // Bump the counter
+                numRecordsProcessed++;
             }
+
+            // Create the query and run it
+            pgClient.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
+                'timestamp_utc, value) values ' + valueText, function (err, result) {
+
+                // Check for errors
+                if (err) {
+                    logger.error('Error inserting bulk rows');
+                    logger.error(err);
+                    callback(err);
+                } else {
+                    // So it looks like the insert was successful, let's recursively call this method
+                    // with any remaining records
+                    logger.debug('Done with bulk insert and inserted ', result);
+                    if (ancillaryDataArray.length > 0) {
+                        logger.debug('Now recursively calling with ' + ancillaryDataArray.length
+                            + ' records left to process');
+                        insertAncillaryDataArray(deployment, pgClient, ancillaryDataArray, callback);
+                        // And return
+                        return;
+                    } else {
+                        // Call the callback that has been passed down as we are done!
+                        callback(null, deployment);
+                    }
+                }
+            });
         }
     }
 }
