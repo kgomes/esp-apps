@@ -63,10 +63,12 @@ function AppServer(dataAccess, opts) {
     // Setup the error handler on the server
     this.server.error(function (err, req, res, next) {
         if (err instanceof me.NotFound) {
-            console.log('File not found: ');
-            console.log(err);
+            logger.warn('File not found: ');
+            logger.warn(err);
+            logger.warn("req: ", req);
+            logger.warn("res: ", res);
         } else {
-            console.log(err);
+            logger.warn(err);
         }
     });
 
