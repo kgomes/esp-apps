@@ -269,8 +269,8 @@ function LogParser(dataAccess, dataDir, opts) {
             var fileReadStream = fs.createReadStream(logFile);
 
             // Create the processed data location
-            var processedDataLocation = me.dataDir + path.sep + "instances" + path.sep + deployment.esp.name +
-                path.sep + "deployments" + path.sep + deployment.name + path.sep + "data" + path.sep + "processed";
+            var processedDataLocation = path.join(me.dataDir,"instances",deployment.esp.name,
+                "deployments",deployment.name,"data","processed");
             logger.debug("Processed data for the deployment will go in " + processedDataLocation);
 
             // Add handler when the stream read end of file
@@ -501,10 +501,6 @@ function LogParser(dataAccess, dataDir, opts) {
 
                             // Make sure the deployment has the appropriate ancillary sources attached
                             addAncillarySourcesToDeployment(deployment, entries[i]);
-
-                            // I now have a log entry and the deployment should have all the proper entries
-                            // for what this log entry contains.
-                            writeAncillaryDataToFile(deployment, entries[i], processedDataLocation);
 
                             // Split the source, hours, minutes and seconds from the data
                             var ancillarySplitMatches = entries[i].match(me.ancillarySplitPattern);
@@ -898,14 +894,6 @@ function LogParser(dataAccess, dataDir, opts) {
 
             // Now move on to the next one
             processLogFileOffQueue();
-        }
-
-        // This function takes in the deployment and an ancillaryDataEntry from the log file and writes
-        // it to the appropriate file in the processed data location
-        function writeAncillaryDataToFile(deployment, ancillaryDataEntry, processedDataLocation) {
-            //logger.debug("Going to write some ancillary data to a CSV file.");
-
-            return;
         }
     }
 }

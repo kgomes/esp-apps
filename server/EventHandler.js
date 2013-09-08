@@ -52,6 +52,10 @@ function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
         // This event happens when the FTP crawler downloads or updates a file local
         // on this server
         this.ftpSync.on('ftp_file_updated', this.handleFTPFileUpdated);
+
+        // This event happens when ancillary data has been updated in the
+        // persistent store
+        this.dataAccess.on('ancillary_data_persisted', this.handleAncillaryDataPersisted);
     }
 
     // *****************************************************************************
@@ -71,7 +75,7 @@ function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
         socket.on('disconnect', function () {
             logger.debug("Client disconnected.");
         });
-    }
+    };
 
     // *************************************************************************
     // This is the function to handle the event when a file was updated locally
@@ -84,7 +88,7 @@ function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
         if (data.deployment) {
             // Make sure it has an esp
             if (data.deployment.esp) {
-                // Make sure it has a log file liste
+                // Make sure it has a log file listed
                 if (data.deployment.esp.log_file) {
                     // Make sure the incoming event has a local file listed
                     if (data.file) {
@@ -107,7 +111,18 @@ function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
                 }
             }
         }
-    }
+    };
+
+    // *************************************************************************
+    // This function handles the event that some ancillary data was updated
+    // in the persistent store.  It basically calls the method to synchronize
+    // the database ancillary data with the file representation of it.
+    // *************************************************************************
+    this.handleAncillaryDataPersisted = function(eventData) {
+        logger.debug("Got event that ancillary data was persisted from deployment " +
+            eventData.deployment.name + ' using basedir ' + me.baseDir);
+        dataAccess.syncAncillaryDataFileWithDatabase(eventData.deployment, me.baseDir);
+    };
 }
 
 // Export the factory method

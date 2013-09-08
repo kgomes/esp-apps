@@ -16,6 +16,9 @@ log4js.addAppender(log4js.appenders.file('./logs/FTPSync.log'), 'FTPSync');
 // Grab the logger
 var logger = log4js.getLogger('FTPSync');
 
+// Inherit event emitter functionality
+util.inherits(FTPSync, eventEmitter);
+
 // The constructor function
 function FTPSync(opts) {
     // Set the log level if sent in
@@ -568,9 +571,6 @@ function FTPSync(opts) {
 
     }
 }
-
-// Inherit event emitter functionality
-util.inherits(FTPSync, eventEmitter);
 
 // Export the factory method
 exports.createFTPSync = function (opts) {
