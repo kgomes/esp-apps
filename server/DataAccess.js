@@ -1030,8 +1030,7 @@ function DataAccess(opts) {
                                     logger.debug("Appending data complete", err);
                                     // Find the index of the file path in the tracking array
                                     var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
-                                    logger.debug("File path was found at index " + filePathIndex + ", will remove it");
-                                    self.ancillaryFilesBeingSyncd.slice(filePathIndex, 1);
+                                    self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                                     if (callback)
                                         callback(err);
                                 });
