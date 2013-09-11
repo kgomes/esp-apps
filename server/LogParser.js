@@ -14,6 +14,9 @@ log4js.addAppender(log4js.appenders.file('./logs/LogParser.log'), 'LogParser');
 // Grab the logger
 var logger = log4js.getLogger('LogParser');
 
+// Inherit event emitter functionality
+util.inherits(LogParser, eventEmitter);
+
 // The constructor function
 function LogParser(dataAccess, dataDir, opts) {
     // Set the log level if specified
@@ -136,59 +139,66 @@ function LogParser(dataAccess, dataDir, opts) {
                     logger.debug("Starting the parse of log file " + parsingLogFile +
                         " for deployment " + parsingDeployment.name + " of ESP " + parsingDeployment.esp.name);
 
-                    // Now the first thing to do is create a temporary file
-                    createTempFile(parsingLogFile, function (err, tempFile) {
-                        // Check for any errors first
-                        if (err) {
-                            // And now clean up and bail out
-                            cleanUpAfterParsing(err, parsingDeployment, tempFile);
-                            return;
-                        } else {
-                            // OK, temp file successfully created
-                            logger.debug("Will parse temporary file " + tempFile);
+                    // To make sure I have the most updated deployment information, grab the most
+                    // recent from the database
+                    dataAccess.getDeploymentByID(parsingDeployment._id, function (err, refreshedDeployment) {
 
-                            // Call the method to parse the log file, which will return an updated deployment
-                            // and an array of ancillary data that was found in the log file.
-                            parseLogFile(parsingDeployment, parsingLogFile, function (err, updatedDeployment, ancillaryDataArray) {
-                                // Check for an error
-                                if (err) {
-                                    // Send the error to the callback and bail out
-                                    cleanUpAfterParsing(err, parsingDeployment, tempFile);
-                                    return;
-                                } else {
-                                    // Things seem to have processed properly, so update the
-                                    // deployment information in database
-                                    me.dataAccess.persistDeployment(updatedDeployment, function (err, persistedDeployment) {
-                                        // Check for errors
-                                        if (err) {
-                                            // Send the error to the callback and bail out
-                                            cleanUpAfterParsing(err, parsingDeployment, tempFile);
-                                            return;
-                                        } else {
-                                            // Now persist ancillary data if there is any
-                                            if (ancillaryDataArray.length > 0) {
-                                                logger.debug("There are " + ancillaryDataArray.length + " ancillary records to write to the DB");
-                                                me.dataAccess.insertAncillaryDataArray(persistedDeployment, ancillaryDataArray,
-                                                    function (err, updatedDeployment) {
-                                                        logger.debug("Got callback from insertAncillaryDataArray");
-                                                        if (err) {
-                                                            logger.error("Something went wrong inserting the ancillary data in the DB");
-                                                            logger.error(err);
-                                                        }
-                                                        // Send the error to the callback and bail out
-                                                        cleanUpAfterParsing(err, parsingDeployment, tempFile);
-                                                        return;
-                                                    });
-                                            } else {
-                                                cleanUpAfterParsing(err, parsingDeployment, tempFile);
+
+                        // Now the first thing to do is create a temporary file
+                        createTempFile(parsingLogFile, function (err, tempFile) {
+                            // Check for any errors first
+                            if (err) {
+                                // And now clean up and bail out
+                                cleanUpAfterParsing(err, refreshedDeployment, tempFile);
+                                return;
+                            } else {
+                                // OK, temp file successfully created
+                                logger.debug("Will parse temporary file " + tempFile);
+
+                                // Call the method to parse the log file, which will return an updated deployment
+                                // and an array of ancillary data that was found in the log file.
+                                parseLogFile(refreshedDeployment, tempFile, function (err, updatedDeployment, ancillaryDataArray) {
+                                    // Check for an error
+                                    if (err) {
+                                        // Send the error to the callback and bail out
+                                        cleanUpAfterParsing(err, refreshedDeployment, tempFile);
+                                        return;
+                                    } else {
+                                        // Things seem to have processed properly, so update the
+                                        // deployment information in database
+                                        logger.info('LogParser calling persistDeployment on ' + updatedDeployment.name + '(rev=' + updatedDeployment._rev + ')');
+                                        me.dataAccess.persistDeployment(updatedDeployment, function (err, persistedDeployment) {
+                                            // Check for errors
+                                            if (err) {
+                                                // Send the error to the callback and bail out
+                                                cleanUpAfterParsing(err, refreshedDeployment, tempFile);
                                                 return;
+                                            } else {
+                                                // Now persist ancillary data if there is any
+                                                if (ancillaryDataArray.length > 0) {
+                                                    logger.debug("There are " + ancillaryDataArray.length + " ancillary records to write to the DB");
+                                                    me.dataAccess.insertAncillaryDataArray(persistedDeployment, ancillaryDataArray,
+                                                        function (err, updatedDeployment) {
+                                                            logger.debug("Got callback from insertAncillaryDataArray");
+                                                            if (err) {
+                                                                logger.error("Something went wrong inserting the ancillary data in the DB");
+                                                                logger.error(err);
+                                                            }
+                                                            // Send the error to the callback and bail out
+                                                            cleanUpAfterParsing(err, refreshedDeployment, tempFile);
+                                                            return;
+                                                        });
+                                                } else {
+                                                    cleanUpAfterParsing(err, refreshedDeployment, tempFile);
+                                                    return;
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
 
-                                }
-                            });
-                        }
+                                    }
+                                });
+                            }
+                        });
                     });
                 } else {
                     logger.debug("No log files left to parse, will ignore the call");
@@ -269,8 +279,8 @@ function LogParser(dataAccess, dataDir, opts) {
             var fileReadStream = fs.createReadStream(logFile);
 
             // Create the processed data location
-            var processedDataLocation = path.join(me.dataDir,"instances",deployment.esp.name,
-                "deployments",deployment.name,"data","processed");
+            var processedDataLocation = path.join(me.dataDir, "instances", deployment.esp.name,
+                "deployments", deployment.name, "data", "processed");
             logger.debug("Processed data for the deployment will go in " + processedDataLocation);
 
             // Add handler when the stream read end of file
@@ -897,9 +907,6 @@ function LogParser(dataAccess, dataDir, opts) {
         }
     }
 }
-
-// Inherit event emitter functionality
-util.inherits(LogParser, eventEmitter);
 
 // Export the factory method
 exports.createLogParser = function (dataAccess, dataDir, opts) {

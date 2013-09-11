@@ -337,21 +337,23 @@ function FTPSync(opts) {
                         me.numberOfDirectoriesToProcess--;
                         checkForExit(err);
                     } else {
-                        logger.debug('There are ' + fileList.length + ' files in the remote dir');
-                        // Now process the list of files
-                        for (var i = 0; i < fileList.length; i++) {
-                            // Quick check to make sure something is there
-                            if (fileList[i]) {
-                                // Now check to see if it is a file and if so, process it that way
-                                if (fileList[i].type === '-') {
-                                    syncFile(localCurrentDirectory,
-                                        remoteCurrentDirectory, fileList[i]);
-                                } else if (fileList[i].type === 'd') {
-                                    // This is a directory, so we need to drill down
-                                    drillDown(path.join(localCurrentDirectory, fileList[i].name),
-                                        path.join(remoteCurrentDirectory, fileList[i].name));
-                                } else {
-                                    logger.warn('Could not understand type of file ' + fileList[i].name);
+                        if (fileList) {
+                            logger.debug('There are ' + fileList.length + ' files in the remote dir');
+                            // Now process the list of files
+                            for (var i = 0; i < fileList.length; i++) {
+                                // Quick check to make sure something is there
+                                if (fileList[i]) {
+                                    // Now check to see if it is a file and if so, process it that way
+                                    if (fileList[i].type === '-') {
+                                        syncFile(localCurrentDirectory,
+                                            remoteCurrentDirectory, fileList[i]);
+                                    } else if (fileList[i].type === 'd') {
+                                        // This is a directory, so we need to drill down
+                                        drillDown(path.join(localCurrentDirectory, fileList[i].name),
+                                            path.join(remoteCurrentDirectory, fileList[i].name));
+                                    } else {
+                                        logger.warn('Could not understand type of file ' + fileList[i].name);
+                                    }
                                 }
                             }
                         }
@@ -437,72 +439,75 @@ function FTPSync(opts) {
                                 //checkForExit(err);
                             } else {
                                 // Add handler to clean up once the file has finished downloading
-                                data.once('close', function (hadError) {
-                                    // Check the boolean to see if there was any error
-                                    if (hadError) {
-                                        // Just log it
-                                        logger.error('It appears there was an error downloading file ' +
-                                            remoteFilePath + ' that was returned with the close event');
-                                    }
+                                if (data) {
+                                    data.once('close', function (hadError) {
+                                        // Check the boolean to see if there was any error
+                                        if (hadError) {
+                                            // Just log it
+                                            logger.error('It appears there was an error downloading file ' +
+                                                remoteFilePath + ' that was returned with the close event');
+                                        }
 
-                                    // Set the local date equal to remote date
-                                    fs.utimes(localFilePath, remoteFile.date.getTime() / 1000,
-                                        remoteFile.date.getTime() / 1000, function (err) {
-                                            if (err) {
-                                                // Write to log
-                                                logger.error('Error on updating file date-time on local file ' +
-                                                    localFilePath);
-                                                logger.error(err);
-                                            }
+                                        // Set the local date equal to remote date
+                                        fs.utimes(localFilePath, remoteFile.date.getTime() / 1000,
+                                            remoteFile.date.getTime() / 1000, function (err) {
+                                                if (err) {
+                                                    // Write to log
+                                                    logger.error('Error on updating file date-time on local file ' +
+                                                        localFilePath);
+                                                    logger.error(err);
+                                                }
 
-                                            // Push the log file onto the files updated array
-                                            me.filesUpdated.push(localFilePath);
+                                                // Push the log file onto the files updated array
+                                                me.filesUpdated.push(localFilePath);
 
-                                            // Drop the number of files to process and check for exit
-                                            logger.debug('Finished processing remote file ' + remoteFilePath);
-                                            me.numberOfFilesToProcess--;
-                                            logger.debug('Dropped file counter to ' + me.numberOfFilesToProcess);
-                                            checkForExit(err);
-                                        });
+                                                // Drop the number of files to process and check for exit
+                                                logger.debug('Finished processing remote file ' + remoteFilePath);
+                                                me.numberOfFilesToProcess--;
+                                                logger.debug('Dropped file counter to ' + me.numberOfFilesToProcess);
+                                                checkForExit(err);
+                                            });
 
-                                    // Now if the file is a TIFF image, for browser support we need to create
-                                    // a version that is a JPG.
-                                    if (localFilePath.indexOf('.tif') !== -1) {
-                                        logger.debug('The downloaded file was a tif, let\'s create a JPEG version');
-                                        var jpgFilePath = localFilePath.replace(path.sep + 'data' + path.sep + 'raw' +
-                                            path.sep + 'esp', path.sep + 'data' + path.sep + 'processed' + path.sep + 'esp').replace('.tif', '.jpg');
-                                        logger.debug('JPG Path will be ' + jpgFilePath);
+                                        // Now if the file is a TIFF image, for browser support we need to create
+                                        // a version that is a JPG.
+                                        if (localFilePath.indexOf('.tif') !== -1) {
+                                            logger.debug('The downloaded file was a tif, let\'s create a JPEG version');
+                                            var jpgFilePath = localFilePath.replace(path.sep + 'data' + path.sep + 'raw' +
+                                                path.sep + 'esp', path.sep + 'data' + path.sep + 'processed' + path.sep + 'esp').replace('.tif', '.jpg');
+                                            logger.debug('JPG Path will be ' + jpgFilePath);
 
-                                        // Let's make sure the directory exists
-                                        var pathSegments = jpgFilePath.split(path.sep);
+                                            // Let's make sure the directory exists
+                                            var pathSegments = jpgFilePath.split(path.sep);
 
-                                        // Loop over the array (except the last which is the file name) to build the path
-                                        var incrementalPath = '';
-                                        try {
-                                            for (var i = 0; i < pathSegments.length - 1; i++) {
-                                                // the new path segment
-                                                if (pathSegments[i] && pathSegments[i] !== '') {
-                                                    // Build the path
-                                                    incrementalPath += path.normalize(path.sep + pathSegments[i]);
+                                            // Loop over the array (except the last which is the file name) to build the path
+                                            var incrementalPath = '';
+                                            try {
+                                                for (var i = 0; i < pathSegments.length - 1; i++) {
+                                                    // the new path segment
+                                                    if (pathSegments[i] && pathSegments[i] !== '') {
+                                                        // Build the path
+                                                        incrementalPath += path.normalize(path.sep + pathSegments[i]);
 
-                                                    // Create it if it does not exist
-                                                    var incrementalExists = fs.existsSync(incrementalPath);
-                                                    if (!incrementalExists) {
-                                                        fs.mkdirSync(incrementalPath);
+                                                        // Create it if it does not exist
+                                                        var incrementalExists = fs.existsSync(incrementalPath);
+                                                        if (!incrementalExists) {
+                                                            fs.mkdirSync(incrementalPath);
+                                                        }
                                                     }
                                                 }
+                                            } catch (error) {
+                                                logger.error('Error caught trying to ensure directory ' + incrementalPath + ' exists');
+                                                logger.error(error);
                                             }
-                                        } catch (error) {
-                                            logger.error('Error caught trying to ensure directory ' + incrementalPath + ' exists');
-                                            logger.error(error);
+                                            // Convert it
+                                            im.convert([localFilePath, jpgFilePath]);
                                         }
-                                        // Convert it
-                                        im.convert([localFilePath, jpgFilePath]);
-                                    }
-                                });
-
-                                // Write read stream to file write stream
-                                data.pipe(fs.createWriteStream(localFilePath));
+                                    });
+                                    // Write read stream to file write stream
+                                    data.pipe(fs.createWriteStream(localFilePath));
+                                } else {
+                                    logger.error('For some reason the data came back empty from get call for file ' + remoteFilePath);
+                                }
                             }
                         }
                     );

@@ -5,6 +5,8 @@ var cradle = require('cradle');
 var pg = require('pg');
 var path = require('path');
 var fs = require('fs');
+var readline = require('readline');
+var stream = require('stream');
 var eventEmitter = require('events').EventEmitter;
 
 // Configure logging for the DataStore
@@ -86,6 +88,9 @@ function DataAccess(opts) {
     logger.debug('Port: ' + this.pgConfiguration.port);
     logger.debug('Username: ' + this.pgConfiguration.username);
     logger.debug('Database: ' + this.pgConfiguration.database);
+
+    // This is an array of ancillary data files that are currently in the process of being sync'd
+    this.ancillaryFilesBeingSyncd = [];
 
     // ***********************************************************
     // This function returns an array of all the User objects in
@@ -497,30 +502,29 @@ function DataAccess(opts) {
     // ***********************************************************
     this.persistDeployment = function (deployment, callback) {
 
+        logger.info("PersistDeployment called on deployment " + deployment.name);
+        logger.info("Deployment ID Before " + deployment._id);
+        logger.info("Deployment Rev Before " + deployment._rev);
         // Call the method to save the deployment to the datastore
         this.couchDBConn.save(deployment, function (err, res) {
             // Check for errors
             if (err) {
                 // Log the error
-                logger.warn('Error trying to save a deployment: ');
-                logger.warn(deployment);
+                logger.warn('Error trying to save deployment ' + deployment.name + '(id=' + deployment._id + ',rev=' + deployment._rev);
                 logger.warn(err);
 
                 // Send error to the caller
                 if (callback)
                     callback(err);
             } else {
-                logger.debug('Deployment ' + deployment.name + ' updated successfully');
-                logger.debug(res);
-                logger.debug(deployment);
-                logger.debug('With ancillary data');
-                logger.debug(deployment.ancillary_data);
-
-                // Assingn the ID and rev
+                // Assign the ID and rev
                 if (res.ok) {
+                    logger.info('Deployment ' + deployment.name + ' updated successfully');
                     // Assign the ID and revision
                     deployment._id = res.id;
                     deployment._rev = res.rev;
+                    logger.info("Deployment ID After " + deployment._id);
+                    logger.info("Deployment Rev After " + deployment._rev);
 
                     // Send the updated deployment back to the caller
                     if (callback)
@@ -628,6 +632,7 @@ function DataAccess(opts) {
                         callback(err);
                     } else {
                         // Persist any changes to the deployment
+                        logger.info('DataAccess calling persistDeployment on ' + updatedDeployment.name + '(rev=' + updatedDeployment._rev + ')');
                         self.persistDeployment(updatedDeployment, function (err, updatedUpdatedDeployment) {
                             if (err) {
                                 callback(err);
@@ -647,6 +652,7 @@ function DataAccess(opts) {
                                             // Call done to clean up the DB
                                             done();
                                             // And persist the updated deployment
+                                            logger.info('DataAccess calling persistDeployment on ' + deploymentAfterDataInsert.name + '(rev=' + deploymentAfterDataInsert._rev + ')');
                                             self.persistDeployment(deploymentAfterDataInsert, function (err, lastUpdatedDeployment) {
                                                 callback(err, lastUpdatedDeployment);
                                             });
@@ -902,23 +908,45 @@ function DataAccess(opts) {
                 // This is the object to hold the sources and their associated writeStreams
                 var sourceStreams = {};
 
+                // A counter to keep track of how many sources are currently in process
+                var sourceCounter = 0;
+
                 // Loop over the data sources and pass of to function to retain scope
                 // of 'source'
                 for (var source in deployment.ancillary_data) {
+                    logger.debug('Working with source ' + source);
+                    // Bump the counter
+                    sourceCounter++;
+
+                    // Call function to process the source
                     processSource(deployment, source, function (err) {
-                        if (err) {
-                            if (callback)
-                                callback(err);
-                        } else {
-                            // If we are here, assume all is well and return OK
-                            if (callback)
-                                callback(null, true);
+                        // We are here, but we may not be the only source being
+                        // processed, so decrement the counter and see where we are
+                        sourceCounter--;
+
+                        // If there are no more sources being processed, send it
+                        // back to the caller, otherwise, don't do anything
+                        if (sourceCounter === 0) {
+                            logger.debug("No more sources to process, exiting");
+
+                            // If there was an error, send it back
+                            // TODO kgomes In reality, if I am here and there is no error
+                            // on this particular callback, it could be that a different
+                            // one did have an error and it would be ignored. Hmmmm...
+                            if (err) {
+                                if (callback)
+                                    callback(err);
+                            } else {
+                                // If we are here, assume all is well and return OK
+                                if (callback)
+                                    callback(null, true);
+                            }
                         }
                     });
                 }
-
             } else {
-                // If we are here, assume all is well and return OK
+                // There are no entries for ancillary data, so we will just return it to the
+                // caller with success since it is really not an error as far as we are concerned
                 if (callback)
                     callback(null, true);
             }
@@ -930,110 +958,172 @@ function DataAccess(opts) {
 
         // This is a function that processes each source from a deployment
         function processSource(deployment, source, callback) {
-            logger.debug('Working with source ', source);
+            logger.debug('Processing source ', source);
 
             // Now build the CSV file for this source
             var filePath = path.join(basedir, 'instances', deployment.esp.name, 'deployments',
                 deployment.name, 'data', 'processed', source + '.csv');
             logger.debug('File path is ', filePath);
+            // We first need to make sure the base directory is built
+            var pathElements = filePath.split(path.sep);
+            var growPath = '';
+            for (var i = 0; i < (pathElements.length-1); i++) {
+                growPath = path.normalize(growPath + path.sep + pathElements[i]);
+                if (!fs.existsSync(growPath)) {
+                    fs.mkdirSync(growPath);
+                }
+            }
 
-            // Now create a stream writer
-            var sourceStream = fs.createWriteStream(filePath);
 
-            // Open it and start writing
-            sourceStream.once('open', function (fd) {
-                logger.debug('A header needs to be written');
-                writeHeader(deployment, source, sourceStream, function (err, sourceIDArray) {
-                    if (err) {
-                        sourceStream.end();
-                        callback(err);
-                    } else {
-                        logger.debug('Header written and ID array returned is: ', sourceIDArray);
-                        // Build the query
-                        var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, timestamp_utc, ancillary_source_id_fk, value from ancillary_data where';
-                        for (var i = 0; i < sourceIDArray.length; i++) {
-                            if (i > 0) {
-                                query += ' OR';
+            // Check to see if it is being sync'd already
+            if (self.ancillaryFilesBeingSyncd.indexOf(filePath) >= 0) {
+                logger.debug('File ' + filePath + ' is already being syncd so will ignore request');
+                if (callback)
+                    callback(null);
+            } else {
+
+                // Add it to the array of files being sync'd
+                self.ancillaryFilesBeingSyncd.push(filePath);
+
+                // Does the file currently exist?
+                fs.exists(filePath, function (exists) {
+
+                    if (exists) {
+                        logger.debug('File already exists');
+
+                        // Since the file exists, we need to grab the latest timestamp from the file so
+                        // we only append the data that is new.
+                        var instream = fs.createReadStream(filePath);
+                        var outstream = new stream;
+                        var rl = readline.createInterface(instream, outstream);
+                        var latestEpoch = null;
+
+                        // Read down the file looking for the latest epoch seconds
+                        rl.on('line', function (line) {
+                            latestEpoch = line.split(',')[0];
+                        });
+
+                        // Once the file is closed, query for more recent data and append to the file
+                        rl.on('close', function () {
+                            logger.debug("Reading of file done");
+                            logger.debug("last epoch for file " + filePath + " is " + latestEpoch);
+                            if (latestEpoch) {
+                                // Grab the source IDs
+                                var sourceIDArray = getSourceIDs(deployment, source);
+
+                                // TODO kgomes do I need to check to make sure sourceIDArray has elements?
+
+                                // Now build the query
+                                var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, timestamp_utc, ancillary_source_id_fk, value from ancillary_data where (';
+                                for (var i = 0; i < sourceIDArray.length; i++) {
+                                    if (i > 0) {
+                                        query += ' OR';
+                                    }
+                                    query += ' ancillary_source_id_fk = ' + sourceIDArray[i];
+                                }
+                                query += ') and extract(epoch from timestamp_utc) > ' + latestEpoch;
+                                query += ' order by timestamp_utc asc'
+                                logger.debug("New query is: " + query);
+
+                                // Now write the data
+                                writeAncillaryData(filePath, query, sourceIDArray, function (err) {
+                                    logger.debug("Appending data complete", err);
+                                    // Find the index of the file path in the tracking array
+                                    var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                                    logger.debug("File path was found at index " + filePathIndex + ", will remove it");
+                                    self.ancillaryFilesBeingSyncd.slice(filePathIndex, 1);
+                                    if (callback)
+                                        callback(err);
+                                });
+                            } else {
+                                // The file already existed, but there was no latest epoch timestamp
+                                // found.  This should not really happen, so we will send back an error
+                                var errorMessage = 'While file ' + filePath + ' already exists, it did not seem ' +
+                                    ' to have any existing data.  That is very strange';
+                                logger.error(errorMessage);
+                                callback(new Error(errorMessage));
                             }
-                            query += ' ancillary_source_id_fk = ' + sourceIDArray[i];
-                        }
-                        query += ' order by timestamp_utc asc';
-                        logger.debug('Query string = ' + query);
-
-                        // Let's run the query
-                        pg.connect(self.pgConnectionString, function (err, client, done) {
+                        });
+                    } else {
+                        logger.debug('File ' + filePath + ' does not exist, will create it and write header');
+                        // Write the header to the file first
+                        writeHeader(deployment, source, filePath, function (err) {
+                            // Check for an error
                             if (err) {
-                                logger.error('Error caught trying to connect to DB');
-                                logger.error(err);
-                                sourceStream.end();
+                                logger.error("Error trying to write header: ", err);
                                 if (callback)
                                     callback(err);
                             } else {
-                                client.query(query, function (err, result) {
-                                    if (err) {
-                                        logger.error('Error running query');
-                                        logger.error(err);
-                                        sourceStream.end();
+                                // Grab sourceIDs
+                                var sourceIDArray = getSourceIDs(deployment, source);
+
+                                // TODO kgomes do I need to check for elements here?
+                                if (sourceIDArray) {
+                                    // Create the proper query to grab all the data
+                                    var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, timestamp_utc, ancillary_source_id_fk, value from ancillary_data where';
+                                    for (var i = 0; i < sourceIDArray.length; i++) {
+                                        if (i > 0) {
+                                            query += ' OR';
+                                        }
+                                        query += ' ancillary_source_id_fk = ' + sourceIDArray[i];
+                                    }
+                                    query += ' order by timestamp_utc asc';
+                                    logger.debug('Query string = ' + query);
+
+                                    // Now write the data
+                                    writeAncillaryData(filePath, query, sourceIDArray, function (err) {
+                                        logger.debug("Fresh data writing complete. Error? ", err);
+                                        // Find the index of the file path in the tracking array
+                                        var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                                        logger.debug("File path was found at index " + filePathIndex + ", will remove it");
+                                        self.ancillaryFilesBeingSyncd.slice(filePathIndex, 1);
                                         if (callback)
                                             callback(err);
-                                    } else {
-                                        logger.debug('Query came back with ' + result.rows.length + ' points');
-                                        if (result && result.rows && result.rows.length > 0) {
-                                            // A placeholder for the timestamp we are currently working with
-                                            var currentEpochSeconds = null;
-                                            var currentTimestamp = null;
-                                            var valueArray = [];
-                                            // Loop over all the rows
-                                            for (var i = 0; i < result.rows.length; i++) {
-                                                // Grab the values from the row
-                                                var tempEpochSeconds = result.rows[i]['epochseconds'];
-                                                var tempTimestamp = result.rows[i]['timestamp_utc'];
-                                                var tempAncSourceIDFK = result.rows[i]['ancillary_source_id_fk'];
-                                                var tempValue = result.rows[i]['value'];
-
-                                                // If it's the first row, save the timestamp
-                                                if (i === 0) {
-                                                    currentEpochSeconds = tempEpochSeconds;
-                                                    currentTimestamp = tempTimestamp;
-                                                }
-
-                                                // Now if the timestamp has changed, we need to write the row
-                                                if (tempEpochSeconds !== currentEpochSeconds) {
-                                                    var rowToWrite = currentEpochSeconds + ',' + currentTimestamp;
-                                                    for (var j = 0; j < valueArray.length; j++) {
-                                                        rowToWrite += ',';
-                                                        rowToWrite += valueArray[j];
-                                                    }
-                                                    sourceStream.write(rowToWrite + '\n');
-                                                    // Re-initialize things
-                                                    currentEpochSeconds = tempEpochSeconds;
-                                                    currentTimestamp = tempTimestamp;
-                                                    valueArray = [];
-                                                }
-                                                // Search for the index where the source id is located
-                                                var sourceIDIndex = sourceIDArray.indexOf(tempAncSourceIDFK);
-                                                // Insert the value there
-                                                if (sourceIDIndex >= 0) valueArray[sourceIDIndex] = tempValue;
-                                            }
-                                        }
-                                        sourceStream.end();
-                                        done();
-                                        if (callback)
-                                            callback(null);
-                                    }
-                                });
+                                    });
+                                } else {
+                                    var errorMessage = 'No source ID array was returned, that is just not right!';
+                                    logger.error(errorMessage);
+                                    if (callback) callback(new Error(errorMessage));
+                                }
                             }
                         });
-
                     }
                 });
-            });
+            }
+        }
+
+        // This function is a convenience function to return the sourceIDs
+        // associated with a deployment and source
+        function getSourceIDs(deployment, source) {
+            // The source IDs to return
+            var sourceIDs = [];
+
+            //  Make sure there is something there to examine
+            if (deployment && source && deployment.ancillary_data[source]) {
+
+                // Loop over the variable entries
+                for (var varEntry in deployment.ancillary_data[source]) {
+
+                    // Push the ID on the array
+                    sourceIDs.push(deployment.ancillary_data[source][varEntry]['source_id']);
+                }
+            }
+
+            // Return the result
+            return sourceIDs;
         }
 
         // This is a function that will write a header to a write stream
-        function writeHeader(deployment, source, openstream, callback) {
-            // The source IDs and their order are enforced in this array
-            var sourceIDs = [];
+        function writeHeader(deployment, source, filePath, callback) {
+            // Now create a stream writer
+            var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
+
+            // Add the event handler to send the call back when the stream finished
+            sourceStream.on('finish', function () {
+                logger.debug('Header writing complete');
+                if (callback)
+                    callback(null);
+            });
 
             // The header
             var headerText = 'Timestamp(Epoch Seconds),Datetime';
@@ -1042,22 +1132,102 @@ function DataAccess(opts) {
             for (var varEntry in deployment.ancillary_data[source]) {
                 logger.debug('Dealing with varEntry ', varEntry);
 
-                // Push the ID on the array
-                sourceIDs.push(deployment.ancillary_data[source][varEntry]['source_id']);
-
                 // Append the header text (adding comma if not the first entry)
                 headerText += ',' + deployment.ancillary_data[source][varEntry]['var_long_name'] +
                     ' (' + deployment.ancillary_data[source][varEntry]['units'] + ')';
             }
-            logger.debug('sourceIDs: ', sourceIDs);
             logger.debug('headerText: ', headerText);
+
             // Now write it
-            openstream.write(headerText + '\n', function (err) {
+            sourceStream.write(headerText + '\n', function (err) {
+                // End the stream
+                sourceStream.end();
+
+                // Depending on the result, send it back to the caller
                 if (err) {
-                    callback(err);
-                } else {
-                    callback(null, sourceIDs);
+                    logger.error('Error writing header to file: ', err);
                 }
+            });
+        }
+
+        // This is a function that reads data from the ancillary database and appends to
+        // the file specified.
+        function writeAncillaryData(filePath, query, sourceIDArray, callback) {
+            // Now create a stream writer
+            var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
+
+            // When the finish event occurs, send the callback
+            sourceStream.on('finish', function () {
+                logger.debug("All writing finished");
+                if (callback)
+                    callback(null);
+            });
+
+            // Open it and start writing
+            sourceStream.once('open', function (fd) {
+                // Let's run the query
+                pg.connect(self.pgConnectionString, function (err, client, done) {
+                    if (err) {
+                        logger.error('Error caught trying to connect to DB');
+                        logger.error(err);
+                        sourceStream.end();
+                        if (callback)
+                            callback(err);
+                    } else {
+                        client.query(query, function (err, result) {
+                            if (err) {
+                                logger.error('Error running query');
+                                logger.error(err);
+                                sourceStream.end();
+                                if (callback)
+                                    callback(err);
+                            } else {
+                                logger.debug('Query came back with ' + result.rows.length + ' points');
+                                if (result && result.rows && result.rows.length > 0) {
+                                    // A placeholder for the timestamp we are currently working with
+                                    var currentEpochSeconds = null;
+                                    var currentTimestamp = null;
+                                    var valueArray = [];
+                                    // Loop over all the rows
+                                    for (var i = 0; i < result.rows.length; i++) {
+                                        // Grab the values from the row
+                                        var tempEpochSeconds = result.rows[i]['epochseconds'];
+                                        var tempTimestamp = result.rows[i]['timestamp_utc'];
+                                        var tempAncSourceIDFK = result.rows[i]['ancillary_source_id_fk'];
+                                        var tempValue = result.rows[i]['value'];
+
+                                        // If it's the first row, save the timestamp
+                                        if (i === 0) {
+                                            currentEpochSeconds = tempEpochSeconds;
+                                            currentTimestamp = tempTimestamp;
+                                        }
+
+                                        // Now if the timestamp has changed, we need to write the row
+                                        if (tempEpochSeconds !== currentEpochSeconds) {
+                                            var rowToWrite = currentEpochSeconds + ',' + currentTimestamp;
+                                            for (var j = 0; j < valueArray.length; j++) {
+                                                rowToWrite += ',';
+                                                rowToWrite += valueArray[j];
+                                            }
+                                            sourceStream.write(rowToWrite + '\n');
+                                            // Re-initialize things
+                                            currentEpochSeconds = tempEpochSeconds;
+                                            currentTimestamp = tempTimestamp;
+                                            valueArray = [];
+                                        }
+                                        // Search for the index where the source id is located
+                                        var sourceIDIndex = sourceIDArray.indexOf(tempAncSourceIDFK);
+                                        // Insert the value there
+                                        if (sourceIDIndex >= 0) valueArray[sourceIDIndex] = tempValue;
+                                    }
+                                    logger.debug("Done looping over rows");
+                                }
+                                sourceStream.end();
+                                done();
+                            }
+                        });
+                    }
+                });
             });
         }
     }

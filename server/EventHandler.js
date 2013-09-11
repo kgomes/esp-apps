@@ -121,7 +121,9 @@ function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
     this.handleAncillaryDataPersisted = function(eventData) {
         logger.debug("Got event that ancillary data was persisted from deployment " +
             eventData.deployment.name + ' using basedir ' + me.baseDir);
-        dataAccess.syncAncillaryDataFileWithDatabase(eventData.deployment, me.baseDir);
+        dataAccess.syncAncillaryDataFileWithDatabase(eventData.deployment, me.baseDir, function(err, result){
+           logger.debug("syncAncillaryDataFileWithDatabase callback called");
+        });
     };
 }
 

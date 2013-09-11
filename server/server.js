@@ -29,7 +29,7 @@ var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions);
 
 // Create the object that will be responsible for handling the
 // synchronization of files from FTP servers
-var ftp = require('./FTPSync').createFTPSync(espCfg.ftpSyncOptions);
+var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions);
 
 // The directory where the esp applications and data live
 var espDataDir = espCfg.dataDir;
@@ -44,7 +44,7 @@ var appServer = require('./AppServer').createAppServer(da, espCfg.appServerOptio
 var io = io.listen(appServer.getServer());
 
 // Create an event handler
-require('./EventHandler').createEventHandler(io, ftp, da, lp, espCfg.dataDir, espCfg.eventHandlerOptions);
+require('./EventHandler').createEventHandler(io, dfs, da, lp, espCfg.dataDir, espCfg.eventHandlerOptions);
 
 // Go ahead and call the first processing of deployments since we are in start
 try {
@@ -89,7 +89,7 @@ function processDeployment(deployment) {
         deployment.esp.ftp_working_dir &&
         espDataDir) {
         try {
-            ftp.syncDeployment(deployment, espDataDir, function (error) {
+            dfs.syncDeployment(deployment, espDataDir, function (error) {
                 if (error) {
                     logger.error('Error returned from FTP sync for deployment ' + deployment.name);
                     logger.error(error);
