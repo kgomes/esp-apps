@@ -242,8 +242,13 @@ function GraphPanelController($scope, $http, espSharedService) {
                         // Create a new axis
                         var newaxis = {
                             id: objkey,
-                            title: seriesName + "(" + seriesUnits + ")"
+                            title: espName + " " + seriesName + "(" + seriesUnits + ")"
                         };
+
+                        // If the data is depth, invert the axis
+                        if (seriesName.indexOf("Depth") >= 0 || seriesName.indexOf("depth") >=0 ) {
+                            newaxis.reversed = true;
+                        }
 
                         // Add the new axis to the chart
                         $scope.chart.addAxis(newaxis);
