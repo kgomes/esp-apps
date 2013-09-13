@@ -205,6 +205,7 @@ function GraphPanelController($scope, $http, espSharedService) {
                 // We need to grab some information from the deployment to graph things properly
                 var starttime = null;
                 var endtime = null;
+                var espName = null;
                 var sourceName = null;
                 var seriesName = null;
                 var seriesUnits = null;
@@ -221,6 +222,7 @@ function GraphPanelController($scope, $http, espSharedService) {
                         // Loop over the ancillary sources
                         for (var j = 0; j < espSharedService.getSelectedDeployments()[i].anc_source_array.length; j++) {
                             if (espSharedService.getSelectedDeployments()[i].anc_source_array[j].source_id == sourceID) {
+                                espName = espSharedService.getSelectedDeployments()[i].esp.name;
                                 sourceName = espSharedService.getSelectedDeployments()[i].anc_source_array[j].source;
                                 seriesName = espSharedService.getSelectedDeployments()[i].anc_source_array[j].var_long_name;
                                 seriesUnits = espSharedService.getSelectedDeployments()[i].anc_source_array[j].units;
@@ -248,7 +250,7 @@ function GraphPanelController($scope, $http, espSharedService) {
 
                         // Now create a new series of data from the reply from the server
                         var newSeries = {
-                            name: sourceName + " " + seriesName + " (" + seriesUnits + ")",
+                            name: espName + " " + sourceName + " " + seriesName + " (" + seriesUnits + ")",
                             tooltip: {
                                 valueDecimals: 2
                             },
