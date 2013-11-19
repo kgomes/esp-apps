@@ -1,0 +1,28 @@
+<div class='row image-details-row'>
+    <div class="col-md-5 image-details-list">
+        <table class='table table-hover'>
+            <thead>
+            <tr>
+                <th class="image-datetime-col">Timestamp</th>
+                <th class="image-name-col">Name</th>
+                <th class="image-exposure-col">Exposure (sec)</th>
+                <th class="image-download-col">Download</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(timestamp,image) in images" ng-click="handleClick(timestamp)">
+                <td class="image-datetime-col">{{timestamp | date:'MM/dd/yyyy HH:mm'}}</td>
+                <td class="image-name-col">{{image.imageFilename}}</td>
+                <td class="image-exposure-col">{{image.exposure}}</td>
+                <td class="image-download-col"><a ng-show="image.downloaded" ng-href="{{image.tiffUrl}}" class="btn btn-sm icon-download-alt"/></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-7 image-details-image">
+        <div class="image-details-image-name">{{selectedImageName}}</div>
+        B:<div id="selected-image-brightness-slider"></div>
+        C:<div id="selected-image-contrast-slider"></div>
+        <span id="selected-image-canvas"></span>
+    </div>
+</div>

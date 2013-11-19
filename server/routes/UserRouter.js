@@ -61,7 +61,7 @@ function UserRouter(dataAccess, opts) {
         // Verify there is an ID first
         if (req.params.id) {
             logger.debug("Will look for user with ID " + req.params.id);
-            me.dataAccess.getUserById(req.params.id, function (err, responise) {
+            me.dataAccess.getUserById(req.params.id, function (err, response) {
                if (err){
                    // TODO kgomes: handle this error
                } else {

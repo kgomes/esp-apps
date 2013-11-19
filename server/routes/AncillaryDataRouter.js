@@ -29,35 +29,36 @@ function AncillaryDataRouter(dataAccess, opts) {
     this.getAncillaryData = function (req, res) {
         logger.debug('getAncillaryData called');
 
-        // Grab the URL params
-        var url_parts = url.parse(req.url, true);
-        var query = url_parts.query;
+        // Grab any params from the URL
+        var sourceID = req.params.sourceID;
 
-        // Look for 'sourceid', 'starttime', 'endtime'
-        var sourceId = query.sourceid;
-        var startTime = query.starttime;
-        var endTime = query.endtime;
-        var format = query.format;
-        logger.debug(sourceId + ',' + startTime + ',' + endTime + ',' + format);
+        // Now any filtering query params
+        var startDate = req.query.startDate;
+        var endDate = req.query.endDate;
+
+        // And any formatting params
+        var format = req.query.format;
+
+        logger.debug(sourceID + ',' + startDate + ',' + endDate + ',' + format);
 
         // Set the response to JSON
         res.contentType('application/json');
 
         // Make sure we have a source ID that is a number
         var sourceIDInt = null;
-        if (sourceId) {
+        if (sourceID) {
             try {
-                sourceIDInt = parseInt(sourceId);
+                sourceIDInt = parseInt(sourceID);
                 logger.debug('Source ID int = ' + sourceIDInt);
             } catch (error) {
-                logger.warn('Could not convert sourceid ' + sourceId + ' to integer');
+                logger.warn('Could not convert sourceID ' + sourceID + ' to integer');
             }
         }
 
         // TODO validate the timestamps
         if (sourceIDInt) {
             logger.debug('Going to the DB');
-            me.dataAccess.getAncillaryData(sourceIDInt, startTime, endTime, format, function (err, data) {
+            me.dataAccess.getAncillaryData(sourceIDInt, startDate, endDate, format, function (err, data) {
                 logger.debug('data access replied');
                 if (err) {
                     logger.error('Error on reply');
@@ -68,7 +69,6 @@ function AncillaryDataRouter(dataAccess, opts) {
                 }
             });
         } else {
-
             // Now send the response
             res.send('[]');
         }

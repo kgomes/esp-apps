@@ -54,7 +54,7 @@ function AppServer(dataAccess, opts) {
         me.server.use(connect.bodyParser());
         me.server.use(express.cookieParser());
         me.server.use(express.session({ secret: 'shhhhhhhhh!'}));
-        me.server.use(connect.static(__dirname + '/../static'));
+        me.server.use(connect.static(__dirname + '/../app'));
         me.server.use(passport.initialize());
         me.server.use(passport.session());
         me.server.use(me.server.router);
@@ -66,9 +66,8 @@ function AppServer(dataAccess, opts) {
             logger.warn('File not found: ');
             logger.warn(err);
             logger.warn("req: ", req);
-            logger.warn("res: ", res);
         } else {
-            logger.warn(err);
+            logger.warn("Error caught in handler:", err);
         }
     });
 
@@ -181,26 +180,53 @@ function AppServer(dataAccess, opts) {
     // Define all the routes
     // **********************************************
 
+    // A route for returning the list of deployments
+    this.server.get('/deployments', this.deploymentRouter.getDeployments);
+
+    // A route to just get a specific deployment by it's ID
+    this.server.get('/deployments/:id', this.deploymentRouter.getDeploymentByID);
+
+    // A route to grab the error list associated with a specific ID
+    this.server.get('/deployments/:id/errors', this.deploymentRouter.getDeploymentErrors);
+
+    // A route to grab the protocolRuns list associated with a specific ID
+    this.server.get('/deployments/:id/protocolRuns', this.deploymentRouter.getDeploymentProtocolRuns);
+
+    // A route to grab the sample list associated with a specific ID
+    this.server.get('/deployments/:id/samples', this.deploymentRouter.getDeploymentSamples);
+
+    // A route to grab the image list associated with a specific ID
+    this.server.get('/deployments/:id/images', this.deploymentRouter.getDeploymentImages);
+
+    // A route to grab the data values for a specific column name for a specific start time of a specific run
+    // name of a specific pcr type associated with a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType/:runName/:epochSecs/:columnName', this.deploymentRouter.getDeploymentPCRDataRecords);
+
+    // A route to grab the list of column names for a specific start time of a specific run name of a
+    // specific pcr type associated with a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType/:runName/:epochSecs', this.deploymentRouter.getDeploymentPCRColumnNames);
+
+    // A route to grab the list of epochseconds which are the start times associated with a specific
+    // run name of a specific pcr type on a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType/:runName', this.deploymentRouter.getDeploymentPCREpochSeconds);
+
+    // A route to grab the list of run names that happened on a specific PCR type on a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType', this.deploymentRouter.getDeploymentPCRRunNames);
+
+    // A route to grab the list of pcr type run on a specific deployment
+    this.server.get('/deployments/:id/pcrs', this.deploymentRouter.getDeploymentPCRTypes);
+
+    // A router to get a listing of all the ESPs
+    this.server.get('/esps', this.espRouter.getESPs);
+
+    // A route for ancillary data
+    this.server.get('/ancdata/:sourceID', this.ancillaryDataRouter.getAncillaryData);
+
     // A route to get a list of all users
     this.server.get('/users', this.userRouter.getUsers);
 
     // A route to get a specific user
     this.server.get('/users/:id', this.userRouter.getUserById);
-
-    // A router to get a listing of all the ESPs
-    this.server.get('/esps', this.espRouter.getESPs);
-
-    // A router to handle the list of just the ESP names
-    this.server.get('/esps/names', this.espRouter.getESPNames);
-
-    // A route for returning the list of deployments
-    this.server.get('/deployments', this.deploymentRouter.getDeployments);
-
-    // A route to just get the names of all deployments
-    this.server.get('/deployments/names', this.deploymentRouter.getDeploymentNames);
-
-    // A route for ancillary data
-    this.server.get('/ancdata', this.ancillaryDataRouter.getAncillaryData);
 
     // A Route for Creating a 500 Error (Useful to keep around)
     this.server.get('/500', function (req, res) {

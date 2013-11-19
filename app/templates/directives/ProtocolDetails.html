@@ -1,0 +1,24 @@
+<div class='protocol-details-table'>
+    <table class='table table-bordered'>
+        <thead>
+        <tr>
+            <th class="protocol-run-date-col">Date</th>
+            <th class="protocol-run-time-col">Time</th>
+            <th class="protocol-run-zone-col">Zone</th>
+            <th class="protocol-run-name-col">Name</th>
+            <th class="protocol-run-volume-col">Target Volume (ml)</th>
+            <th class="protocol-run-actor-col">Run By</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="(timestamp,protocolRun) in protocolRuns">
+            <td class="protocol-run-date-col">{{timestamp | date:'MM/dd/yyyy'}}</td>
+            <td class="protocol-run-time-col">{{timestamp | date:'HH:mm:ss'}}</td>
+            <td class="protocol-run-zone-col">{{timestamp | date:'Z'}}</td>
+            <td class="protocol-run-name-col">{{protocolRun.name}}</td>
+            <td class="protocol-run-volume-col">{{protocolRun.targetVol}}</td>
+            <td class="protocol-run-actor-col">{{protocolRun.actor}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

@@ -47,6 +47,9 @@ function LogParser(dataAccess, dataDir, opts) {
     // The temporary directory from the configuration
     this.tempDirectory = opts.tempDir;
 
+    // This is the number of ancillary data records to batch process
+    this.numberOfAncillaryRecordsToBatch = opts.numberOfAncillaryRecordsToBatch;
+
     // Check for the flag about whether or not to try and use the timestamps from the ancillary instruments.
     // Use a default of true however
     this.useAncillaryTimestamps = true;
@@ -61,12 +64,15 @@ function LogParser(dataAccess, dataDir, opts) {
     this.ancillaryPattern = new RegExp(/^Can@.*/);
     this.ancillarySplitPattern = new RegExp(/^(\S+)@(\d{2}):(\d{2}):(\d{2}),(.*)$/);
     this.ancillaryDataPattern = new RegExp(/^(-*\d+\.*\d*)(.*)$/);
-    this.processRunStartPattern = new RegExp(/^(\S+) sampling at most (\d+\.*\d*)ml(.*)/);
+    this.protocolRunStartPattern = new RegExp(/^(\S+) sampling at most (\d+\.*\d*)ml(.*)/);
     this.dwsmSampleStartPattern = new RegExp(/^Sample Bag inhaling\s+(\d+\.*\d*)ml.*$/);
     this.dwsmSampleEndPattern = new RegExp(/^Waiting up to (\d+)s for Sample Bag to stabilize.*$/);
     this.sampleStartPattern = new RegExp(/^Sampling\s+(\d+\.*\d*)ml.*$/);
     this.sampleStopPattern = new RegExp(/^Sampled\s+(\d+\.*\d*)ml.*$/);
     this.imagePattern = new RegExp(/Exposing\s+(\d+)x(\d+)\s+pixel\s+(\d+)-bit\s+image\s+for\s+(\d+\.*\d+)\s+seconds\\(.*\/)([a-zA-Z0-9]+\.tif)/);
+    this.pcrStartPattern = new RegExp(/Setting up PCR for (\S+) -- writing (\S+\.pcr)/);
+    this.pcrStopPattern = new RegExp(/PCR for (\S+) completed -- closed (\S+\.pcr)/);
+
 
     // An object that holds the current list of log files (that point to an associated deployment)
     // that still need to ge parsed
@@ -93,7 +99,7 @@ function LogParser(dataAccess, dataDir, opts) {
     // let asynchronous parallel processing of these files happen.
     // ********************************************************************************************
     this.submitLogFileForParsing = function (deployment, logFile, callback) {
-        logger.debug("submitLogFileForParsing called with deployment " + deployment.name +
+        logger.info("submitLogFileForParsing called with deployment " + deployment.name +
             " of esp " + deployment.esp.name + " and log file " + logFile);
 
         // Check the parameters first
@@ -105,14 +111,14 @@ function LogParser(dataAccess, dataDir, opts) {
         } else {
             // Check to see if the logFile is already in the queue, if not, add it
             if (!me.logFileParseQueue[logFile]) {
-                logger.debug(deployment.esp.name + ":" + deployment.name + ":" + logFile +
+                logger.info(deployment.esp.name + ":" + deployment.name + ":" + logFile +
                     " needs parsing, adding to queue.");
                 me.logFileParseQueue[logFile] = [deployment, logFile, callback];
 
                 // Call the method to process log files
                 processLogFileOffQueue();
             } else {
-                logger.debug(deployment.esp.name + ":" + deployment.name + ":" + logFile +
+                logger.info(deployment.esp.name + ":" + deployment.name + ":" + logFile +
                     " is already queued for parsing, will ignore this call");
             }
         }
@@ -136,12 +142,13 @@ function LogParser(dataAccess, dataDir, opts) {
 
                     // Remove it from the queue
                     delete me.logFileParseQueue[parsingLogFile];
-                    logger.debug("Starting the parse of log file " + parsingLogFile +
+                    logger.info("Starting the parse of log file " + parsingLogFile +
                         " for deployment " + parsingDeployment.name + " of ESP " + parsingDeployment.esp.name);
 
                     // To make sure I have the most updated deployment information, grab the most
                     // recent from the database
-                    dataAccess.getDeploymentByID(parsingDeployment._id, function (err, refreshedDeployment) {
+                    me.dataAccess.getDeploymentByID(parsingDeployment._id, true, function (err, refreshedDeployment) {
+                        logger.info("Retrieved deployment from data store:", refreshedDeployment);
 
 
                         // Now the first thing to do is create a temporary file
@@ -153,49 +160,20 @@ function LogParser(dataAccess, dataDir, opts) {
                                 return;
                             } else {
                                 // OK, temp file successfully created
-                                logger.debug("Will parse temporary file " + tempFile);
+                                logger.info("Will parse temporary file " + tempFile);
 
                                 // Call the method to parse the log file, which will return an updated deployment
                                 // and an array of ancillary data that was found in the log file.
                                 parseLogFile(refreshedDeployment, tempFile, function (err, updatedDeployment, ancillaryDataArray) {
                                     // Check for an error
                                     if (err) {
-                                        // Send the error to the callback and bail out
-                                        cleanUpAfterParsing(err, refreshedDeployment, tempFile);
-                                        return;
-                                    } else {
-                                        // Things seem to have processed properly, so update the
-                                        // deployment information in database
-                                        logger.info('LogParser calling persistDeployment on ' + updatedDeployment.name + '(rev=' + updatedDeployment._rev + ')');
-                                        me.dataAccess.persistDeployment(updatedDeployment, function (err, persistedDeployment) {
-                                            // Check for errors
-                                            if (err) {
-                                                // Send the error to the callback and bail out
-                                                cleanUpAfterParsing(err, refreshedDeployment, tempFile);
-                                                return;
-                                            } else {
-                                                // Now persist ancillary data if there is any
-                                                if (ancillaryDataArray.length > 0) {
-                                                    logger.debug("There are " + ancillaryDataArray.length + " ancillary records to write to the DB");
-                                                    me.dataAccess.insertAncillaryDataArray(persistedDeployment, ancillaryDataArray,
-                                                        function (err, updatedDeployment) {
-                                                            logger.debug("Got callback from insertAncillaryDataArray");
-                                                            if (err) {
-                                                                logger.error("Something went wrong inserting the ancillary data in the DB");
-                                                                logger.error(err);
-                                                            }
-                                                            // Send the error to the callback and bail out
-                                                            cleanUpAfterParsing(err, refreshedDeployment, tempFile);
-                                                            return;
-                                                        });
-                                                } else {
-                                                    cleanUpAfterParsing(err, refreshedDeployment, tempFile);
-                                                    return;
-                                                }
-                                            }
-                                        });
-
+                                        logger.error("Error during parsing of log file!", err);
                                     }
+
+                                    // Clean up everything
+                                    cleanUpAfterParsing(err, refreshedDeployment, tempFile);
+                                    return;
+
                                 });
                             }
                         });
@@ -272,8 +250,11 @@ function LogParser(dataAccess, dataDir, opts) {
             // entries that span more than one line
             var lineSegments = [];
 
-            // Create an array to store all the ancillary data to write to the DB
-            var ancillaryDataStorageArray = [];
+            // This is the object to track Samples that is kept locally to make sure all start and stop
+            // of samples are accurately recorded.  This had to be done because samples span
+            // multiple lines and with asynchronous commits, things can happen out of order and
+            // the sample parsing gets all messed up.
+            var samplesBeingParsed = {};
 
             // Create the read stream
             var fileReadStream = fs.createReadStream(logFile);
@@ -289,62 +270,99 @@ function LogParser(dataAccess, dataDir, opts) {
                 // Log out end of file read
                 logger.debug("Completed reading of file " + logFile);
 
+                // Commit any left over samples that might not have ended in the log file.
+                for (var sampleTS in samplesBeingParsed) {
+                    me.dataAccess.addOrUpdateSample(deployment._id, sampleTS, samplesBeingParsed[sampleTS], function (err) {
+                        logger.error("Error returned while trying to save a sample that was not processed yet:", err);
+                    });
+                }
+
+                // Flush the ancillary data in data access
+                me.dataAccess.flushAncillaryDataRecords(deployment._id, deployment.esp.name, me.dataDir, function (err) {
+                    // If there was an error log it
+                    if (err) {
+                        logger.error("Error trapped trying to flush the rest of the ancillary data:", err);
+                    } else {
+                        logger.debug("Last records should be flushed and deployment and CSV files should be updated");
+                    }
+                });
+
+                // Set the line number where we ended to the last line parsed for the deployment
+                me.dataAccess.setLastLineParsedInLogFile(deployment._id, lineNumber);
+
                 // Return the updated deployment and ancillary data array to the callback
-                callback(null, deployment, ancillaryDataStorageArray);
+                callback(null, deployment, null);
 
             });
 
-            // Now loop over the lines in the log file
-            new lazy(fileReadStream)
-                .lines
-                .forEach(function (line) {
-
-                    // Bump Line Number
-                    lineNumber++;
-
-                    // Look for a line continuation character
-                    if (line[line.length - 1] !== 92) {
-                        // Push it on the stack
-                        lineSegments.push(line);
-
-                        // Concatenate the line segment and process the log entry
-                        var tempTimestampUTC = processLogEntry(lineNumber, Buffer.concat(lineSegments),
-                            timestampUTC, deployment, ancillaryDataStorageArray, processedDataLocation);
-
-                        // If a timestamp was returned, update the last known timestamp
-                        if (tempTimestampUTC) {
-
-                            // Set the timestamp to the one that was parsed
-                            timestampUTC = tempTimestampUTC;
-
-                            // Make sure we are keeping track of the last line that we parsed from the log file
-                            if (!deployment.last_line_parse_from_log_file ||
-                                deployment.last_line_parse_from_log_file < lineNumber) {
-                                deployment.last_line_parse_from_log_file = lineNumber;
-                            }
-
-                            // Just log if the time seems to go backwards
-                            if (timestampUTC && tempTimestampUTC.diff(timestampUTC) < 0) {
-                                logger.warn("TIME WENT BACKWARDS!!!!");
-                                logger.warn("Line " + lineNumber + "->" + line);
-                                logger.warn("OLD:" + timestampUTC.format());
-                                logger.warn("NEW:" + tempTimestampUTC.format());
-                            }
-                        }
-
-                        // Clear the line segment array
-                        lineSegments = [];
-                    } else {
-                        // Push the segment on the stack, but remove the line continuation
-                        lineSegments.push(line.slice(0, line.length));
-                    }
+            // Before we start parsing, grab the most recent sample from the stored deployment and if
+            // there is no end time, add it to the local array of samples being parsed as it is likely the
+            // end of the sample will come up first during this parsing
+            me.dataAccess.getLatestSample(deployment._id, function (err, latestSample, latestSampleTS) {
+                // Check for an error first
+                if (err) {
+                    // Log it, but keep going, not having a latest sample may not be the end of the world
+                    logger.error("Error caught trying to get latest sample");
                 }
-            );
+
+                // If a sample was returned and it has no end timestamp, add it to the array of samples that
+                // are being parsed as it is was most likely started in the last parsing, but never finished
+                if (latestSample && !latestSample.endts && latestSampleTS) {
+                    samplesBeingParsed[latestSampleTS] = latestSample;
+                }
+
+                // Now loop over the lines in the log file
+                new lazy(fileReadStream)
+                    .lines
+                    .forEach(function (line) {
+
+                        // Bump Line Number
+                        lineNumber++;
+
+                        // Look for a line continuation character
+                        if (line[line.length - 1] !== 92) {
+                            // Push it on the stack
+                            lineSegments.push(line);
+
+                            // Concatenate the line segment and process the log entry
+                            var tempTimestampUTC = processLogEntry(lineNumber, Buffer.concat(lineSegments),
+                                timestampUTC, deployment, samplesBeingParsed);
+
+                            // If a timestamp was returned, update the last known timestamp
+                            if (tempTimestampUTC) {
+
+                                // Set the timestamp to the one that was parsed
+                                timestampUTC = tempTimestampUTC;
+
+                                // Make sure we are keeping track of the last line that we parsed from the log file
+                                if (!deployment.lastLineParsedFromLogFile ||
+                                    deployment.lastLineParsedFromLogFile < lineNumber) {
+                                    deployment.lastLineParsedFromLogFile = lineNumber;
+                                }
+
+                                // Just log if the time seems to go backwards
+                                if (timestampUTC && tempTimestampUTC.diff(timestampUTC) < 0) {
+                                    logger.warn("TIME WENT BACKWARDS!!!!");
+                                    logger.warn("Line " + lineNumber + "->" + line);
+                                    logger.warn("OLD:" + timestampUTC.format());
+                                    logger.warn("NEW:" + tempTimestampUTC.format());
+                                }
+                            }
+
+                            // Clear the line segment array
+                            lineSegments = [];
+                        } else {
+                            // Push the segment on the stack, but remove the line continuation
+                            lineSegments.push(line.slice(0, line.length));
+                        }
+                    }
+                );
+            });
         }
 
 
         // This is the function that will process a line from the log file and return a timestamp
-        function processLogEntry(lineNumber, completeLineBuffer, lastTimestampUTC, deployment, ancillaryDataStorageArray, processedDataLocation) {
+        function processLogEntry(lineNumber, completeLineBuffer, lastTimestampUTC, deployment, samplesBeingParsed) {
 
             //logger.trace("Line " + lineNumber + "->" + completeLineBuffer.toString());
 
@@ -451,7 +469,7 @@ function LogParser(dataAccess, dataDir, opts) {
             } else {
 
                 // If the entry is before the last line already parsed, skip processing it
-                if (lineNumber > deployment.last_line_parse_from_log_file) {
+                if (lineNumber > deployment.lastLineParsedFromLogFile) {
 
                     // Check to see what type of log entry it is based on the first byte
                     var bodyIndex = 0;
@@ -477,29 +495,35 @@ function LogParser(dataAccess, dataDir, opts) {
                     // Do pattern matching for all possibilities
                     var errorMatches = bodyBuffer.toString().match(me.errorPattern);
                     var ancillaryMatches = bodyBuffer.toString().match(me.ancillaryPattern);
-                    var processRunStartMatches = bodyBuffer.toString().match(me.processRunStartPattern);
+                    var protocolRunStartMatches = bodyBuffer.toString().match(me.protocolRunStartPattern);
                     var dwsmSampleStartMatches = bodyBuffer.toString().match(me.dwsmSampleStartPattern);
                     var dwsmSampleEndMatches = bodyBuffer.toString().match(me.dwsmSampleEndPattern);
                     var sampleStartMatches = bodyBuffer.toString().match(me.sampleStartPattern);
                     var sampleEndMatches = bodyBuffer.toString().match(me.sampleStopPattern);
                     var imageMatches = bodyBuffer.toString().match(me.imagePattern);
+                    var pcrStartMatches = bodyBuffer.toString().match(me.pcrStartPattern);
+                    var pcrStopMatches = bodyBuffer.toString().match(me.pcrStopPattern);
 
                     // Now handle the various entry types, starting with errors
                     if (errorMatches && errorMatches.length > 0) {
                         logger.trace("Line " + lineNumber + "->" + completeLineBuffer.toString());
                         logger.trace("Error found.");
-                        // Quick check to make sure there is an error object
-                        if (!deployment.errors) deployment.errors = {};
 
-                        // Check to see if the error was already entered at this time
-                        if (!deployment.errors[lastTimestampUTC.valueOf()]) {
-                            // Add the error
-                            deployment.errors[lastTimestampUTC.valueOf()] = {
-                                actor: me.currentActor,
-                                subject: errorMatches[2],
-                                message: errorMatches[1]
-                            };
-                        }
+                        // Create a new error object
+                        var newError = {
+                            actor: me.currentActor,
+                            subject: errorMatches[2],
+                            message: errorMatches[1]
+                        };
+
+                        // Now add or update it
+                        me.dataAccess.addOrUpdateError(deployment._id, lastTimestampUTC.valueOf(), newError,
+                            function (err) {
+                                if (err)
+                                    logger.error("Error trying to add new error to deployment at timestamp " +
+                                        lastTimestampUTC.valueOf(), err);
+                            });
+
                     } else if (ancillaryMatches && ancillaryMatches.length > 0) {
                         // TODO figure out how we are going to write to a file for downloading (or pull from URL)
 
@@ -510,14 +534,14 @@ function LogParser(dataAccess, dataDir, opts) {
                             logger.trace("Dealing with AncillaryData entry: " + entries[i]);
 
                             // Make sure the deployment has the appropriate ancillary sources attached
-                            addAncillarySourcesToDeployment(deployment, entries[i]);
+                            //addAncillarySourcesToDeployment(deployment, entries[i]);
 
                             // Split the source, hours, minutes and seconds from the data
                             var ancillarySplitMatches = entries[i].match(me.ancillarySplitPattern);
                             if (ancillarySplitMatches && ancillarySplitMatches.length > 0) {
                                 logger.trace("Line " + lineNumber + "->" + completeLineBuffer.toString());
                                 // Grab the source
-                                var source_name = ancillarySplitMatches[1];
+                                var sourceName = ancillarySplitMatches[1];
 
                                 // Grab the hours minutes and seconds from the ancillary record
                                 // NOTE THESE ARE IN THE TIMEZONE OF THE ESP, NOT UTC
@@ -530,10 +554,9 @@ function LogParser(dataAccess, dataDir, opts) {
                                 logTimestampLocal.zone(me.timezoneOffset);
                                 logTimestampLocal.local();
 
-                                logger.trace("Log->UTC: " + lastTimestampUTC.format());
-                                logger.trace("Timezone: " + me.timezoneOffset);
-                                logger.trace("Log->Local: " + logTimestampLocal.format());
-                                logger.trace("Anc->HH:mm:ss = " + ancHourLocal + ":" + ancMinuteLocal + ":" + ancSecondLocal);
+                                logger.trace("TS:Log->UTC=" + lastTimestampUTC.format() +
+                                    ",TZ: " + me.timezoneOffset + ",Log->Local: " + logTimestampLocal.format() +
+                                    ",Anc->HH:mm:ss = " + ancHourLocal + ":" + ancMinuteLocal + ":" + ancSecondLocal);
 
                                 // Make another copy of the local timestamp so we can make sure the ancillary data
                                 // timestamp doesn't jump ahead of the log timestamp
@@ -543,11 +566,12 @@ function LogParser(dataAccess, dataDir, opts) {
                                 ancillaryTimestamp.hour(ancHourLocal);
                                 ancillaryTimestamp.minute(ancMinuteLocal);
                                 ancillaryTimestamp.second(ancSecondLocal);
-                                logger.trace("Anc->Local: " + ancillaryTimestamp.format());
+                                logger.trace();
 
                                 // Now convert the ancillary local timestamp to UTC
                                 ancillaryTimestamp.utc();
-                                logger.trace("Anc->UTC: " + ancillaryTimestamp.format());
+                                logger.trace("Anc->Local: " + ancillaryTimestamp.format() +
+                                    ",Anc->UTC: " + ancillaryTimestamp.format());
 
                                 // OK, let's calculate the difference in the ancillary timestamp and the log timestamp
                                 var diffSeconds = ancillaryTimestamp.diff(lastTimestampUTC, 'seconds');
@@ -567,15 +591,15 @@ function LogParser(dataAccess, dataDir, opts) {
                                     logger.trace("Instrument clock is " + diffSeconds + " behind ESP clock");
                                     // If the clock is less than 10 minutes behind the ESP clock
                                     if (Math.abs(diffSeconds) > (10 * 60)) {
-                                        logger.debug("Instrument clock is more than 10 seconds behind ESP clock, will use ESP timestamp");
-                                        logger.debug("Log->UTC: " + lastTimestampUTC.format());
-                                        logger.debug("Anc->UTC: " + ancillaryTimestamp.format());
+                                        logger.trace("Instrument clock is more than 10 seconds behind ESP clock, will use ESP timestamp");
+                                        logger.trace("Log->UTC: " + lastTimestampUTC.format());
+                                        logger.trace("Anc->UTC: " + ancillaryTimestamp.format());
                                         ancillaryTimestamp = moment(lastTimestampUTC);
                                     }
                                 } else if (diffSeconds > 0) {
-                                    logger.debug("Instrument clock is AHEAD of ESP clock");
-                                    logger.debug("Log->UTC: " + lastTimestampUTC.format());
-                                    logger.debug("Anc->UTC: " + ancillaryTimestamp.format());
+                                    logger.trace("Instrument clock is AHEAD of ESP clock");
+                                    logger.trace("Log->UTC: " + lastTimestampUTC.format());
+                                    logger.trace("Anc->UTC: " + ancillaryTimestamp.format());
                                     // Now if the clock is more than 12 hours ahead, first subtract a day as this
                                     // could be a day rollover
                                     if (diffSeconds > (12 * 60 * 60)) {
@@ -583,11 +607,11 @@ function LogParser(dataAccess, dataDir, opts) {
                                         // Now check to see if the timestamp is within 10 minutes behind ESP time
                                         if (ancillaryTimestamp.diff(lastTimestampUTC, 'seconds') > 0 ||
                                             ancillaryTimestamp.diff(lastTimestampUTC, 'seconds') < (-10 * 60)) {
-                                            logger.debug("Ancillary timestamp is still out of whack after day adjustment, will use ESP clock");
+                                            logger.trace("Ancillary timestamp is still out of whack after day adjustment, will use ESP clock");
                                             ancillaryTimestamp = moment(lastTimestampUTC);
                                         }
                                     } else {
-                                        logger.debug("Clock seems to be drifting forward, will use ESP time");
+                                        logger.trace("Clock seems to be drifting forward, will use ESP time");
                                         ancillaryTimestamp = moment(lastTimestampUTC);
                                     }
                                 }
@@ -608,7 +632,7 @@ function LogParser(dataAccess, dataDir, opts) {
 
                                         var logData = cleanDataMatches[1];
                                         var logUnits = cleanDataMatches[2];
-                                        var varFromLookup = me.ancillaryLookup[source_name][logUnits];
+                                        var varFromLookup = me.ancillaryLookup[sourceName][logUnits];
                                         // TODO insert check to make sure there is ancillary data in the lookup before going on!!!!!
 
                                         // Add the ancillary data to a local array for later processing
@@ -616,45 +640,72 @@ function LogParser(dataAccess, dataDir, opts) {
 
                                         // Check if we are supposed to use the ancillary timestamps or not
                                         if (me.useAncillaryTimestamps) {
-                                            ancillaryDataStorageArray.push([source_name, varFromLookup.var_name,
-                                                varFromLookup.var_long_name, varFromLookup.units, logUnits, ancillaryTimestamp.format(), logData]);
-                                            logger.trace("Pushed: " + source_name + ", " + varFromLookup.var_name + ", " +
-                                                varFromLookup.var_long_name + ", " + varFromLookup.units + ", " + logUnits +
+                                            me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
+                                                [sourceName, varFromLookup.varName, varFromLookup.varLongName,
+                                                    varFromLookup.units, logUnits, ancillaryTimestamp.format(),
+                                                    logData], function (err) {
+
+                                                });
+                                            logger.trace("Pushed: " + sourceName + ", " + varFromLookup.varName + ", " +
+                                                varFromLookup.varLongName + ", " + varFromLookup.units + ", " + logUnits +
                                                 ", " + ancillaryTimestamp.format() + ", " + logData);
                                         } else {
-                                            ancillaryDataStorageArray.push([source_name, varFromLookup.var_name,
-                                                varFromLookup.var_long_name, varFromLookup.units, logUnits, lastTimestampUTC.format(), logData]);
-                                            logger.trace("Pushed: " + source_name + ", " + varFromLookup.var_name + ", " +
-                                                varFromLookup.var_long_name + ", " + varFromLookup.units + ", " + logUnits +
+                                            me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
+                                                [sourceName, varFromLookup.varName, varFromLookup.varLongName,
+                                                    varFromLookup.units, logUnits, lastTimestampUTC.format(),
+                                                    logData], function (err) {
+
+                                                });
+                                            logger.trace("Pushed: " + sourceName + ", " + varFromLookup.varName + ", " +
+                                                varFromLookup.varLongName + ", " + varFromLookup.units + ", " + logUnits +
                                                 ", " + lastTimestampUTC.format() + ", " + logData);
-                                        }
-
-                                        // Now make sure we bump the number of data points for the ancillary
-                                        // data description on the deployment
-
-                                        // Make sure there is an ancillary object first
-                                        if (!deployment.ancillary_data) deployment.ancillary_data = {};
-
-                                        // Check for source object first and add if not there
-                                        if (!deployment.ancillary_data[source_name])
-                                            deployment.ancillary_data[source_name] = {};
-
-                                        // Now check for source and units combination and add from lookup if not there
-                                        if (!deployment.ancillary_data[source_name][logUnits]) {
-                                            deployment.ancillary_data[source_name][logUnits] = me.ancillaryLookup[source_name][logUnits];
                                         }
                                     }
                                 }
                             }
                         }
-                    } else if (imageMatches && imageMatches.length > 0) {
-                        // Make sure the deployment has an image objects
-                        if (!deployment.images) deployment.images = {};
+                    }
+                    else if (imageMatches && imageMatches.length > 0) {
+                        logger.debug("Image line found: ", completeLineBuffer.toString());
 
-                        // Where should this file be in the filesystem
-                        var imageLocationOnDisk = me.dataDir + path.sep + "instances" + path.sep + deployment.esp.name +
-                            path.sep + "deployments" + path.sep + deployment.name + path.sep + "data" + path.sep + "raw" + path.sep +
-                            "esp" + path.sep + imageMatches[6];
+                        // First grab the full local path on the ESP where the image is located
+                        var fullImagePath = imageMatches[5] + imageMatches[6];
+                        logger.debug("Image path on ESP is " + fullImagePath);
+
+                        // The local path to the base of the FTP file sync
+                        var localDeploymentRootPath = me.dataDir + path.sep + "instances" + path.sep +
+                            deployment.esp.name + path.sep + "deployments" + path.sep + deployment.name + path.sep +
+                            "data" + path.sep + "raw";
+                        logger.debug("Local deployment root path is " + localDeploymentRootPath);
+
+                        // The base URL for the TIF image
+                        var localDeploymentRootTIFPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
+                            deployment.name + "/data/raw";
+
+                        // The base URL for the JPG version
+                        var localDeploymentRootJPGPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
+                            deployment.name + "/data/processed";
+
+                        // Construct the local path to the image using the full path on the ESP minus any path
+                        // defined on the deployment.  If there is no path defined on the deployment, take a best
+                        // guess
+                        var imageLocationOnDisk = null;
+                        var imageLocationTIFURL = null;
+                        var imageLocationJPGURL = null;
+                        if (deployment.esp && deployment.esp.path) {
+                            // Since we have an ESP relative path where the image is located, we just replace
+                            // that in the full path with the local roots
+                            imageLocationOnDisk = fullImagePath.replace(deployment.esp.path, localDeploymentRootPath);
+                            imageLocationTIFURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootTIFPathURL);
+                            imageLocationJPGURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootJPGPathURL).replace(".tif", ".jpg");
+                        } else {
+                            // This is our best guess and should be where most of the images live
+                            imageLocationOnDisk = localDeploymentRootPath + path.sep +
+                                "esp" + path.sep + imageMatches[6];
+                            imageLocationTIFURL = localDeploymentRootTIFPathURL + "/esp/" + imageMatches[6];
+                            imageLocationJPGURL = localDeploymentRootJPGPathURL + "/esp/" +
+                                imageMatches[6].replace(".tif", ".jpg");
+                        }
                         logger.debug("If image was downloaded it should be found here: " + imageLocationOnDisk);
                         var isOnDisk = false;
                         if (fs.existsSync(imageLocationOnDisk)) {
@@ -672,109 +723,304 @@ function LogParser(dataAccess, dataDir, opts) {
                             bits: imageMatches[3],
                             exposure: imageMatches[4],
                             imageFilename: imageMatches[6],
-                            fullImagePath: imageMatches[5] + imageMatches[6],
+                            fullImagePath: fullImagePath,
                             downloaded: isOnDisk,
-                            imageUrl: "/data/instances/" + deployment.esp.name + "/deployments/" +
-                                deployment.name + "/data/processed/esp/" + imageMatches[6].replace(".tif", ".jpg")
+                            tiffUrl: imageLocationTIFURL,
+                            imageUrl: imageLocationJPGURL
                         }
 
                         // Now add it to the deployment if it's not there
-                        if (!deployment.images[lastTimestampUTC.valueOf()]) {
-                            // Add the image
-                            deployment.images[lastTimestampUTC.valueOf()] = image;
-                        }
-                    } else if (processRunStartMatches && processRunStartMatches.length > 0) {
-                        logger.debug("ProcessRun!:" + bodyBuffer.toString() + "->");
-                        logger.debug("[0]:" + processRunStartMatches[0]);
-                        logger.debug("[1]:" + processRunStartMatches[1]);
-                        logger.debug("[2]:" + processRunStartMatches[2]);
-                        if (processRunStartMatches[3])
-                            logger.debug("[3]:" + processRunStartMatches[3]);
+                        me.dataAccess.addOrUpdateImage(deployment._id, lastTimestampUTC.valueOf(), image,
+                            function (err) {
+                                if (err)
+                                    logger.error("Error trying to add new image to deployment at timestamp " +
+                                        lastTimestampUTC.valueOf(), err);
+                            });
+                    } else if (protocolRunStartMatches && protocolRunStartMatches.length > 0) {
+                        logger.debug("ProtocolRun!:" + bodyBuffer.toString() + "->");
+                        logger.debug("[0]:" + protocolRunStartMatches[0]);
+                        logger.debug("[1]:" + protocolRunStartMatches[1]);
+                        logger.debug("[2]:" + protocolRunStartMatches[2]);
+                        if (protocolRunStartMatches[3])
+                            logger.debug("[3]:" + protocolRunStartMatches[3]);
 
-                        // We have found the start of a process run, first make sure there are processRuns
-                        if (!deployment.processRuns) deployment.processRuns = {};
+                        // We have found the start of a protocol run, first make sure there are protocolRuns
+                        //if (!deployment.protocolRuns) deployment.protocolRuns = {};
 
                         // Now extract the information
-                        var processRun = {
+                        var protocolRun = {
                             actor: me.currentActor,
-                            name: processRunStartMatches[1],
-                            targetVol: processRunStartMatches[2]
+                            name: protocolRunStartMatches[1],
+                            targetVol: protocolRunStartMatches[2]
                         }
 
                         // Now if there is a clause after that, there is an archive
-                        if (processRunStartMatches[3]) {
+                        if (protocolRunStartMatches[3]) {
                             // The pattern for the archive
                             var archiveRegExp = new RegExp(/, wcr at most (\d+\.*\d*)ml/);
-                            var archiveMatches = processRunStartMatches[3].match(archiveRegExp);
+                            var archiveMatches = protocolRunStartMatches[3].match(archiveRegExp);
                             if (archiveMatches && archiveMatches.length > 0) {
-                                processRun.archive = {
+                                protocolRun.archive = {
                                     name: "wcr",
                                     targetVol: archiveMatches[1]
                                 }
                             }
                         }
-                        // Now add it to the deployment if it's not there
-                        if (!deployment.processRuns[lastTimestampUTC.valueOf()]) {
-                            // Add the process run
-                            deployment.processRuns[lastTimestampUTC.valueOf()] = processRun;
-                        }
+
+                        // Now add it to the deployment
+                        me.dataAccess.addOrUpdateProtocolRun(deployment._id, lastTimestampUTC.valueOf(), protocolRun,
+                            function (err) {
+                                if (err)
+                                    logger.error("Error trying to add new protocol run to deployment at timestamp " +
+                                        lastTimestampUTC.valueOf(), err);
+                            });
                     } else if (dwsmSampleStartMatches && dwsmSampleStartMatches.length > 0) {
-                        // We have found the start of a DWSM inhale, make sure there is a place for them on the deployment
-                        if (!deployment.samples) deployment.samples = {};
+                        // We have found the start of a DWSM inhale, let's create a new Sample
                         var newSample = {
                             actor: me.currentActor,
                             dwsm: true,
                             targetVolume: dwsmSampleStartMatches[1]
                         }
-                        // Now add it to the deployment if it's not there
-                        if (!deployment.samples[lastTimestampUTC.valueOf()]) {
-                            // Add the process run
-                            deployment.samples[lastTimestampUTC.valueOf()] = newSample;
-                        }
+
+                        // Add it to the array of samples being parsed
+                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
+
                     } else if (dwsmSampleEndMatches && dwsmSampleEndMatches.length > 0) {
-                        // We have found the end of sample, makes sure there is a place for them on the deployment
-                        if (!deployment.samples) deployment.samples = {};
-                        // Grab the last sample:
-                        var latestSample = null;
-                        var latestSampleTS = null;
-                        Object.keys(deployment.samples).forEach(function (samplets) {
-                            if ((!latestSampleTS || latestSampleTS < samplets) && deployment.samples[samplets].dwsm) {
-                                latestSampleTS = samplets;
-                                latestSample = deployment.samples[samplets];
+                        // Now we have found the end of a DWSM sample, let's look in the array of samples
+                        // being parsed and find the most recent DWSM sample that has no end time
+                        for (var sampleStartTS in samplesBeingParsed) {
+                            if (samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
+                                // It's a DWSM with no end time, we will assume this to be the right one.
+
+                                // Grab the timestamp and the sample out of the tracking object
+                                var latestDWSMStartTS = sampleStartTS;
+                                var latestDWSMSample = samplesBeingParsed[sampleStartTS];
+
+                                // Remove it from the tracking object so it won't get processed by another cycle
+                                delete samplesBeingParsed[sampleStartTS];
+
+                                // Set the end time
+                                latestDWSMSample.endts = lastTimestampUTC.valueOf();
+
+                                // And update it
+                                me.dataAccess.addOrUpdateSample(deployment._id, latestDWSMStartTS, latestDWSMSample,
+                                    function (err) {
+                                        if (err)
+                                            logger.error("Error trying to update the DWSM sample at time index " +
+                                                latestDWSMStartTS, err);
+                                    });
+
+                                // End the loop
+                                break;
                             }
-                        });
-                        // If a sample was found and there is no end volume or ts, add them
-                        if (latestSample && !latestSample.endts) {
-                            latestSample.endts = lastTimestampUTC.valueOf();
                         }
                     } else if (sampleStartMatches && sampleStartMatches.length > 0) {
-                        // We have found the start of sample, make sure there is a place for them on the deployment
-                        if (!deployment.samples) deployment.samples = {};
+
+                        // We have found the start of sample, create a new sample
                         var newSample = {
                             actor: me.currentActor,
                             targetVolume: sampleStartMatches[1]
                         }
-                        // Now add it to the deployment if it's not there
-                        if (!deployment.samples[lastTimestampUTC.valueOf()]) {
-                            // Add the process run
-                            deployment.samples[lastTimestampUTC.valueOf()] = newSample;
-                        }
+                        // Now add it to the local sample tracking object
+                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
+
                     } else if (sampleEndMatches && sampleEndMatches.length > 0) {
-                        // We have found the end of sample, makes sure there is a place for them on the deployment
-                        if (!deployment.samples) deployment.samples = {};
-                        // Grab the last sample:
-                        var latestSample = null;
-                        var latestSampleTS = null;
-                        Object.keys(deployment.samples).forEach(function (samplets) {
-                            if (!latestSampleTS || latestSampleTS < samplets) {
-                                latestSampleTS = samplets;
-                                latestSample = deployment.samples[samplets];
+                        // Since I have found a sample end, grab the end timestamp and the actual volume sampled
+                        var endSampleTS = lastTimestampUTC.valueOf();
+                        var actualVolume = sampleEndMatches[1];
+
+                        // Now look in the local sample tracking object for the sample that this will match with
+                        for (var sampleStartTS in samplesBeingParsed) {
+                            if (!samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
+                                // Should be a regular sample with no timestamp so we will assume it is the one
+                                // we are looking for
+
+                                // Grab the timestamp and the sample out of the tracking object
+                                var latestStartTS = sampleStartTS;
+                                var latestSample = samplesBeingParsed[sampleStartTS];
+
+                                // Remove it from the tracking object so it won't get processed by another cycle
+                                delete samplesBeingParsed[sampleStartTS];
+
+                                // Set the end time
+                                latestSample.endts = lastTimestampUTC.valueOf();
+
+                                // If there is an actual volume, set it
+                                if (actualVolume) {
+                                    latestSample.actualVolume = actualVolume;
+                                }
+
+                                // And update it
+                                me.dataAccess.addOrUpdateSample(deployment._id, latestStartTS, latestSample,
+                                    function (err) {
+                                        if (err)
+                                            logger.error("Error trying to update the sample at time index " +
+                                                latestStartTS, err);
+                                    });
+
+                                // End the loop
+                                break;
                             }
-                        });
-                        // If a sample was found and there is no end volume or ts, add them
-                        if (latestSample && !latestSample.endts && !latestSample.actualVolume) {
-                            latestSample.endts = lastTimestampUTC.valueOf();
-                            latestSample.actualVolume = sampleEndMatches[1];
+                        }
+                    } else if (pcrStopMatches) {
+                        // Grab the full file path
+                        var fullFilePath = pcrStopMatches[2];
+
+                        // Grab just the file name using split
+                        var fullFilePathArray = fullFilePath.split('/');
+                        var filename = fullFilePathArray[fullFilePathArray.length - 1];
+
+                        // Where should this file be in the filesystem
+                        var pcrLocationOnDisk = me.dataDir + path.sep + "instances" + path.sep + deployment.esp.name +
+                            path.sep + "deployments" + path.sep + deployment.name + path.sep + "data" + path.sep + "raw" + path.sep +
+                            "esp" + path.sep + filename;
+                        logger.debug("PCR: if file was downloaded it should be found here: " + pcrLocationOnDisk);
+
+                        var isOnDisk = false;
+                        if (fs.existsSync(pcrLocationOnDisk)) {
+                            logger.debug("PCR: It IS on disk!");
+                            isOnDisk = true;
+
+                            // Create the new object that will be used to store all the PCR data
+                            var pcrData = {};
+
+                            // Create some patterns that will be used when parsing the PCR file
+                            var headerPattern = new RegExp(/^(\S+),\s(\S+) started at, (\d+)\/(\d+)\/(\d+) (\d+):(\d+):(\d+),(\S+)/);
+
+                            // Read in the file and then loop over each line in the file
+                            var pcrType = null;
+                            var pcrStartDate = null;
+                            var pcrRunName = null;
+                            var pcrRunStartDate = null;
+                            var pcrRunNumberOfCycles = null;
+                            var pcrColumnHeaders = null;
+                            var pcrCycleCounter = 0;
+                            var timestampColumn = -1;
+                            var celsiusColumn = -1;
+                            fs.readFileSync(pcrLocationOnDisk).toString().split('\n').forEach(function (line) {
+                                logger.trace("PCR: File line: ", line);
+                                // Check for the header
+                                var headerMatches = line.match(headerPattern);
+                                if (headerMatches) {
+                                    // Parse the date
+                                    var startDate = moment("20" + headerMatches[5] + "-" + headerMatches[3] + "-" +
+                                        headerMatches[4] + "T" + headerMatches[6] + ":" + headerMatches[7] + ":" +
+                                        headerMatches[8] + " " + headerMatches[9]);
+                                    logger.trace("PCR: Date parsed", startDate);
+                                    if (line.indexOf("cycles started") !== -1) {
+                                        logger.trace("PCR: Cycle starting was found");
+                                        // Grab the number of cycles
+                                        pcrRunNumberOfCycles = headerMatches[1];
+                                        // Grab the run start date
+                                        pcrRunStartDate = startDate;
+                                        logger.trace("PCR: Number of cycles = " + pcrRunNumberOfCycles + " started at " + pcrRunStartDate + " which in epoch is " + pcrRunStartDate.unix());
+                                    } else {
+                                        logger.trace("PCR: Header was found, start a new parsing");
+                                        // Set the PCR type
+                                        pcrType = headerMatches[1];
+                                        // Set the name of the run
+                                        pcrRunName = headerMatches[2];
+                                        // Set the PCR start date
+                                        pcrStartDate = startDate;
+
+                                        // Clear other fields
+                                        pcrRunStartDate = null;
+                                        pcrRunNumberOfCycles = null;
+                                        pcrColumnHeaders = null;
+                                        pcrCycleCounter = 0;
+                                        timestampColumn = -1;
+                                        celsiusColumn = -1;
+
+                                        logger.trace("PCR: New PCR type " + pcrType + " with run named " + pcrRunName + " started at " + pcrStartDate + " which in epoch is " + pcrStartDate.unix());
+                                    }
+                                } else {
+                                    // Check for a column header
+                                    if (line.indexOf("SecsSinceStart") !== -1 && line.indexOf("Celsius") !== -1) {
+                                        pcrColumnHeaders = line.split(',');
+                                        // Find the SecsSinceStart column
+                                        timestampColumn = pcrColumnHeaders.indexOf('SecsSinceStart');
+                                        celsiusColumn = pcrColumnHeaders.indexOf('Celsius');
+                                        logger.trace("PCR: We have a column header line where seconds is in column " + timestampColumn + " and temp is in column " + celsiusColumn);
+                                    } else {
+                                        logger.trace("PCR: Could be a data record");
+                                        // Could be a data record, so split the line into an array by commas
+                                        var dataRecordColumns = line.split(',');
+                                        // Make sure it is the same length as the column headers
+                                        if (pcrColumnHeaders && (dataRecordColumns.length === pcrColumnHeaders.length)) {
+                                            logger.trace("PCR: same number of columns, could be data!");
+                                            var secsSinceStart = dataRecordColumns[timestampColumn];
+                                            var celsius = dataRecordColumns[celsiusColumn];
+
+                                            // Make sure we can parse both
+                                            var secsSinceStartInt = null;
+                                            var celsiusFloat = null;
+                                            try {
+                                                secsSinceStartInt = parseInt(secsSinceStart);
+                                                celsiusFloat = parseFloat(celsius);
+                                            } catch (err) {
+                                                logger.error("PCR: Could not parse seconds or celsius: ", err);
+                                            }
+
+                                            // Make sure we have seconds and celsius
+                                            if (secsSinceStartInt && celsiusFloat) {
+                                                // Bump the cycle counter
+                                                pcrCycleCounter++;
+
+                                                // Copy the start time of the pcr run
+                                                var timestamp = moment(pcrRunStartDate);
+                                                timestamp.add('s', secsSinceStartInt);
+
+                                                // Pull both timestamps as epoch millis
+                                                var timestampEpochMillis = timestamp.unix() * 1000;
+                                                var pcrRunStartDateEpochMillis = pcrRunStartDate.unix() * 1000;
+
+                                                // Now loop over the columns of data
+                                                for (var i = 0; i < dataRecordColumns.length; i++) {
+                                                    if (i !== timestampColumn && i !== celsiusColumn) {
+                                                        // New record
+                                                        var dataRecord = [pcrCycleCounter, timestampEpochMillis, celsiusFloat, parseFloat(dataRecordColumns[i])];
+
+                                                        // Make sure the PCRType is on the data object
+                                                        if (!pcrData[pcrType]) {
+                                                            pcrData[pcrType] = {};
+                                                        }
+
+                                                        // Now make sure the run name is there
+                                                        if (!pcrData[pcrType][pcrRunName]) {
+                                                            pcrData[pcrType][pcrRunName] = {};
+                                                        }
+
+                                                        // Now make sure the timestamp is already there
+                                                        if (!pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis]) {
+                                                            pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis] = {};
+                                                        }
+
+                                                        // Make sure there is a pcr entry for the particular column
+                                                        if (!pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]]) {
+                                                            pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]] = [];
+                                                        }
+
+                                                        // Now push the data
+                                                        pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]].push(dataRecord);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            logger.trace("PCR data from file " + pcrLocationOnDisk + " is:", pcrData);
+
+                            // Now commit the pcr data object to the deployment
+                            me.dataAccess.addPCRData(deployment._id, pcrData, function (err) {
+                                if (err) {
+                                    logger.error("Error adding PCR data to deployment");
+                                    if (callback)
+                                        callback(err);
+                                }
+                            });
+                        } else {
+                            logger.debug("PCR: Nope, not on disk");
                         }
                     }
                 } else {
@@ -822,53 +1068,53 @@ function LogParser(dataAccess, dataDir, opts) {
         }
 
         // This method takes in a deployment
-        function addAncillarySourcesToDeployment(deployment, ancillaryData) {
-            // Split the data into source, hours, minutes, seconds and data
-            var ancillarySplitMatches = ancillaryData.match(me.ancillarySplitPattern);
-            if (ancillarySplitMatches && ancillarySplitMatches.length > 0) {
-                // Grab the source
-                var source = ancillarySplitMatches[1];
-
-                // Grab all the variables
-                var data = ancillarySplitMatches[5];
-
-                // Split the data on commas
-                var variables = data.split(",");
-                for (var j = 0; j < variables.length; j++) {
-                    // Strip off whitespace
-                    var cleanData = variables[j].trim();
-
-                    // Now separate the data and the unit
-                    var cleanDataMatches = cleanData.match(me.ancillaryDataPattern);
-                    if (cleanDataMatches && cleanDataMatches.length > 0) {
-
-                        // grab the units
-                        var varUnits = cleanDataMatches[2];
-
-                        // Make sure the deployment has this ancillary data type listed
-                        if (me.ancillaryLookup[source][varUnits]) {
-                            // Make sure there is an ancillary object first
-                            if (!deployment.ancillary_data) deployment.ancillary_data = {};
-
-                            // Check for source object first and add if not there
-                            if (!deployment.ancillary_data[source])
-                                deployment.ancillary_data[source] = {};
-
-                            // Now check for source and units combination and add from lookup if not there
-                            if (!deployment.ancillary_data[source][varUnits]) {
-                                deployment.ancillary_data[source][varUnits] = JSON.parse(JSON.stringify(me.ancillaryLookup[source][varUnits]));
-                                logger.debug("Added ancillary data to deployment " + deployment.name + " of ESP " +
-                                    deployment.esp.name);
-                                logger.debug(me.ancillaryLookup[source][varUnits]);
-
-                                // Add a number of data points property
-                                deployment.ancillary_data[source][varUnits]["numPoints"] = 0;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        function addAncillarySourcesToDeployment(deployment, ancillaryData) {
+//            // Split the data into source, hours, minutes, seconds and data
+//            var ancillarySplitMatches = ancillaryData.match(me.ancillarySplitPattern);
+//            if (ancillarySplitMatches && ancillarySplitMatches.length > 0) {
+//                // Grab the source
+//                var source = ancillarySplitMatches[1];
+//
+//                // Grab all the variables
+//                var data = ancillarySplitMatches[5];
+//
+//                // Split the data on commas
+//                var variables = data.split(",");
+//                for (var j = 0; j < variables.length; j++) {
+//                    // Strip off whitespace
+//                    var cleanData = variables[j].trim();
+//
+//                    // Now separate the data and the unit
+//                    var cleanDataMatches = cleanData.match(me.ancillaryDataPattern);
+//                    if (cleanDataMatches && cleanDataMatches.length > 0) {
+//
+//                        // grab the units
+//                        var varUnits = cleanDataMatches[2];
+//
+//                        // Make sure the deployment has this ancillary data type listed
+//                        if (me.ancillaryLookup[source][varUnits]) {
+//                            // Make sure there is an ancillary object first
+//                            if (!deployment.ancillaryData) deployment.ancillaryData = {};
+//
+//                            // Check for source object first and add if not there
+//                            if (!deployment.ancillaryData[source])
+//                                deployment.ancillaryData[source] = {};
+//
+//                            // Now check for source and units combination and add from lookup if not there
+//                            if (!deployment.ancillaryData[source][varUnits]) {
+//                                deployment.ancillaryData[source][varUnits] = JSON.parse(JSON.stringify(me.ancillaryLookup[source][varUnits]));
+//                                logger.debug("Added ancillary data to deployment " + deployment.name + " of ESP " +
+//                                    deployment.esp.name);
+//                                logger.debug(me.ancillaryLookup[source][varUnits]);
+//
+//                                // Add a number of data points property
+//                                deployment.ancillaryData[source][varUnits]['numPoints'] = 0;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         // This function looks to see if there is a log file currently being parsed and cleans up by
         // calling the associated callback and clearing out the log file from the variable tracking
@@ -877,7 +1123,7 @@ function LogParser(dataAccess, dataDir, opts) {
             logger.debug("cleanUpAfterParsing called");
             // Check to see if something is being parsed
             if (me.logFileCurrentlyParsing) {
-                logger.debug("Cleaning up after the parsing of " + me.logFileCurrentlyParsing[1] + " for deployment " +
+                logger.info("Cleaning up after the parsing of " + me.logFileCurrentlyParsing[1] + " for deployment " +
                     me.logFileCurrentlyParsing[0].name + " of ESP " + me.logFileCurrentlyParsing[0].esp.name);
 
                 // Remove the temp file

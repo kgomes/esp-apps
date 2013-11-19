@@ -1,0 +1,30 @@
+<div class='sample-details-table'>
+    <table class='table table-bordered'>
+        <thead>
+        <tr>
+            <th class="sample-start-date-col">Start Date</th>
+            <th class="sample-start-time-col">Start Time</th>
+            <th class="sample-end-date-col">End Date</th>
+            <th class="sample-end-time-col">End Time</th>
+            <th class="sample-zone-col">Zone</th>
+            <th class="sample-duration-col">Duration (minutes)</th>
+            <th class="sample-target-volume-col">Target Volume (ml)</th>
+            <th class="sample-actual-volume-col">Actual Volume (ml)</th>
+            <th class="sample-volume-diff-col">Difference (ml)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="(timestamp,sample) in samples">
+            <td class="sample-start-date-col">{{timestamp | date:'MM/dd/yyyy'}}</td>
+            <td class="sample-start-time-col">{{timestamp | date:'HH:mm:ss'}}</td>
+            <td class="sample-end-date-col">{{sample.endts | date:'MM/dd/yyyy'}}</td>
+            <td class="sample-end-time-col">{{sample.endts | date:'HH:mm:ss'}}</td>
+            <td class="sample-zone-col">{{timestamp | date:'Z'}}</td>
+            <td class="sample-duration-col">{{((sample.endts - timestamp)/(1000*60)).toFixed(2)}}</td>
+            <td class="sample-target-volume-col">{{sample.targetVolume}}</td>
+            <td class="sample-actual-volume-col">{{sample.actualVolume}}</td>
+            <td class="sample-volume-diff-col">{{sample.targetVolume - sample.actualVolume}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>

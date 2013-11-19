@@ -1,0 +1,186 @@
+/* Styling for the ESP Web application */
+
+/* Set up HTML and body to fill 100% of page */
+html, body {
+    height: 100%;
+}
+
+/* Augment the rows from Bootstrap */
+body > .row {
+    margin: 0px;
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-height: 400px; /* We don't want the row to squish too much */
+    height: 50%;
+}
+
+/* For the left column that users can use to select items */
+#selection-column {
+    height: 100%;
+    margin: 0px;
+}
+
+/* Styles for the group around the deployment selection button */
+#deployment-dropdown-btn-group {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+/* And for the button itself */
+#deployment-dropdown-btn {
+    width: 100%;
+}
+
+/* Specify the size of the fonts for the selection list */
+.selection-list {
+    font-size: 12px;
+    font-weight: 100;
+}
+
+#selection-accordion {
+    height: 90%;
+    overflow-y: scroll;
+}
+
+/* Specify the alignment of the data key */
+.ancillary-data-key {
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* The panel where the graph will be visible */
+#graph-column {
+    height: 100%;
+    margin: 0px;
+}
+
+#details-column {
+    height: 100%;
+}
+
+.tabbable {
+    height: 100%;
+}
+
+.tab-content {
+    height: 90%;
+}
+
+.tab-pane {
+    height: 100%;
+}
+
+.tab-pane > div {
+    height: 100%;
+}
+
+/* Styles specifically for the table displaying protocol run details */
+.protocol-details-table {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+/* Some column styling */
+.protocol-run-date-col {
+    width: 15%;
+}
+
+.protocol-run-time-col {
+    width: 15%;
+}
+
+.protocol-run-zone-col {
+    width: 10%;
+}
+
+.protocol-run-volume-col {
+    width: 30%;
+}
+
+.protocol-run-actor-col {
+    width: 30%;
+}
+
+/* Styles specifically for the table displaying sample details */
+.sample-details-table {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+/* Styles specifically for the table displaying sample details */
+.image-details-row {
+    height: 100%;
+}
+
+.image-details-list {
+    background-color: #FFFFFF;
+    height: 100%;
+    overflow-y: scroll;
+    font-size: small;
+}
+
+.image-details-image {
+    height: 100%;
+}
+
+.image-details-image-name {
+    text-align: center;
+    font-size: large;
+}
+
+/* Some overrides of default styling */
+.ui-slider .ui-slider-handle {
+    width: 10px;
+    height: 20px;
+}
+
+#selected-image-brightness-slider {
+    width: 45%;
+    display: inline-block;
+}
+#selected-image-contrast-slider {
+    width: 45%;
+    display: inline-block;
+}
+
+.image-details-image > canvas {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-height: 90%;
+    max-width: 100%;
+}
+
+.image-details-details {
+    height: 100%;
+    overflow-y: scroll;
+    font-size: small;
+}
+
+/* Styles for the the panel that displays the PCR data */
+.pcr-details-row {
+    height: 100%;
+}
+
+.pcr-details-selection-list {
+    height: 100%;
+    overflow-y: scroll;
+    font-size: small;
+}
+
+#pcr-graph-column {
+    height: 100%;
+    margin: 0px;
+}
+
+#pcr-details-graph {
+    height: 100%;
+    margin: 0px;
+}
+
+/* Styling for enabling the cloaking functions of AngularJS */
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none;
+}

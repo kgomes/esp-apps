@@ -1,0 +1,35 @@
+{
+    "resource": "Deployment",
+    "name": "Test Deployment",
+    "description": "Unit Test of Deployment",
+    "depth": 99,
+    "startDate": "2013-04-20T00:00:00",
+    "timezone": "PDT",
+    "ancillaryData": {
+
+    },
+    "comments": {
+    },
+    "esp": {
+        "colorHexValue": null,
+        "configPath": null,
+        "ftpHost": "ftp.mbari.org",
+        "ftpPort": 21,
+        "ftpUsername": "anonymous",
+        "ftpPassword": "kgomes@mbari.org",
+        "ftpWorkingDir": "/pub/kgomes/esp_test/",
+        "home": null,
+        "logFile": "real.log",
+        "mode": "real",
+        "name": "TestESP",
+        "path": null,
+        "serialNumber": "001",
+        "type": null
+    },
+    "latitude": null,
+    "longitude": null,
+    "protocolRuns": {
+    },
+    "errors": {
+    }
+}

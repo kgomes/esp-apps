@@ -7,9 +7,14 @@ module.exports = {
     // This is the location where the data for all the ESPs will be stored
     dataDir: '/Users/kgomes/Documents/Web/esp/services/espweb/data',
 
+    // Options for the data crawling service
+    crawlerOptions: {
+        ftpSyncIntervalMillis: 60000,
+        loggerLevel: 'info'
+    },
+
     // Options for the server
     serverOptions: {
-        ftpSyncIntervalMillis: 60000,
         loggerLevel: 'info'
     },
 
@@ -17,7 +22,7 @@ module.exports = {
     appServerOptions: {
         hostBaseUrl:'http://localhost',
         port: 8081,
-        loggerLevel: 'debug',
+        loggerLevel: 'info',
         // The UserRouter options
         userRouterOptions: {
             loggerLevel: 'info'
@@ -51,21 +56,22 @@ module.exports = {
         pgUsername: 'espdba',
         pgPassword: 'leghorn',
         pgDatabase: 'esp_ancillary',
-        loggerLevel: 'info',
+        loggerLevel: 'debug',
         numAncillaryPointsToBatch: 1000
     },
 
     // The options for the FTPSync class
-    ftpSyncOptions: {
-        loggerLevel: 'info'
+    deploymentFileSyncOptions: {
+        loggerLevel: 'debug'
     },
 
     // The LogParser options
     logParserOptions: {
-        loggerLevel: 'info',
+        loggerLevel: 'debug',
         useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
         tempDir: '/tmp',
+        numberOfAncillaryRecordsToBatch: 1000,
         // The timezone lookup table
         timezoneLookup: {
             'EDT': {
@@ -93,88 +99,88 @@ module.exports = {
         ancillaryLookup: {
             CTD: {
                 'C': {
-                    'var_name': 'Temp',
-                    'var_long_name': 'Temperature',
-                    'units': 'Degrees C'
+                    varName: 'Temp',
+                    varLongName: 'Temperature',
+                    units: 'Degrees C'
                 },
                 'm': {
-                    'var_name': 'Depth',
-                    'var_long_name': 'Depth',
-                    'units': 'meters'
+                    varName: 'Depth',
+                    varLongName: 'Depth',
+                    units: 'meters'
                 },
                 'psu': {
-                    'var_name': 'Sal',
-                    'var_long_name': 'Salinity',
-                    'units': 'psu'
+                    varName: 'Sal',
+                    varLongName: 'Salinity',
+                    units: 'psu'
                 },
                 'mg/m^3': {
-                    'var_name': 'Chl',
-                    'var_long_name': 'Chlorophyll',
-                    'units': 'mg/m^3'
+                    varName: 'Chl',
+                    varLongName: 'Chlorophyll',
+                    units: 'mg/m^3'
                 },
                 '%': {
-                    'var_name': 'Light Tx',
-                    'var_long_name': 'Light Transmission',
-                    'units': '%'
+                    varName: 'Light Tx',
+                    varLongName: 'Light Transmission',
+                    units: '%'
                 },
                 'ml/L': {
-                    'var_name': 'Diss O2',
-                    'var_long_name': 'Computed Dissolved Oxygen',
-                    'units': 'ml/L'
+                    varName: 'Diss O2',
+                    varLongName: 'Computed Dissolved Oxygen',
+                    units: 'ml/L'
                 }
             },
             Can: {
                 'C': {
-                    'var_name': 'Temp',
-                    'var_long_name': 'Temperature',
-                    'units': 'Degrees C'
+                    varName: 'Temp',
+                    varLongName: 'Temperature',
+                    units: 'Degrees C'
                 },
                 '% humidity': {
-                    'var_name': '% Humidity',
-                    'var_long_name': 'Percent Humidity',
-                    'units': '%'
+                    varName: '% Humidity',
+                    varLongName: 'Percent Humidity',
+                    units: '%'
                 },
                 'psia': {
-                    'var_name': 'Press',
-                    'var_long_name': 'Pressure',
-                    'units': 'psia'
+                    varName: 'Press',
+                    varLongName: 'Pressure',
+                    units: 'psia'
                 },
                 'V': {
-                    'var_name': 'Volt',
-                    'var_long_name': 'Battery Voltage',
-                    'units': 'V'
+                    varName: 'Volt',
+                    varLongName: 'Battery Voltage',
+                    units: 'V'
                 },
                 'A': {
-                    'var_name': 'Inst Curr',
-                    'var_long_name': 'Instantaneous Current',
-                    'units': 'A'
+                    varName: 'Inst Curr',
+                    varLongName: 'Instantaneous Current',
+                    units: 'A'
                 },
                 'A avg': {
-                    'var_name': 'Avg Curr',
-                    'var_long_name': 'Average Current',
-                    'units': 'A'
+                    varName: 'Avg Curr',
+                    varLongName: 'Average Current',
+                    units: 'A'
                 },
                 'W': {
-                    'var_name': 'Power',
-                    'var_long_name': 'Power',
-                    'units': 'W'
+                    varName: 'Power',
+                    varLongName: 'Power',
+                    units: 'W'
                 }
             },
             ISUS: {
                 'uM/L no^3': {
-                    'var_name': 'Nitrate',
-                    'var_long_name': 'Nitrate',
-                    'units': 'uM/L no^3'
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM/L no^3'
                 },
                 'uM/L hs': {
-                    'var_name': 'Nitrate 2',
-                    'var_long_name': 'Nitrate 2',
-                    'units': 'uM/L hs'
+                    varName: 'Nitrate 2',
+                    varLongName: 'Nitrate 2',
+                    units: 'uM/L hs'
                 },
                 'psu': {
-                    'var_name': 'PSU',
-                    'var_long_name': 'PSU',
-                    'units': 'psu'
+                    varName: 'PSU',
+                    varLongName: 'PSU',
+                    units: 'psu'
                 }
             }
         }
@@ -182,6 +188,6 @@ module.exports = {
 
     // The EventHandler options
     eventHandlerOptions: {
-        loggerLevel: 'info'
+        loggerLevel: 'debug'
     }
 };
