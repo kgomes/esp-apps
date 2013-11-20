@@ -29,7 +29,6 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
 
     // Grab the placeholder span
     var placeholder = document.getElementById('selected-image-canvas');
-    $log.log("placeholder = ", placeholder);
 
     // Create the glfx canvas (WebGL)
     var imageCanvas = null;
@@ -47,10 +46,8 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     var texture = null;
 
     // Grab the two sliders
-    var brightnessSlider = $("#selected-image-brightness-slider");
-    var contrastSlider = $("#selected-image-contrast-slider");
-    $log.log("brightnessSlider:", brightnessSlider);
-    $log.log("contrastSlider:", contrastSlider);
+    var brightnessSlider = angular.element('#selected-image-brightness-slider');
+    var contrastSlider = angular.element('#selected-image-contrast-slider');
 
     // The functions to handle brightness and contrast changes
     var handleImageChanges = function (event, ui) {

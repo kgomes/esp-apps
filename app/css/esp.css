@@ -149,11 +149,7 @@ body > .row {
     height: 100%;
 }
 
-.image-details-image-adjust-box-image {
-    height: 100%;
-}
-
-.image-details-image-adjust-box > canvas {
+.image-details-image-adjust-box canvas {
     display: block;
     margin-left: auto;
     margin-right: auto;
