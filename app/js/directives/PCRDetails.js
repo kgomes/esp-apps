@@ -230,19 +230,20 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
                 var dataToPlot = [];
                 for (var i = 1; i < $scope.pcrData[objkey].length; i++) {
                     // Calculate the average temp between the last and this data point
-                    var avgTemp = ($scope.pcrData[objkey][i][2] + $scope.pcrData[objkey][i-1][2])/2;
+                    var avgTemp = ($scope.pcrData[objkey][i][2] + $scope.pcrData[objkey][i - 1][2]) / 2;
 
                     // Calculate the change in temperature
-                    var deltaTemp = $scope.pcrData[objkey][i][2] - $scope.pcrData[objkey][i-1][2];
+                    var deltaTemp = $scope.pcrData[objkey][i][2] - $scope.pcrData[objkey][i - 1][2];
 
                     // Calculate the change in raw florescence
-                    var deltaFlor = $scope.pcrData[objkey][i][3] - $scope.pcrData[objkey][i-1][3];
+                    var deltaFlor = $scope.pcrData[objkey][i][3] - $scope.pcrData[objkey][i - 1][3];
 
                     // Now calculate the derivative
-                    var derivative = -(deltaFlor/deltaTemp);
+                    var derivative = -(deltaFlor / deltaTemp);
 
                     // And push the data for plotting
-                    dataToPlot.push([avgTemp, derivative]);
+                    if (isFinite(derivative))
+                        dataToPlot.push([avgTemp, derivative]);
                 }
 
                 // Create the new series
@@ -269,7 +270,7 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
      * This method changes the XAxis on the chart and then loops over the data sets and re-plots them
      * @param xValueType
      */
-    $scope.changeAxes = function(xValueType){
+    $scope.changeAxes = function (xValueType) {
         // Make sure they actually want a change
         if (xValueType !== $scope.xValuesType) {
             // Set the new value
@@ -277,9 +278,9 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
 
             // Change the xAxis
             var xAxisTitle = 'Cycle #';
-            if (xValueType === 'temperature'){
+            if (xValueType === 'temperature') {
                 xAxisTitle = 'Temperature (C)'
-            } else if (xValueType === 'derivative'){
+            } else if (xValueType === 'derivative') {
                 xAxisTitle = 'Avg Temperature (C)'
             }
             $scope.chart.xAxis[0].update({
@@ -290,9 +291,9 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
 
             // Change the yAxis
             var yAxisTitle = 'Raw Fluorescence';
-            if (xValueType === 'temperature'){
+            if (xValueType === 'temperature') {
                 yAxisTitle = 'Raw Fluorescence'
-            } else if (xValueType === 'derivative'){
+            } else if (xValueType === 'derivative') {
                 yAxisTitle = 'dFluor/dTemp';
             }
             $scope.chart.yAxis[0].update({
@@ -302,7 +303,7 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
             });
 
             // Now loop over the data keys and re-plot
-            for (var objkey in $scope.pcrData){
+            for (var objkey in $scope.pcrData) {
                 plotPcrData(objkey);
             }
         }
