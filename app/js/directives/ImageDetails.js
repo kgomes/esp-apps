@@ -13,6 +13,8 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     // Grab a reference to me
     var me = this;
 
+    $log.log("Scope:", $scope);
+
     // Clear the images
     $scope.images = {};
 
@@ -23,20 +25,23 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     $scope.selectedImageName = "No image selected";
 
     // Grab the deployment ID from the parent Tab
-    var deploymentID = $scope.$parent.tab.deploymentID;
+    $scope.deploymentID = $scope.$parent.tab.deploymentID;
 
     // Grab the placeholder span
     var placeholder = document.getElementById('selected-image-canvas');
+    $log.log("placeholder = ", placeholder);
 
     // Create the glfx canvas (WebGL)
     var imageCanvas = null;
-    try {
-        imageCanvas = fx.canvas();
-    } catch (e) {
-        $log.log("Could not create HTML 5 canvas!!!");
-        placeholder.innerHTML = e;
+    if (placeholder) {
+        try {
+            imageCanvas = fx.canvas();
+        } catch (e) {
+            $log.log("Could not create HTML 5 canvas!!!");
+            placeholder.innerHTML = e;
+        }
+        imageCanvas.replace(placeholder);
     }
-    imageCanvas.replace(placeholder);
 
     // This is the texture associated with the selected image
     var texture = null;
@@ -44,6 +49,8 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     // Grab the two sliders
     var brightnessSlider = $("#selected-image-brightness-slider");
     var contrastSlider = $("#selected-image-contrast-slider");
+    $log.log("brightnessSlider:", brightnessSlider);
+    $log.log("contrastSlider:", contrastSlider);
 
     // The functions to handle brightness and contrast changes
     var handleImageChanges = function (event, ui) {
@@ -56,6 +63,7 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
 
     // Create sliders out of the two divs for brightness and contrast
     brightnessSlider.slider({
+        orientation: 'vertical',
         max: 1,
         min: -1,
         step: 0.01,
@@ -63,6 +71,7 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
         slide: handleImageChanges
     });
     contrastSlider.slider({
+        orientation: 'vertical',
         max: 1,
         min: -1,
         step: 0.01,
@@ -89,7 +98,7 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     };
 
     // Call the method to get the images from the server
-    deploymentData.getDeploymentImages(deploymentID, function (images) {
+    deploymentData.getDeploymentImages($scope.deploymentID, function (images) {
         if (images) {
             $scope.images = images;
         }
@@ -99,8 +108,8 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     var setImageByUrl = function (url) {
 
         // Set the sliders back to zero
-        brightnessSlider.slider("value",0);
-        contrastSlider.slider("value",0);
+        brightnessSlider.slider("value", 0);
+        contrastSlider.slider("value", 0);
         // Create a new image object
         var img = new Image;
 

@@ -59,8 +59,8 @@ function DeploymentFileSync(opts) {
                 pass: deployment.esp.ftpPassword
             });
 
-            logger.debug("ftpClient ", ftpClient);
-            logger.debug("ftpClient.socket ", ftpClient.socket);
+            logger.trace("ftpClient ", ftpClient);
+            logger.trace("ftpClient.socket ", ftpClient.socket);
             // Add event handlers
             ftpClient.on('progress', function (progress) {
                 logger.debug("FTP " + progress.action + " " + progress.filename + "->" + progress.transferred);

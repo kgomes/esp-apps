@@ -131,32 +131,34 @@ body > .row {
 }
 
 /* Some overrides of default styling */
+.ui-slider {
+    width: 5px;
+}
+
 .ui-slider .ui-slider-handle {
     width: 10px;
-    height: 20px;
+    height: 10px;
 }
 
-#selected-image-brightness-slider {
-    width: 45%;
-    display: inline-block;
-}
-#selected-image-contrast-slider {
-    width: 45%;
-    display: inline-block;
+.image-details-image-adjust-box {
+    height: 100%;
+    width: 100%;
 }
 
-.image-details-image > canvas {
+.image-details-image-adjust-box-sliders {
+    height: 100%;
+}
+
+.image-details-image-adjust-box-image {
+    height: 100%;
+}
+
+.image-details-image-adjust-box > canvas {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    max-height: 90%;
+    max-height: 95%;
     max-width: 100%;
-}
-
-.image-details-details {
-    height: 100%;
-    overflow-y: scroll;
-    font-size: small;
 }
 
 /* Styles for the the panel that displays the PCR data */

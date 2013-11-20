@@ -996,6 +996,76 @@ function DataAccess(opts) {
         }
     };
 
+    /**
+     * This function takes in a deployment ID and an object that contains property keys which are epoch
+     * milliseconds when an error occurred and an Error object as the property.  These errors are then added
+     * (or updated) on the deployment with the matching ID.
+     * @param deploymentID
+     * @param errors
+     * @param callback
+     */
+    this.addOrUpdateErrors = function (deploymentID, errors, callback) {
+        // First verify the deployment ID and some errors were specified
+        if (deploymentID && errors) {
+            logger.debug("Going to update deployment with ID " + deploymentID + " and add/update these errors:", errors);
+            // We have the deployment ID, so let's find the deployment in the couch database
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
+                // First look to see if we got an error
+                if (err) {
+                    logger.error("Error trying to get a deployment with ID " + deploymentID + ":", err);
+                    // Send it back to the caller
+                    if (callback)
+                        callback(err);
+                } else {
+                    // No error, but let's see if a matching deployment was found
+                    if (deployment) {
+                        // So far, so good, we have the right deployment.  Let's loop over all the timestamps in
+                        // the errors object and add them to the deployment (first checking to make sure there
+                        // is an error object on the deployment)
+                        if (!deployment.errors)
+                            deployment.errors = {};
+
+                        for (var timestamp in errors) {
+                            deployment.errors[timestamp] = errors[timestamp];
+                        }
+                        logger.debug("Errors updated on deployment, deployment.errors = ", deployment.errors);
+
+                        // Now update that in the couch database
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with new errors " +
+                                        "added, will try again", err);
+                                    me.addOrUpdateErrors(deploymentID, errors, callback);
+                                } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(null);
+                            }
+                        });
+                    } else {
+                        // Send an error back since no deployment was found
+                        if (callback)
+                            callback(new Error("No deployment with ID " + deploymentID + " was found"));
+                    }
+                }
+            });
+        } else {
+            // Send back an error
+            if (callback)
+                callback(new Error("Not enough parameters were supplied, should be (deploymentID, errors, callback)"));
+        }
+    }
+
+
     // ***********************************************************
     // This function takes in the ID of a deployment, the epoch
     // milliseconds of the image capture that occurred, and the image
@@ -1077,6 +1147,76 @@ function DataAccess(opts) {
                 callback(new Error("Not enough parameters supplied (deploymentID, epochMillis, image, callback)"));
         }
     };
+
+    /**
+     * This function takes in a deployment ID and an object that contains property keys which are epoch
+     * milliseconds when a Image was taken and a Image object as the property.  These Images are then added
+     * (or updated) on the deployment with the matching ID.
+     * @param deploymentID
+     * @param images
+     * @param callback
+     */
+    this.addOrUpdateImages = function (deploymentID, images, callback) {
+        // First verify the deployment ID and some images were specified
+        if (deploymentID && images) {
+            logger.debug("Going to update deployment with ID " + deploymentID + " and add/update these images:", images);
+            // We have the deployment ID, so let's find the deployment in the couch database
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
+                // First look to see if we got an error
+                if (err) {
+                    logger.error("Error trying to get a deployment with ID " + deploymentID + ":", err);
+                    // Send it back to the caller
+                    if (callback)
+                        callback(err);
+                } else {
+                    // No error, but let's see if a matching deployment was found
+                    if (deployment) {
+                        // So far, so good, we have the right deployment.  Let's loop over all the timestamps in
+                        // the images object and add them to the deployment (first checking to make sure there
+                        // is an images object on the deployment)
+                        if (!deployment.images)
+                            deployment.images = {};
+
+                        for (var timestamp in images) {
+                            deployment.images[timestamp] = images[timestamp];
+                        }
+                        logger.debug("Images updated on deployment, deployment.images = ", deployment.images);
+
+                        // Now update that in the couch database
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with new images " +
+                                        "added, will try again", err);
+                                    me.addOrUpdateImages(deploymentID, images, callback);
+                                } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(null);
+                            }
+                        });
+                    } else {
+                        // Send an error back since no deployment was found
+                        if (callback)
+                            callback(new Error("No deployment with ID " + deploymentID + " was found"));
+                    }
+                }
+            });
+        } else {
+            // Send back an error
+            if (callback)
+                callback(new Error("Not enough parameters were supplied, should be (deploymentID, images, callback)"));
+        }
+    }
+
 
     // ***********************************************************
     // This function takes in the ID of a deployment, the epoch
@@ -1160,6 +1300,78 @@ function DataAccess(opts) {
                 callback(new Error("Not enough parameters supplied (deploymentID, epochMillis, protocolRun, callback)"));
         }
     };
+
+    /**
+     * This function takes in a deployment ID and an object that contains property keys which are epoch
+     * milliseconds when a ProtolRun was started and a ProtocolRun object as the property.  These ProtocolRuns are
+     * then added (or updated) on the deployment with the matching ID.
+     * @param deploymentID
+     * @param protocolRuns
+     * @param callback
+     */
+    this.addOrUpdateProtocolRuns = function (deploymentID, protocolRuns, callback) {
+        // First verify the deployment ID and some protocolRuns were specified
+        if (deploymentID && protocolRuns) {
+            logger.debug("Going to update deployment with ID " + deploymentID +
+                " and add/update these protocolRuns:", protocolRuns);
+            // We have the deployment ID, so let's find the deployment in the couch database
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
+                // First look to see if we got an error
+                if (err) {
+                    logger.error("Error trying to get a deployment with ID " + deploymentID + ":", err);
+                    // Send it back to the caller
+                    if (callback)
+                        callback(err);
+                } else {
+                    // No error, but let's see if a matching deployment was found
+                    if (deployment) {
+                        // So far, so good, we have the right deployment.  Let's loop over all the timestamps in
+                        // the protocolRuns object and add them to the deployment (first checking to make sure there
+                        // is an protocolRuns object on the deployment)
+                        if (!deployment.protocolRuns)
+                            deployment.protocolRuns = {};
+
+                        for (var timestamp in protocolRuns) {
+                            deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
+                        }
+                        logger.debug("ProtocolRuns updated on deployment, deployment.protocolRuns = ", deployment.protocolRuns);
+
+                        // Now update that in the couch database
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                logger.error("Error caught trying to save deployment " + deployment.name);
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with new protocolRuns " +
+                                        "added, will try again", err);
+                                    me.addOrUpdateProtocolRuns(deploymentID, protocolRuns, callback);
+                                } else {
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(null);
+                            }
+                        });
+                    } else {
+                        // Send an error back since no deployment was found
+                        if (callback)
+                            callback(new Error("No deployment with ID " + deploymentID + " was found"));
+                    }
+                }
+            });
+        } else {
+            // Send back an error
+            if (callback)
+                callback(new Error("Not enough parameters were supplied, " +
+                    "should be (deploymentID, protocolRuns, callback)"));
+        }
+    }
+
 
     /**
      * This method takes in the ID of deployment and returns the most recent sample from that deployment
@@ -1297,6 +1509,77 @@ function DataAccess(opts) {
     };
 
     /**
+     * This function takes in a deployment ID and an object that contains property keys which are epoch
+     * milliseconds when a sample occurred and a Sample object as the property.  These Samples are then added
+     * (or updated) on the deployment with the matching ID.
+     * @param deploymentID
+     * @param samples
+     * @param callback
+     */
+    this.addOrUpdateSamples = function (deploymentID, samples, callback) {
+        // First verify the deployment ID and some samples were specified
+        if (deploymentID && samples) {
+            logger.debug("Going to update deployment with ID " + deploymentID + " and add/update these samples:", samples);
+            // We have the deployment ID, so let's find the deployment in the couch database
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
+                // First look to see if we got an error
+                if (err) {
+                    logger.error("Error trying to get a deployment with ID " + deploymentID + ":", err);
+                    // Send it back to the caller
+                    if (callback)
+                        callback(err);
+                } else {
+                    // No error, but let's see if a matching deployment was found
+                    if (deployment) {
+                        // So far, so good, we have the right deployment.  Let's loop over all the timestamps in
+                        // the samples object and add them to the deployment (first checking to make sure there
+                        // is a sample object on the deployment)
+                        if (!deployment.samples)
+                            deployment.samples = {};
+
+                        for (var timestamp in samples) {
+                            deployment.samples[timestamp] = samples[timestamp];
+                        }
+                        logger.debug("Samples updated on deployment, deployment.samples = ", deployment.samples);
+
+                        // Now update that in the couch database
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with new samples " +
+                                        "added, will try again", err);
+                                    me.addOrUpdateSamples(deploymentID, samples, callback);
+                                } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(err);
+                            }
+                        });
+                    } else {
+                        // Send an error back since no deployment was found
+                        if (callback)
+                            callback(new Error("No deployment with ID " + deploymentID + " was found"));
+                    }
+                }
+            });
+        } else {
+            // Send back an error
+            if (callback)
+                callback(new Error("Not enough parameters were supplied, should be (deploymentID, samples, callback)"));
+        }
+    }
+
+
+    /**
      *
      * @param deploymentID
      * @param endEpochMillis
@@ -1395,19 +1678,17 @@ function DataAccess(opts) {
     };
 
     /**
-     *
-     * @param pcrType
-     * @param pcrRunName
-     * @param pcrStartDate
-     * @param pcrColumnHeader
-     * @param dataRecord
+     * This is a method that takes in an array of PCRData entries and attaches them to a deployment that
+     * matches the given ID.
+     * @param deploymentID
+     * @param pcrDataArray
      * @param callback
      */
-    this.addPCRData = function (deploymentID, pcrData, callback) {
+    this.addPCRData = function (deploymentID, pcrDataArray, callback) {
         // Make sure all the parameters are valid
-        if (deploymentID && pcrData) {
+        if (deploymentID && pcrDataArray) {
             // OK, so we have the information we need, let's grab the deployment specified
-            this.couchDBConn.get(deploymentID, function (err, doc) {
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
                 // If an error occurred, send it back
                 if (err) {
                     logger.error("Error looking for deployment with ID " + deploymentID);
@@ -1415,36 +1696,43 @@ function DataAccess(opts) {
                         callback(err);
                 } else {
                     // Make sure we got something back
-                    if (doc) {
-                        // OK, we now have the deployment and the PCR data to be added.  It will be an object
-                        // that has pcr types as keys, so we need to loop over the pcrTypes first
-                        for (var pcrType in pcrData) {
-                            // Now next item will be the PCR run name
-                            for (var pcrRunName in pcrData[pcrType]) {
-                                // Now the item will be the timestamp of the file that was processed
-                                for (var timestamp in pcrData[pcrType][pcrRunName]) {
-                                    // Add (or replace the entry on the deployment with this information
-                                    if (!doc.pcrs)
-                                        doc.pcrs = {};
-                                    if (!doc.pcrs[pcrType])
-                                        doc.pcrs[pcrType] = {};
-                                    if (!doc.pcrs[pcrType][pcrRunName])
-                                        doc.pcrs[pcrType][pcrRunName] = {};
-                                    if (!doc.pcrs[pcrType][pcrRunName][timestamp])
-                                        doc.pcrs[pcrType][pcrRunName][timestamp] = pcrData[pcrType][pcrRunName][timestamp];
+                    if (deployment) {
+                        // OK, we now have the deployment and the PCR data to be added.  The PCR data is in an array,
+                        // so we need to iterate over the array to get at the individual entries.
+                        for (var i = 0; i < pcrDataArray.length; i++) {
+                            // Grab the data
+                            var pcrData = pcrDataArray[i];
+
+                            // It will be an object that has pcr types as keys, so we need to
+                            // loop over the pcrTypes first
+                            for (var pcrType in pcrData) {
+                                // Now next item will be the PCR run name
+                                for (var pcrRunName in pcrData[pcrType]) {
+                                    // Now the item will be the timestamp of the file that was processed
+                                    for (var timestamp in pcrData[pcrType][pcrRunName]) {
+                                        // Add (or replace the entry on the deployment with this information
+                                        if (!deployment.pcrs)
+                                            deployment.pcrs = {};
+                                        if (!deployment.pcrs[pcrType])
+                                            deployment.pcrs[pcrType] = {};
+                                        if (!deployment.pcrs[pcrType][pcrRunName])
+                                            deployment.pcrs[pcrType][pcrRunName] = {};
+                                        if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
+                                            deployment.pcrs[pcrType][pcrRunName][timestamp] =
+                                                pcrData[pcrType][pcrRunName][timestamp];
+                                    }
                                 }
                             }
                         }
-                        // Now we need to add the pcr data
-                        // Now save it
-                        me.couchDBConn.save(doc, function (err, res) {
+                        // Now we need to save the deployment
+                        me.couchDBConn.save(deployment, function (err, res) {
                             // If error, check for document conflict
                             if (err) {
                                 // Make sure the error is a conflict error before recursing
                                 if (err.error === 'conflict') {
                                     logger.warn("Conflict trapped trying to add PCR data, " +
                                         "will try again", err);
-                                    me.addPCRData(deploymentID, pcrData, callback);
+                                    me.addPCRData(deploymentID, pcrDataArray, callback);
                                 } else {
                                     // Since the error is not a conflict error, bail out
                                     if (callback)
@@ -1468,7 +1756,7 @@ function DataAccess(opts) {
             logger.error("Not enough parameters in call");
             if (callback)
                 callback(new Error("Not enough parameters were specified, should be " +
-                    "(deploymentID, pcrData, callback"));
+                    "(deploymentID, pcrDataArray, callback"));
         }
     };
 
@@ -2118,7 +2406,8 @@ function DataAccess(opts) {
 
                 // Look up the ancillary source ID from the deployment
                 me.getAncillaryDataSourceID(deploymentID, espName, sourceName, varName, varLongName, varUnits,
-                    logUnits, timestamp, data, function (err, sourceID, cbDeploymentID, cbEspName, cbSourceName, cbVarName, cbVarLongName, cbVarUnits, cbLogUnits, cbTimestamp, cbData) {
+                    logUnits, timestamp, data,
+                    function (err, sourceID, cbDeploymentID, cbEspName, cbSourceName, cbVarName, cbVarLongName, cbVarUnits, cbLogUnits, cbTimestamp, cbData) {
                         // Check for error
                         if (err) {
                             // And send the error back
@@ -2141,7 +2430,9 @@ function DataAccess(opts) {
                             } else {
                                 // Log it and keep going
                                 logger.error("No source ID found for deployment ID " + deploymentID +
-                                    " of esp " + espName + " using record:", recordToProcess);
+                                    " of esp " + espName + " with source:(name = " + sourceName + ", varName = " +
+                                    varName + ", varLongName = " + varLongName) + ", varUnits = " + varUnits +
+                                    ", logUnits = " + logUnits;
                             }
                         }
 
@@ -2151,7 +2442,7 @@ function DataAccess(opts) {
                         // Now if we have processed enough records to fire an insert or have processed
                         // all the records, do a bulk insert
                         if (numberOfRecordsProcessed === originalNumberOfRecords) {
-                            logger.debug("Going to insert using statement:\n" + valueText);
+                            logger.trace("Going to insert using statement:\n" + valueText);
                             // Grab a connection from the pool
                             pg.connect(me.pgConnectionString, function (err, client, done) {
                                 // If there was an error, send it to the caller
@@ -2293,296 +2584,6 @@ function DataAccess(opts) {
         }
     }
 
-    // ***********************************************************
-    // This method takes in a Deployment object and an array of ancillary date records of the form
-    // (instrument_type, variable_name, variable_long_name, units, units_from_log_file, timestamp_utc, data)
-    // and then inserts the ancillary data in the PostgreSQL DB and updates the Deployment with
-    // the updated ancillary data information
-    // ***********************************************************
-//    this.insertAncillaryDataArray = function (deployment, ancillaryDataArray, callback) {
-//        logger.debug('insertAncillaryDataArray called with deployment ');
-//        logger.debug(deployment);
-//        logger.debug('and with an array of ' + ancillaryDataArray.length + ' points');
-//
-//        // Grab a reference to self
-//        var self = this;
-//
-//        // Make sure we have data to process
-//        if (ancillaryDataArray && ancillaryDataArray.length && ancillaryDataArray.length > 0) {
-//
-//            // Next, let's make sure there is a deployment and some ancillary data points to
-//            // actually process, otherwise, throw an error
-//            if (deployment && deployment.ancillaryData) {
-//
-//                // We are looking good to go, so let's call the method that will make sure
-//                // we have source IDs associated with the deployment
-//                assignSourceIDsToDeployment(deployment, function (err, updatedDeployment) {
-//
-//                    // Check for errors first
-//                    if (err) {
-//                        callback(err);
-//                    } else {
-//                        // Persist any changes to the deployment
-//                        logger.info('DataAccess calling persistDeployment on ' + updatedDeployment.name + '(rev=' + updatedDeployment._rev + ')');
-//                        self.persistDeployment(updatedDeployment, function (err, updatedUpdatedDeployment) {
-//                            if (err) {
-//                                callback(err);
-//                            } else {
-//                                // Now I have the deployment with all ancillary sources having ID's,
-//                                // go ahead and persist the actual data points.  First create the PostgreSQL
-//                                // client and then pass it into the method to insert the data
-//                                pg.connect(self.pgConnectionString, function (err, client, done) {
-//                                    // Check for any error
-//                                    if (err) {
-//                                        logger.error('Error connection to the postgres DB');
-//                                        logger.error(err);
-//                                        callback(err);
-//                                    } else {
-//                                        // Client should be good to go, call the method to process the data
-//                                        insertAncillaryDataArray(updatedUpdatedDeployment, client, ancillaryDataArray, function (err, deploymentAfterDataInsert) {
-//                                            // Call done to clean up the DB
-//                                            done();
-//                                            // And persist the updated deployment
-//                                            logger.info('DataAccess calling persistDeployment on ' + deploymentAfterDataInsert.name + '(rev=' + deploymentAfterDataInsert._rev + ')');
-//                                            self.persistDeployment(deploymentAfterDataInsert, function (err, lastUpdatedDeployment) {
-//                                                callback(err, lastUpdatedDeployment);
-//                                            });
-//
-//                                            // Emit and event that ancillary data was updated
-//                                            self.emit('ancillaryDataPersisted', {
-//                                                deployment: deploymentAfterDataInsert
-//                                            });
-//
-//                                        });
-//                                    }
-//                                });
-//                            }
-//                        });
-//                    }
-//                });
-//            } else {
-//                callback(new Error('No deployment or ancillary data objects associated with the deployment'));
-//            }
-//        } else {
-//            // No data was to be processed, just return
-//            callback(null, deployment);
-//        }
-//
-//        // This method takes in a deployment and ensures there are IDs associated with each of the
-//        // ancillary data objects.
-//        function assignSourceIDsToDeployment(deployment, callback) {
-//            logger.debug('Going to check all source IDs for deployment');
-//            logger.debug(deployment);
-//            var deploymentForAssigning = deployment;
-//
-//            // Connect to the database
-//            pg.connect(self.pgConnectionString, function (err, client, done) {
-//
-//                // Check for errors connecting to the DB
-//                if (err) {
-//                    // Log the error
-//                    logger.fatal('Error connecting to Postgres when assigning source IDs');
-//                    logger.fatal(err);
-//
-//                    // Send to callback
-//                    callback(err);
-//                } else {
-//                    // The number of variables to be processed
-//                    var numberOfVariablesToProcess = 0;
-//
-//                    // Start by grabbing the names of the data sources from the deployment
-//                    var sourceNames = Object.keys(deploymentForAssigning.ancillaryData);
-//
-//                    // Let's count up the total number of variables there are to check
-//                    sourceNames.forEach(function (sourceName) {
-//                        numberOfVariablesToProcess += Object.keys(deploymentForAssigning.ancillaryData[sourceName]).length;
-//                    });
-//                    logger.debug('There are a total of ' + numberOfVariablesToProcess + ' variables to check');
-//
-//                    // Successful connection to the DB, now loop over the sources
-//                    sourceNames.forEach(function (sourceName) {
-//
-//                        // Now loop over the log units for that source
-//                        Object.keys(deploymentForAssigning.ancillaryData[sourceName]).forEach(function (logUnits) {
-//
-//                            logger.debug('Checking ' + sourceName + ' unit ' + logUnits);
-//                            logger.debug(deploymentForAssigning.ancillaryData[sourceName][logUnits]);
-//
-//                            // Check to see if the ancillary source ID has already been assigned
-//                            if (deploymentForAssigning.ancillaryData[sourceName][logUnits]['sourceID'] &&
-//                                deploymentForAssigning.ancillaryData[sourceName][logUnits]['sourceID'] > 0) {
-//
-//                                logger.debug('ID already exists, skip it');
-//                                // Decrement the number of variables to process since we are processing one now
-//                                numberOfVariablesToProcess--;
-//
-//                                if (numberOfVariablesToProcess === 0) {
-//                                    logger.debug('Done checking for source IDs, close the DB and send ' +
-//                                        'updated deployment to callback');
-//                                    done();
-//                                    callback(null, deploymentForAssigning);
-//                                }
-//                            } else {
-//                                client.query('SELECT id from ancillary_sources where deployment_id_fk = $1 ' +
-//                                    'and esp_name = $2 and instrument_type = $3 ' +
-//                                    'and log_units = $4',
-//                                    [deploymentForAssigning._id, deploymentForAssigning.esp.name, sourceName, logUnits],
-//                                    function (err, result) {
-//                                        // Check for any errors first
-//                                        if (err) {
-//                                            // Log the error
-//                                            logger.error('DB error searching for ancillary source ID');
-//                                            logger.error(err);
-//
-//                                            // Decrement the number of variables to process since we are processing one now
-//                                            numberOfVariablesToProcess--;
-//
-//                                            // Close the connection and send back to caller with error
-//                                            done();
-//                                            callback(err);
-//                                        } else {
-//                                            // The query for the ancillary source executed OK, we now need to check
-//                                            // to see if the ancillary source query returned anything
-//                                            if (result && result.rows && result.rows.length > 0) {
-//
-//                                                // Yep, found it, grab the result and add it to the deployment info
-//                                                deploymentForAssigning.ancillaryData[sourceName][logUnits]['sourceID'] = result.rows[0].id;
-//                                                logger.debug('ID already in DB: ' + result.rows[0].id);
-//
-//                                                // Decrement the number of variables to process since we are processing one now
-//                                                numberOfVariablesToProcess--;
-//
-//                                                // Check if we are done
-//                                                if (numberOfVariablesToProcess === 0) {
-//                                                    logger.debug('Done checking for source IDs, close the DB and send ' +
-//                                                        'updated deployment to callback');
-//                                                    done();
-//                                                    callback(null, deploymentForAssigning);
-//                                                }
-//                                            } else {
-//                                                // No, luck will have to insert one and add it to the deployment, then send it back
-//                                                client.query('INSERT INTO ancillary_sources(deployment_id_fk, esp_name, instrument_type, ' +
-//                                                    'var_name, var_long_name, log_units, units) values ($1,$2,$3,$4,$5,$6,$7) RETURNING id',
-//                                                    [deploymentForAssigning._id, deploymentForAssigning.esp.name, sourceName,
-//                                                        deploymentForAssigning.ancillaryData[sourceName][logUnits].varName,
-//                                                        deploymentForAssigning.ancillaryData[sourceName][logUnits].varLongName,
-//                                                        logUnits, deploymentForAssigning.ancillaryData[sourceName][logUnits].units],
-//                                                    function (err, result) {
-//                                                        // Check for errors
-//                                                        if (err) {
-//                                                            // Log the error
-//                                                            logger.warn('Error trying to insert a new ancillary data source for');
-//                                                            logger.warn(err);
-//
-//                                                            // Decrement the number of variables to process since we are processing one now
-//                                                            numberOfVariablesToProcess--;
-//
-//                                                            // Close the database and send back to caller
-//                                                            done();
-//                                                            callback(err);
-//                                                        } else {
-//                                                            // Grab the ID of the ancillary source and set it
-//                                                            deploymentForAssigning.ancillaryData[sourceName][logUnits]['sourceID'] = result.rows[0].id;
-//                                                            logger.debug('Created new source ID of ' + result.rows[0].id);
-//
-//                                                            // Decrement the number of variables to process since we are processing one now
-//                                                            numberOfVariablesToProcess--;
-//
-//                                                            // Check if we are done
-//                                                            if (numberOfVariablesToProcess === 0) {
-//                                                                logger.debug('Done checking for source IDs, close the DB and send ' +
-//                                                                    'updated deployment to callback');
-//                                                                done();
-//                                                                callback(null, deploymentForAssigning);
-//                                                            }
-//                                                        }
-//                                                    }
-//                                                );
-//                                            }
-//                                        }
-//                                    } // End callback function to handle results of search for existing source ID
-//                                ); // End of query to search for existing ID
-//                            }
-//                        });
-//                    }); // End foreach over source names
-//                } // End if-else from error trap on database connection callback
-//            }); // End pg.connect call
-//
-//        }
-//
-//        // This is a recursive method that processes ancillary data from an array, inserts them into the PostgreSQL
-//        // database and updates the deployment with the updated information
-//        function insertAncillaryDataArray(deployment, pgClient, ancillaryDataArray, callback) {
-//            logger.debug('insertAncillaryDataArray called with data array size of ' + ancillaryDataArray.length);
-//            logger.debug('Callback function is ', callback);
-//            // Create a counter to count the current number of records that have been popped off the array
-//            var numRecordsProcessed = 0;
-//
-//            // The value text clause that will be used in the insert
-//            var valueText = '';
-//
-//            // Now loop until you have reached the batch size or until the array is empty
-//            while (numRecordsProcessed < self.numAncillaryPointsToBatch && ancillaryDataArray.length > 0) {
-//                // Pop a record off the array
-//                var recordToProcess = ancillaryDataArray.pop();
-//                // Look up the ancillary source ID from the deployment
-//                if (deployment && deployment.ancillaryData && deployment.ancillaryData[recordToProcess[0]] &&
-//                    deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]] &&
-//                    deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].sourceID &&
-//                    deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].sourceID > 0) {
-//
-//                    // Make sure there is a field for number of points
-//                    if (deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].numPoints &&
-//                        deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].numPoints >= 0) {
-//                        // Bump the counter on the number of variables
-//                        deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].numPoints++;
-//                    } else {
-//                        // Initialize it to one
-//                        deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].numPoints = 1;
-//                    }
-//
-//                    // Check to see if a comma is necessary
-//                    if (valueText !== '') {
-//                        valueText += ',';
-//                    }
-//
-//                    // Append the insert value
-//                    valueText += '(' + deployment.ancillaryData[recordToProcess[0]][recordToProcess[4]].sourceID +
-//                        ',\'' + recordToProcess[5] + '\',' + recordToProcess[6] + ')';
-//
-//                }
-//                // Bump the counter
-//                numRecordsProcessed++;
-//            }
-//
-//            // Create the query and run it
-//            pgClient.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
-//                'timestamp_utc, value) values ' + valueText, function (err, result) {
-//
-//                // Check for errors
-//                if (err) {
-//                    logger.error('Error inserting bulk rows');
-//                    logger.error(err);
-//                    callback(err);
-//                } else {
-//                    // So it looks like the insert was successful, let's recursively call this method
-//                    // with any remaining records
-//                    logger.debug('Done with bulk insert and inserted ', result);
-//                    if (ancillaryDataArray.length > 0) {
-//                        logger.debug('Now recursively calling with ' + ancillaryDataArray.length
-//                            + ' records left to process');
-//                        insertAncillaryDataArray(deployment, pgClient, ancillaryDataArray, callback);
-//                        // And return
-//                        return;
-//                    } else {
-//                        // Call the callback that has been passed down as we are done!
-//                        callback(null, deployment);
-//                    }
-//                }
-//            });
-//        }
-//    }
-//
     // This method uses the information in the database to synchronize a file that represents the parsed
     // ancillary data from the various sources.
     this.syncAncillaryDataFileWithDatabase = function (deployment, basedir, callback) {

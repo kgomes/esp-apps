@@ -250,11 +250,26 @@ function LogParser(dataAccess, dataDir, opts) {
             // entries that span more than one line
             var lineSegments = [];
 
+            // This is an object with the Error that will be added to the deployment when the parsing is all done
+            var errorsToBeAdded = {};
+
             // This is the object to track Samples that is kept locally to make sure all start and stop
             // of samples are accurately recorded.  This had to be done because samples span
             // multiple lines and with asynchronous commits, things can happen out of order and
             // the sample parsing gets all messed up.
-            var samplesBeingParsed = {};
+            var samplesToBeAdded = {};
+
+            // This is the object with images that are parsed from the log file and will be added to the deployment
+            // when the parsing is done.
+            var imagesToBeAdded = {};
+
+            // This is the object with protocol runs that are parsed from the log file and will be added to the
+            // deployment when the parsing is all done.
+            var protocolRunsToBeAdded = {};
+
+            // This is the object that will track the pcrData entries that will need to be added to the deployment
+            // after parsing
+            var pcrDataArray = [];
 
             // Create the read stream
             var fileReadStream = fs.createReadStream(logFile);
@@ -270,12 +285,31 @@ function LogParser(dataAccess, dataDir, opts) {
                 // Log out end of file read
                 logger.debug("Completed reading of file " + logFile);
 
-                // Commit any left over samples that might not have ended in the log file.
-                for (var sampleTS in samplesBeingParsed) {
-                    me.dataAccess.addOrUpdateSample(deployment._id, sampleTS, samplesBeingParsed[sampleTS], function (err) {
-                        logger.error("Error returned while trying to save a sample that was not processed yet:", err);
-                    });
-                }
+                // Update the deployment with any errors
+                me.dataAccess.addOrUpdateErrors(deployment._id, errorsToBeAdded, function (err) {
+                    if (err)
+                        logger.error("Error returned while trying to add the parsed errors to the deployment:", err);
+
+                });
+
+                // Update the deployment with any parsed images
+                me.dataAccess.addOrUpdateImages(deployment._id, imagesToBeAdded, function (err) {
+                    if (err)
+                        logger.error("Error returned while trying to add the parsed images to the deployment:", err);
+                });
+
+                // Update the deployment with any parsed samples
+                me.dataAccess.addOrUpdateSamples(deployment._id, samplesToBeAdded, function (err) {
+                    if (err)
+                        logger.error("Error returned while trying to add the parsed samples to the deployment:", err);
+                });
+
+                // Update the deployment with any parsed protocolRuns
+                me.dataAccess.addOrUpdateProtocolRuns(deployment._id, protocolRunsToBeAdded, function (err) {
+                    if (err)
+                        logger.error("Error returned while trying to add the " +
+                            "parsed protocolRuns to the deployment:", err);
+                });
 
                 // Flush the ancillary data in data access
                 me.dataAccess.flushAncillaryDataRecords(deployment._id, deployment.esp.name, me.dataDir, function (err) {
@@ -287,12 +321,19 @@ function LogParser(dataAccess, dataDir, opts) {
                     }
                 });
 
+                // If any PCR data was found, add that
+                if (pcrDataArray.length > 0) {
+                    me.dataAccess.addPCRData(deployment._id, pcrDataArray, function (err) {
+                        if (err)
+                            logger.error("Error returned while trying to add the parsed PCR data to the deployment:", err);
+                    });
+                }
+
                 // Set the line number where we ended to the last line parsed for the deployment
                 me.dataAccess.setLastLineParsedInLogFile(deployment._id, lineNumber);
 
                 // Return the updated deployment and ancillary data array to the callback
                 callback(null, deployment, null);
-
             });
 
             // Before we start parsing, grab the most recent sample from the stored deployment and if
@@ -308,7 +349,7 @@ function LogParser(dataAccess, dataDir, opts) {
                 // If a sample was returned and it has no end timestamp, add it to the array of samples that
                 // are being parsed as it is was most likely started in the last parsing, but never finished
                 if (latestSample && !latestSample.endts && latestSampleTS) {
-                    samplesBeingParsed[latestSampleTS] = latestSample;
+                    samplesToBeAdded[latestSampleTS] = latestSample;
                 }
 
                 // Now loop over the lines in the log file
@@ -326,7 +367,8 @@ function LogParser(dataAccess, dataDir, opts) {
 
                             // Concatenate the line segment and process the log entry
                             var tempTimestampUTC = processLogEntry(lineNumber, Buffer.concat(lineSegments),
-                                timestampUTC, deployment, samplesBeingParsed);
+                                timestampUTC, deployment, errorsToBeAdded, samplesToBeAdded, imagesToBeAdded,
+                                protocolRunsToBeAdded, pcrDataArray);
 
                             // If a timestamp was returned, update the last known timestamp
                             if (tempTimestampUTC) {
@@ -362,7 +404,7 @@ function LogParser(dataAccess, dataDir, opts) {
 
 
         // This is the function that will process a line from the log file and return a timestamp
-        function processLogEntry(lineNumber, completeLineBuffer, lastTimestampUTC, deployment, samplesBeingParsed) {
+        function processLogEntry(lineNumber, completeLineBuffer, lastTimestampUTC, deployment, errorsToBeAdded, samplesBeingParsed, imagesToBeAdded, protocolRunsToBeAdded, pcrDataArray) {
 
             //logger.trace("Line " + lineNumber + "->" + completeLineBuffer.toString());
 
@@ -516,14 +558,162 @@ function LogParser(dataAccess, dataDir, opts) {
                             message: errorMatches[1]
                         };
 
-                        // Now add or update it
-                        me.dataAccess.addOrUpdateError(deployment._id, lastTimestampUTC.valueOf(), newError,
-                            function (err) {
-                                if (err)
-                                    logger.error("Error trying to add new error to deployment at timestamp " +
-                                        lastTimestampUTC.valueOf(), err);
-                            });
+                        // Add it to the object to be added to the deploymen later
+                        errorsToBeAdded[lastTimestampUTC.valueOf()] = newError;
+                    } else if (imageMatches && imageMatches.length > 0) {
+                        logger.debug("Image line found: ", completeLineBuffer.toString());
 
+                        // First grab the full local path on the ESP where the image is located
+                        var fullImagePath = imageMatches[5] + imageMatches[6];
+                        logger.debug("Image path on ESP is " + fullImagePath);
+
+                        // The local path to the base of the FTP file sync
+                        var localDeploymentRootPath = me.dataDir + path.sep + "instances" + path.sep +
+                            deployment.esp.name + path.sep + "deployments" + path.sep + deployment.name + path.sep +
+                            "data" + path.sep + "raw";
+                        logger.debug("Local deployment root path is " + localDeploymentRootPath);
+
+                        // The base URL for the TIF image
+                        var localDeploymentRootTIFPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
+                            deployment.name + "/data/raw";
+
+                        // The base URL for the JPG version
+                        var localDeploymentRootJPGPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
+                            deployment.name + "/data/processed";
+
+                        // Construct the local path to the image using the full path on the ESP minus any path
+                        // defined on the deployment.  If there is no path defined on the deployment, take a best
+                        // guess
+                        var imageLocationOnDisk = null;
+                        var imageLocationTIFURL = null;
+                        var imageLocationJPGURL = null;
+                        if (deployment.esp && deployment.esp.path) {
+                            // Since we have an ESP relative path where the image is located, we just replace
+                            // that in the full path with the local roots
+                            imageLocationOnDisk = fullImagePath.replace(deployment.esp.path, localDeploymentRootPath);
+                            imageLocationTIFURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootTIFPathURL);
+                            imageLocationJPGURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootJPGPathURL).replace(".tif", ".jpg");
+                        } else {
+                            // This is our best guess and should be where most of the images live
+                            imageLocationOnDisk = localDeploymentRootPath + path.sep +
+                                "esp" + path.sep + imageMatches[6];
+                            imageLocationTIFURL = localDeploymentRootTIFPathURL + "/esp/" + imageMatches[6];
+                            imageLocationJPGURL = localDeploymentRootJPGPathURL + "/esp/" +
+                                imageMatches[6].replace(".tif", ".jpg");
+                        }
+                        logger.debug("If image was downloaded it should be found here: " + imageLocationOnDisk);
+                        var isOnDisk = false;
+                        if (fs.existsSync(imageLocationOnDisk)) {
+                            logger.debug("It IS on disk!");
+                            isOnDisk = true;
+                        } else {
+                            logger.debug("Nope, not on disk");
+                        }
+
+                        // Create the new image and extract the
+                        logger.debug("IMAGE: " + bodyBuffer.toString());
+                        var image = {
+                            xPixels: imageMatches[1],
+                            yPixels: imageMatches[2],
+                            bits: imageMatches[3],
+                            exposure: imageMatches[4],
+                            imageFilename: imageMatches[6],
+                            fullImagePath: fullImagePath,
+                            downloaded: isOnDisk,
+                            tiffUrl: imageLocationTIFURL,
+                            imageUrl: imageLocationJPGURL
+                        }
+
+                        // Add the image to the array of images to be added to the deployment
+                        imagesToBeAdded[lastTimestampUTC.valueOf()] = image;
+
+                    } else if (protocolRunStartMatches && protocolRunStartMatches.length > 0) {
+                        logger.debug("ProtocolRun!:" + bodyBuffer.toString() + "->");
+                        logger.debug("[0]:" + protocolRunStartMatches[0]);
+                        logger.debug("[1]:" + protocolRunStartMatches[1]);
+                        logger.debug("[2]:" + protocolRunStartMatches[2]);
+                        if (protocolRunStartMatches[3])
+                            logger.debug("[3]:" + protocolRunStartMatches[3]);
+
+                        // Now extract the information
+                        var protocolRun = {
+                            actor: me.currentActor,
+                            name: protocolRunStartMatches[1],
+                            targetVol: protocolRunStartMatches[2]
+                        }
+
+                        // Now if there is a clause after that, there is an archive
+                        if (protocolRunStartMatches[3]) {
+                            // The pattern for the archive
+                            var archiveRegExp = new RegExp(/, wcr at most (\d+\.*\d*)ml/);
+                            var archiveMatches = protocolRunStartMatches[3].match(archiveRegExp);
+                            if (archiveMatches && archiveMatches.length > 0) {
+                                protocolRun.archive = {
+                                    name: "wcr",
+                                    targetVol: archiveMatches[1]
+                                }
+                            }
+                        }
+
+                        // Add it to the array of protocols run to be added to the deployment
+                        protocolRunsToBeAdded[lastTimestampUTC.valueOf()] = protocolRun;
+
+                    } else if (dwsmSampleStartMatches && dwsmSampleStartMatches.length > 0) {
+                        // We have found the start of a DWSM inhale, let's create a new Sample
+                        var newSample = {
+                            actor: me.currentActor,
+                            dwsm: true,
+                            targetVolume: dwsmSampleStartMatches[1]
+                        }
+
+                        // Add it to the array of samples being parsed
+                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
+
+                    } else if (dwsmSampleEndMatches && dwsmSampleEndMatches.length > 0) {
+                        // Now we have found the end of a DWSM sample, let's look in the array of samples
+                        // being parsed and find the most recent DWSM sample that has no end time
+                        for (var sampleStartTS in samplesBeingParsed) {
+                            if (samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
+                                // It's a DWSM with no end time, we will assume this to be the right one. Set the
+                                // end time and set the actual volume equal to the target volume as there is currently
+                                // no way to tell how much was actually sampled
+                                samplesBeingParsed[sampleStartTS].endts = lastTimestampUTC.valueOf();
+                                samplesBeingParsed[sampleStartTS].actualVolume =
+                                    samplesBeingParsed[sampleStartTS].targetVolume;
+
+                                // End the loop
+                                break;
+                            }
+                        }
+                    } else if (sampleStartMatches && sampleStartMatches.length > 0) {
+
+                        // We have found the start of sample, create a new sample
+                        var newSample = {
+                            actor: me.currentActor,
+                            targetVolume: sampleStartMatches[1]
+                        }
+                        // Now add it to the local sample tracking object
+                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
+
+                    } else if (sampleEndMatches && sampleEndMatches.length > 0) {
+                        // Since I have found a sample end, grab the end timestamp and the actual volume sampled
+                        var endSampleTS = lastTimestampUTC.valueOf();
+                        var actualVolume = sampleEndMatches[1];
+
+                        // Now look in the local sample tracking object for the sample that this will match with
+                        for (var sampleStartTS in samplesBeingParsed) {
+                            if (!samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
+                                // Should be a regular sample with no timestamp so we will assume it is the one
+                                // we are looking for.  Set the end time and actual volume (if found)
+                                samplesBeingParsed[sampleStartTS].endts = lastTimestampUTC.valueOf();
+                                if (actualVolume) {
+                                    samplesBeingParsed[sampleStartTS].actualVolume = actualVolume;
+                                }
+
+                                // End the loop
+                                break;
+                            }
+                        }
                     } else if (ancillaryMatches && ancillaryMatches.length > 0) {
                         // TODO figure out how we are going to write to a file for downloading (or pull from URL)
 
@@ -664,204 +854,6 @@ function LogParser(dataAccess, dataDir, opts) {
                                 }
                             }
                         }
-                    }
-                    else if (imageMatches && imageMatches.length > 0) {
-                        logger.debug("Image line found: ", completeLineBuffer.toString());
-
-                        // First grab the full local path on the ESP where the image is located
-                        var fullImagePath = imageMatches[5] + imageMatches[6];
-                        logger.debug("Image path on ESP is " + fullImagePath);
-
-                        // The local path to the base of the FTP file sync
-                        var localDeploymentRootPath = me.dataDir + path.sep + "instances" + path.sep +
-                            deployment.esp.name + path.sep + "deployments" + path.sep + deployment.name + path.sep +
-                            "data" + path.sep + "raw";
-                        logger.debug("Local deployment root path is " + localDeploymentRootPath);
-
-                        // The base URL for the TIF image
-                        var localDeploymentRootTIFPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
-                            deployment.name + "/data/raw";
-
-                        // The base URL for the JPG version
-                        var localDeploymentRootJPGPathURL = "/data/instances/" + deployment.esp.name + "/deployments/" +
-                            deployment.name + "/data/processed";
-
-                        // Construct the local path to the image using the full path on the ESP minus any path
-                        // defined on the deployment.  If there is no path defined on the deployment, take a best
-                        // guess
-                        var imageLocationOnDisk = null;
-                        var imageLocationTIFURL = null;
-                        var imageLocationJPGURL = null;
-                        if (deployment.esp && deployment.esp.path) {
-                            // Since we have an ESP relative path where the image is located, we just replace
-                            // that in the full path with the local roots
-                            imageLocationOnDisk = fullImagePath.replace(deployment.esp.path, localDeploymentRootPath);
-                            imageLocationTIFURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootTIFPathURL);
-                            imageLocationJPGURL = fullImagePath.replace(deployment.esp.path, localDeploymentRootJPGPathURL).replace(".tif", ".jpg");
-                        } else {
-                            // This is our best guess and should be where most of the images live
-                            imageLocationOnDisk = localDeploymentRootPath + path.sep +
-                                "esp" + path.sep + imageMatches[6];
-                            imageLocationTIFURL = localDeploymentRootTIFPathURL + "/esp/" + imageMatches[6];
-                            imageLocationJPGURL = localDeploymentRootJPGPathURL + "/esp/" +
-                                imageMatches[6].replace(".tif", ".jpg");
-                        }
-                        logger.debug("If image was downloaded it should be found here: " + imageLocationOnDisk);
-                        var isOnDisk = false;
-                        if (fs.existsSync(imageLocationOnDisk)) {
-                            logger.debug("It IS on disk!");
-                            isOnDisk = true;
-                        } else {
-                            logger.debug("Nope, not on disk");
-                        }
-
-                        // Create the new image and extract the
-                        logger.debug("IMAGE: " + bodyBuffer.toString());
-                        var image = {
-                            xPixels: imageMatches[1],
-                            yPixels: imageMatches[2],
-                            bits: imageMatches[3],
-                            exposure: imageMatches[4],
-                            imageFilename: imageMatches[6],
-                            fullImagePath: fullImagePath,
-                            downloaded: isOnDisk,
-                            tiffUrl: imageLocationTIFURL,
-                            imageUrl: imageLocationJPGURL
-                        }
-
-                        // Now add it to the deployment if it's not there
-                        me.dataAccess.addOrUpdateImage(deployment._id, lastTimestampUTC.valueOf(), image,
-                            function (err) {
-                                if (err)
-                                    logger.error("Error trying to add new image to deployment at timestamp " +
-                                        lastTimestampUTC.valueOf(), err);
-                            });
-                    } else if (protocolRunStartMatches && protocolRunStartMatches.length > 0) {
-                        logger.debug("ProtocolRun!:" + bodyBuffer.toString() + "->");
-                        logger.debug("[0]:" + protocolRunStartMatches[0]);
-                        logger.debug("[1]:" + protocolRunStartMatches[1]);
-                        logger.debug("[2]:" + protocolRunStartMatches[2]);
-                        if (protocolRunStartMatches[3])
-                            logger.debug("[3]:" + protocolRunStartMatches[3]);
-
-                        // We have found the start of a protocol run, first make sure there are protocolRuns
-                        //if (!deployment.protocolRuns) deployment.protocolRuns = {};
-
-                        // Now extract the information
-                        var protocolRun = {
-                            actor: me.currentActor,
-                            name: protocolRunStartMatches[1],
-                            targetVol: protocolRunStartMatches[2]
-                        }
-
-                        // Now if there is a clause after that, there is an archive
-                        if (protocolRunStartMatches[3]) {
-                            // The pattern for the archive
-                            var archiveRegExp = new RegExp(/, wcr at most (\d+\.*\d*)ml/);
-                            var archiveMatches = protocolRunStartMatches[3].match(archiveRegExp);
-                            if (archiveMatches && archiveMatches.length > 0) {
-                                protocolRun.archive = {
-                                    name: "wcr",
-                                    targetVol: archiveMatches[1]
-                                }
-                            }
-                        }
-
-                        // Now add it to the deployment
-                        me.dataAccess.addOrUpdateProtocolRun(deployment._id, lastTimestampUTC.valueOf(), protocolRun,
-                            function (err) {
-                                if (err)
-                                    logger.error("Error trying to add new protocol run to deployment at timestamp " +
-                                        lastTimestampUTC.valueOf(), err);
-                            });
-                    } else if (dwsmSampleStartMatches && dwsmSampleStartMatches.length > 0) {
-                        // We have found the start of a DWSM inhale, let's create a new Sample
-                        var newSample = {
-                            actor: me.currentActor,
-                            dwsm: true,
-                            targetVolume: dwsmSampleStartMatches[1]
-                        }
-
-                        // Add it to the array of samples being parsed
-                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
-
-                    } else if (dwsmSampleEndMatches && dwsmSampleEndMatches.length > 0) {
-                        // Now we have found the end of a DWSM sample, let's look in the array of samples
-                        // being parsed and find the most recent DWSM sample that has no end time
-                        for (var sampleStartTS in samplesBeingParsed) {
-                            if (samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
-                                // It's a DWSM with no end time, we will assume this to be the right one.
-
-                                // Grab the timestamp and the sample out of the tracking object
-                                var latestDWSMStartTS = sampleStartTS;
-                                var latestDWSMSample = samplesBeingParsed[sampleStartTS];
-
-                                // Remove it from the tracking object so it won't get processed by another cycle
-                                delete samplesBeingParsed[sampleStartTS];
-
-                                // Set the end time
-                                latestDWSMSample.endts = lastTimestampUTC.valueOf();
-
-                                // And update it
-                                me.dataAccess.addOrUpdateSample(deployment._id, latestDWSMStartTS, latestDWSMSample,
-                                    function (err) {
-                                        if (err)
-                                            logger.error("Error trying to update the DWSM sample at time index " +
-                                                latestDWSMStartTS, err);
-                                    });
-
-                                // End the loop
-                                break;
-                            }
-                        }
-                    } else if (sampleStartMatches && sampleStartMatches.length > 0) {
-
-                        // We have found the start of sample, create a new sample
-                        var newSample = {
-                            actor: me.currentActor,
-                            targetVolume: sampleStartMatches[1]
-                        }
-                        // Now add it to the local sample tracking object
-                        samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
-
-                    } else if (sampleEndMatches && sampleEndMatches.length > 0) {
-                        // Since I have found a sample end, grab the end timestamp and the actual volume sampled
-                        var endSampleTS = lastTimestampUTC.valueOf();
-                        var actualVolume = sampleEndMatches[1];
-
-                        // Now look in the local sample tracking object for the sample that this will match with
-                        for (var sampleStartTS in samplesBeingParsed) {
-                            if (!samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
-                                // Should be a regular sample with no timestamp so we will assume it is the one
-                                // we are looking for
-
-                                // Grab the timestamp and the sample out of the tracking object
-                                var latestStartTS = sampleStartTS;
-                                var latestSample = samplesBeingParsed[sampleStartTS];
-
-                                // Remove it from the tracking object so it won't get processed by another cycle
-                                delete samplesBeingParsed[sampleStartTS];
-
-                                // Set the end time
-                                latestSample.endts = lastTimestampUTC.valueOf();
-
-                                // If there is an actual volume, set it
-                                if (actualVolume) {
-                                    latestSample.actualVolume = actualVolume;
-                                }
-
-                                // And update it
-                                me.dataAccess.addOrUpdateSample(deployment._id, latestStartTS, latestSample,
-                                    function (err) {
-                                        if (err)
-                                            logger.error("Error trying to update the sample at time index " +
-                                                latestStartTS, err);
-                                    });
-
-                                // End the loop
-                                break;
-                            }
-                        }
                     } else if (pcrStopMatches) {
                         // Grab the full file path
                         var fullFilePath = pcrStopMatches[2];
@@ -913,7 +905,9 @@ function LogParser(dataAccess, dataDir, opts) {
                                         pcrRunNumberOfCycles = headerMatches[1];
                                         // Grab the run start date
                                         pcrRunStartDate = startDate;
-                                        logger.trace("PCR: Number of cycles = " + pcrRunNumberOfCycles + " started at " + pcrRunStartDate + " which in epoch is " + pcrRunStartDate.unix());
+                                        logger.trace("PCR: Number of cycles = " + pcrRunNumberOfCycles +
+                                            " started at " + pcrRunStartDate + " which in epoch is " +
+                                            pcrRunStartDate.unix());
                                     } else {
                                         logger.trace("PCR: Header was found, start a new parsing");
                                         // Set the PCR type
@@ -931,7 +925,8 @@ function LogParser(dataAccess, dataDir, opts) {
                                         timestampColumn = -1;
                                         celsiusColumn = -1;
 
-                                        logger.trace("PCR: New PCR type " + pcrType + " with run named " + pcrRunName + " started at " + pcrStartDate + " which in epoch is " + pcrStartDate.unix());
+                                        logger.trace("PCR: New PCR type " + pcrType + " with run named " + pcrRunName +
+                                            " started at " + pcrStartDate + " which in epoch is " + pcrStartDate.unix());
                                     }
                                 } else {
                                     // Check for a column header
@@ -940,7 +935,8 @@ function LogParser(dataAccess, dataDir, opts) {
                                         // Find the SecsSinceStart column
                                         timestampColumn = pcrColumnHeaders.indexOf('SecsSinceStart');
                                         celsiusColumn = pcrColumnHeaders.indexOf('Celsius');
-                                        logger.trace("PCR: We have a column header line where seconds is in column " + timestampColumn + " and temp is in column " + celsiusColumn);
+                                        logger.trace("PCR: We have a column header line where seconds is in column " +
+                                            timestampColumn + " and temp is in column " + celsiusColumn);
                                     } else {
                                         logger.trace("PCR: Could be a data record");
                                         // Could be a data record, so split the line into an array by commas
@@ -1011,14 +1007,9 @@ function LogParser(dataAccess, dataDir, opts) {
                             });
                             logger.trace("PCR data from file " + pcrLocationOnDisk + " is:", pcrData);
 
-                            // Now commit the pcr data object to the deployment
-                            me.dataAccess.addPCRData(deployment._id, pcrData, function (err) {
-                                if (err) {
-                                    logger.error("Error adding PCR data to deployment");
-                                    if (callback)
-                                        callback(err);
-                                }
-                            });
+                            // Add the pcr to the array of pcr data that will be attached to the deployment
+                            pcrDataArray.push(pcrData);
+
                         } else {
                             logger.debug("PCR: Nope, not on disk");
                         }
@@ -1066,55 +1057,6 @@ function LogParser(dataAccess, dataDir, opts) {
             // Return the index of the main body
             return bodyIndex;
         }
-
-        // This method takes in a deployment
-//        function addAncillarySourcesToDeployment(deployment, ancillaryData) {
-//            // Split the data into source, hours, minutes, seconds and data
-//            var ancillarySplitMatches = ancillaryData.match(me.ancillarySplitPattern);
-//            if (ancillarySplitMatches && ancillarySplitMatches.length > 0) {
-//                // Grab the source
-//                var source = ancillarySplitMatches[1];
-//
-//                // Grab all the variables
-//                var data = ancillarySplitMatches[5];
-//
-//                // Split the data on commas
-//                var variables = data.split(",");
-//                for (var j = 0; j < variables.length; j++) {
-//                    // Strip off whitespace
-//                    var cleanData = variables[j].trim();
-//
-//                    // Now separate the data and the unit
-//                    var cleanDataMatches = cleanData.match(me.ancillaryDataPattern);
-//                    if (cleanDataMatches && cleanDataMatches.length > 0) {
-//
-//                        // grab the units
-//                        var varUnits = cleanDataMatches[2];
-//
-//                        // Make sure the deployment has this ancillary data type listed
-//                        if (me.ancillaryLookup[source][varUnits]) {
-//                            // Make sure there is an ancillary object first
-//                            if (!deployment.ancillaryData) deployment.ancillaryData = {};
-//
-//                            // Check for source object first and add if not there
-//                            if (!deployment.ancillaryData[source])
-//                                deployment.ancillaryData[source] = {};
-//
-//                            // Now check for source and units combination and add from lookup if not there
-//                            if (!deployment.ancillaryData[source][varUnits]) {
-//                                deployment.ancillaryData[source][varUnits] = JSON.parse(JSON.stringify(me.ancillaryLookup[source][varUnits]));
-//                                logger.debug("Added ancillary data to deployment " + deployment.name + " of ESP " +
-//                                    deployment.esp.name);
-//                                logger.debug(me.ancillaryLookup[source][varUnits]);
-//
-//                                // Add a number of data points property
-//                                deployment.ancillaryData[source][varUnits]['numPoints'] = 0;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
 
         // This function looks to see if there is a log file currently being parsed and cleans up by
         // calling the associated callback and clearing out the log file from the variable tracking
