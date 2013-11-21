@@ -97,7 +97,7 @@ espApp.controller('DetailPanelController',
             } else {
                 // Looks like there is nothing associated with the row that was clicked
                 $scope.modal.header = $scope.detailTables[parentIndex].rows[index][1];
-                $scope.modal.url = "/image/nothing.jpg";
+                $scope.modal.url = "image/nothing.jpg";
             }
         }
 
@@ -120,7 +120,7 @@ espApp.controller('DetailPanelController',
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Procotol Runs",
                     active: true,
-                    content: "/templates/directives/ProtocolDetailsInclude.html"
+                    content: "templates/directives/ProtocolDetailsInclude.html"
                 });
             } else if (property === 'samples') {
                 $scope.tabs.push({
@@ -128,7 +128,7 @@ espApp.controller('DetailPanelController',
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Samples",
                     active: true,
-                    content: "/templates/directives/SampleDetailsInclude.html"
+                    content: "templates/directives/SampleDetailsInclude.html"
                 });
             } else if (property === 'images') {
                 $scope.tabs.push({
@@ -136,7 +136,7 @@ espApp.controller('DetailPanelController',
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Images",
                     active: true,
-                    content: "/templates/directives/ImageDetailsInclude.html"
+                    content: "templates/directives/ImageDetailsInclude.html"
                 });
             } else if (property === 'errors') {
                 $scope.tabs.push({
@@ -144,7 +144,7 @@ espApp.controller('DetailPanelController',
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name +  " Errors",
                     active: true,
-                    content: "/templates/directives/ErrorDetailsInclude.html"
+                    content: "templates/directives/ErrorDetailsInclude.html"
                 });
             } else if (property === 'pcrs') {
                 $scope.tabs.push({
@@ -152,7 +152,7 @@ espApp.controller('DetailPanelController',
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " PCRs",
                     active: true,
-                    content: "/templates/directives/PCRDetailsInclude.html"
+                    content: "templates/directives/PCRDetailsInclude.html"
                 });
             }
         });
