@@ -700,19 +700,23 @@ function LogParser(dataAccess, dataDir, opts) {
                         var endSampleTS = lastTimestampUTC.valueOf();
                         var actualVolume = sampleEndMatches[1];
 
-                        // Now look in the local sample tracking object for the sample that this will match with
+                        // We have to be a little careful here as some samples do not finish. So when we find an end
+                        // sample, we just need to find the latest timestamp of a sample with no endTS
+                        var latestOpenSampleTS = null;
                         for (var sampleStartTS in samplesBeingParsed) {
-                            if (!samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts) {
-                                // Should be a regular sample with no timestamp so we will assume it is the one
-                                // we are looking for.  Set the end time and actual volume (if found)
-                                samplesBeingParsed[sampleStartTS].endts = lastTimestampUTC.valueOf();
-                                if (actualVolume) {
-                                    samplesBeingParsed[sampleStartTS].actualVolume = actualVolume;
-                                }
-
-                                // End the loop
-                                break;
+                            if (!samplesBeingParsed[sampleStartTS].dwsm && !samplesBeingParsed[sampleStartTS].endts &&
+                                (!latestOpenSampleTS || sampleStartTS > latestOpenSampleTS)) {
+                                // Copy the timestamp
+                                latestOpenSampleTS = sampleStartTS;
                             }
+                        }
+                        // Now if there is a open sample timestamp found, close it and assign actual volume
+                        if (latestOpenSampleTS) {
+                            samplesBeingParsed[latestOpenSampleTS].endts = lastTimestampUTC.valueOf();
+                            if (actualVolume) {
+                                samplesBeingParsed[latestOpenSampleTS].actualVolume = actualVolume;
+                            }
+
                         }
                     } else if (ancillaryMatches && ancillaryMatches.length > 0) {
                         // TODO figure out how we are going to write to a file for downloading (or pull from URL)

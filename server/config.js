@@ -56,18 +56,18 @@ module.exports = {
         pgUsername: 'espdba',
         pgPassword: 'leghorn',
         pgDatabase: 'esp_ancillary',
-        loggerLevel: 'debug',
+        loggerLevel: 'info',
         numAncillaryPointsToBatch: 1000
     },
 
     // The options for the FTPSync class
     deploymentFileSyncOptions: {
-        loggerLevel: 'debug'
+        loggerLevel: 'info'
     },
 
     // The LogParser options
     logParserOptions: {
-        loggerLevel: 'debug',
+        loggerLevel: 'info',
         useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
         tempDir: '/tmp',
@@ -188,6 +188,6 @@ module.exports = {
 
     // The EventHandler options
     eventHandlerOptions: {
-        loggerLevel: 'debug'
+        loggerLevel: 'info'
     }
 };

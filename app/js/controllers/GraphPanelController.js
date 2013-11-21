@@ -482,7 +482,7 @@ espApp.controller('GraphPanelController',
                                     flagData.push({
                                         x: new Date(parseInt(sampleTS)),
                                         title: "S",
-                                        text: "<b>Start sample targeting " +
+                                        text: "<b>" + deployment.esp.name + "-Start sample targeting " +
                                             samplesObject[sampleTS].targetVolume + " ml</b>"
                                     });
 

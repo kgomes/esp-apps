@@ -7,9 +7,14 @@ module.exports = {
     // This is the location where the data for all the ESPs will be stored
     dataDir: 'Put the absolute path to where the files will be stored on local disk here',
 
+    // Options for the data crawling service
+    crawlerOptions: {
+        ftpSyncIntervalMillis: 60000,
+        loggerLevel: 'info'
+    },
+
     // Options for the server
     serverOptions: {
-        ftpSyncIntervalMillis: 60000,
         loggerLevel: 'info'
     },
 
@@ -66,6 +71,7 @@ module.exports = {
         useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
         tempDir: 'Put the directory on your local disk where the server can write temp files',
+        numberOfAncillaryRecordsToBatch: 1000,
         // The timezone lookup table
         timezoneLookup: {
             'EDT': {

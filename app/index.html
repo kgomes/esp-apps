@@ -37,12 +37,12 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <a class="accordion-toggle" data-toggle="collapse" data-parent="#selection-accordion"
-                           href="#collapse{{index}}">
+                           href="#collapse{{$index}}">
                             {{deployment.esp.name}}
                         </a>
                     </h4>
                 </div>
-                <div id="collapse{{index}}" class="panel-collapse collapse selection-list">
+                <div id="collapse{{$index}}" class="panel-collapse collapse selection-list">
                     <div class="panel-body">
                         <label class="checkbox">
                             <input type="checkbox"

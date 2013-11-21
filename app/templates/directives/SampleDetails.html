@@ -23,7 +23,7 @@
             <td class="sample-duration-col">{{((sample.endts - timestamp)/(1000*60)).toFixed(2)}}</td>
             <td class="sample-target-volume-col">{{sample.targetVolume}}</td>
             <td class="sample-actual-volume-col">{{sample.actualVolume}}</td>
-            <td class="sample-volume-diff-col">{{sample.targetVolume - sample.actualVolume}}</td>
+            <td class="sample-volume-diff-col">{{(sample.targetVolume - sample.actualVolume).toFixed(2)}}</td>
         </tr>
         </tbody>
     </table>

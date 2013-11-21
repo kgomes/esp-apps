@@ -73,6 +73,16 @@ function DeploymentFileSync(opts) {
             });
             ftpClient.on('error', function (error) {
                 logger.error('Error: ', error);
+                // Remove the deployment ID from the list
+                removeIDFromList(deployment._id);
+
+                logger.error("Will close FTP client");
+                ftpClient.raw.quit(function (err, data) {
+                    logger.error("err on FTPClient quit:", err);
+                    logger.error("data on FTPClient quit:", data);
+                    if (callback)
+                        callback(error);
+                });
             });
             ftpClient.on('data', function (data) {
                 logger.trace('Data: ', data);

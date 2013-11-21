@@ -1340,13 +1340,13 @@ function DataAccess(opts) {
                         me.couchDBConn.save(deployment, function (err, res) {
                             // First check for error
                             if (err) {
-                                logger.error("Error caught trying to save deployment " + deployment.name);
                                 // Make sure the error is a conflict error before recursing
                                 if (err.error === 'conflict') {
                                     logger.warn("Conflict trapped trying to save deployment with new protocolRuns " +
                                         "added, will try again", err);
                                     me.addOrUpdateProtocolRuns(deploymentID, protocolRuns, callback);
                                 } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
                                     // Since the error is not a conflict error, bail out
                                     if (callback)
                                         callback(err);
@@ -2376,7 +2376,7 @@ function DataAccess(opts) {
      * @param callback
      */
     this.batchInsertAncillaryData = function (deploymentID, espName, ancillaryDataArray, callback) {
-        logger.info('insertAncillaryDataArray called with data array size of ' + ancillaryDataArray.length +
+        logger.debug('insertAncillaryDataArray called with data array size of ' + ancillaryDataArray.length +
             ' and first record is ', ancillaryDataArray[0]);
 
 
