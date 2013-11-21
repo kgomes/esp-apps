@@ -103,6 +103,12 @@ body > .row {
     width: 30%;
 }
 
+/* Styles specifically for the table displaying error details */
+.error-details-table {
+    height: 100%;
+    overflow-y: scroll;
+}
+
 /* Styles specifically for the table displaying sample details */
 .sample-details-table {
     height: 100%;
