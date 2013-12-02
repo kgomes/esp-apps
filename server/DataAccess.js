@@ -885,6 +885,179 @@ function DataAccess(opts) {
         });
     }
 
+    /**
+     * This method takes in a bunch of parameters and updates the deployment with the given information. If the parameter
+     * that is given is null, this function won't do anything with it.
+     *
+     * @param deploymentID
+     * @param name
+     * @param description
+     * @param startDate
+     * @param endDate
+     * @param esp
+     * @param errors
+     * @param samples
+     * @param protocolRuns
+     * @param images
+     * @param pcrs
+     * @param callback
+     */
+    this.updateDeployment = function (deploymentID, name, description, startDate, endDate, esp, errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback) {
+        // First make sure we have an deployment ID
+        if (deploymentID) {
+            // Next try to find a deployment with the given ID
+            this.couchDBConn.get(deploymentID, function (err, deployment) {
+                // If an error occurred, send it back
+                if (err) {
+                    logger.error("Error caught trying to find deployment with ID: " + deploymentID);
+                    if (callback)
+                        callback(err);
+                } else {
+                    // Make sure there is a deployment
+                    if (deployment) {
+                        // Now examine each of the parameters coming in and if they are specified, update the
+                        // properties on the deployment
+
+                        // The name of the deployment
+                        if (name) deployment.name = name;
+
+                        // The description of the deployment
+                        if (description) deployment.description = description;
+
+                        // The start date
+                        if (startDate) deployment.startDate = startDate;
+
+                        // The end date
+                        if (endDate) deployment.endDate = endDate;
+
+                        // The esp information
+                        if (esp) {
+                            // Make sure the deployment has an ESP object
+                            if (!deployment.esp) deployment.esp = {};
+
+                            // Now check the properties of the esp
+                            if (esp.name) deployment.esp.name = esp.name;
+                            if (esp.ftpHost) deployment.esp.ftpHost = esp.ftpHost;
+                            if (esp.ftpPort) deployment.esp.ftpPort = esp.ftpPort;
+                            if (esp.ftpUsername) deployment.esp.ftpUsername = esp.ftpUsername;
+                            if (esp.ftpPassword) deployment.esp.ftpPassword = esp.ftpPassword;
+                            if (esp.ftpWorkingDir) deployment.esp.ftpWorkingDir = esp.ftpWorkingDir;
+                            if (esp.logFile) deployment.esp.logFile = esp.logFile;
+                            if (esp.mode) deployment.esp.mode = esp.mode;
+                            if (esp.path) deployment.esp.path = esp.path;
+                            if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
+                        }
+
+                        // Now any errors
+                        if (errors) {
+                            if (!deployment.errors)
+                                deployment.errors = {};
+
+                            for (var timestamp in errors) {
+                                deployment.errors[timestamp] = errors[timestamp];
+                            }
+                        }
+
+                        // Now samples
+                        if (samples) {
+                            if (!deployment.samples)
+                                deployment.samples = {};
+
+                            for (var timestamp in samples) {
+                                deployment.samples[timestamp] = samples[timestamp];
+                            }
+                        }
+
+                        // Now protocolRuns
+                        if (protocolRuns) {
+                            if (!deployment.protocolRuns)
+                                deployment.protocolRuns = {};
+
+                            for (var timestamp in protocolRuns) {
+                                deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
+                            }
+                        }
+
+                        // Now images
+                        if (images) {
+                            if (!deployment.images)
+                                deployment.images = {};
+
+                            for (var timestamp in images) {
+                                deployment.images[timestamp] = images[timestamp];
+                            }
+                        }
+
+                        // Now pcrs
+                        if (pcrDataArray) {
+                            for (var i = 0; i < pcrDataArray.length; i++) {
+                                // Grab the data
+                                var pcrData = pcrDataArray[i];
+
+                                // It will be an object that has pcr types as keys, so we need to
+                                // loop over the pcrTypes first
+                                for (var pcrType in pcrData) {
+                                    // Now next item will be the PCR run name
+                                    for (var pcrRunName in pcrData[pcrType]) {
+                                        // Now the item will be the timestamp of the file that was processed
+                                        for (var timestamp in pcrData[pcrType][pcrRunName]) {
+                                            // Add (or replace the entry on the deployment with this information
+                                            if (!deployment.pcrs)
+                                                deployment.pcrs = {};
+                                            if (!deployment.pcrs[pcrType])
+                                                deployment.pcrs[pcrType] = {};
+                                            if (!deployment.pcrs[pcrType][pcrRunName])
+                                                deployment.pcrs[pcrType][pcrRunName] = {};
+                                            if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
+                                                deployment.pcrs[pcrType][pcrRunName][timestamp] =
+                                                    pcrData[pcrType][pcrRunName][timestamp];
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+
+                        // Now last line parsed in log file
+                        if (lastLineParsedFromLogFile) deployment.lastLineParsedFromLogFile = lastLineParsedFromLogFile;
+
+                        // Now try to save the deployment
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with updates " +
+                                        "added, will try again", err);
+                                    me.updateDeployment(deploymentID, name, description, startDate, endDate, esp,
+                                        errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback);
+                                } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(null);
+                            }
+                        });
+
+                    } else {
+                        logger.error("No deployment found matching ID " + deploymentID);
+                        if (callback)
+                            callback(new Error("No deployment matching ID " + deploymentID + " found."));
+                    }
+                }
+            });
+        } else {
+            // Send an error to the callback
+            if (callback)
+                callback(new Error("No deployment ID was specified."));
+        }
+    }
+
     // ***********************************************************
     // The function to remove a deployment from the CouchDB database
     // ***********************************************************
@@ -2001,7 +2174,7 @@ function DataAccess(opts) {
             if (!sourceName || !varName || !varLongName || !varUnits || !logUnits) {
                 if (callback)
                     callback(new Error("Data record did not have all the " +
-                        "required fields", ancillaryDataRecord));
+                        "required fields"));
             } else {
                 logger.trace("Will look for a source ID for:\ndeploymentID = " + deploymentID + "\nespName = " +
                     espName + "\nsourceName = " + sourceName + "\nlogUnits = " + logUnits);
@@ -2019,8 +2192,7 @@ function DataAccess(opts) {
                                 logger.trace("Found ID " + sourceID + " in the local cache");
                                 // Send it to the callback
                                 if (callback)
-                                    callback(null, sourceID, deploymentID, espName, sourceName, varName, varLongName,
-                                        varUnits, logUnits, timestamp, data);
+                                    callback(null, sourceID);
                             } else {
                                 // I need to first see if another request has already been queued for this same
                                 // information
@@ -2307,49 +2479,8 @@ function DataAccess(opts) {
                         if (callback)
                             callback(err);
                     } else {
-                        // Since our client called the method to flush the ancillary data records, it is likely
-                        // that when we get here, the client is done add data records so we should update the deployment
-                        // with the ancillary stats
-                        me.updateDeploymentWithAncillaryStats(deploymentID, function (err) {
-                            if (err) {
-                                logger.error("Error returned trying to sync ancillary stats: ", err);
-                                // Send it back to the caller
-                                if (callback)
-                                    callback(err);
-                            } else {
-                                logger.debug("UpdateDeploymentWithAncillaryStats callback called");
-                                // And now since the deployment stats are updated and all records have been added, sync
-                                // the CSV files with the data records. First grab the updated deployment by ID
-                                me.getDeploymentByID(deploymentID, false, function (err, deployment) {
-                                    // Check for error first
-                                    if (err) {
-                                        logger.error("There was an error trying to get the deployment after updating " +
-                                            "ancillary data stats:", err);
-                                        if (callback)
-                                            callback(err);
-                                    } else {
-                                        // Make sure a deployment was found
-                                        if (deployment) {
-                                            // Now sync the CSV data files with the ancillary data in the database
-                                            me.syncAncillaryDataFileWithDatabase(deployment, baseDir, function (err, result) {
-                                                if (err) {
-                                                    logger.error("Error trying to sync local CSV files with ancillary data:", err);
-                                                    if (callback)
-                                                        callback(err);
-                                                } else {
-                                                    logger.debug("syncAncillaryDataFileWithDatabase callback called");
-                                                    if (callback)
-                                                        callback(null);
-                                                }
-                                            });
-                                        } else {
-                                            if (callback)
-                                                callback(new Error("No deployment with ID " + deploymentID + " was found"));
-                                        }
-                                    }
-                                });
-                            }
-                        });
+                        if (callback)
+                            callback(null);
                     }
 
                 });
@@ -2403,11 +2534,14 @@ function DataAccess(opts) {
                 var logUnits = ancillaryDataArray[i][4];
                 var timestamp = ancillaryDataArray[i][5];
                 var data = ancillaryDataArray[i][6];
+                logger.trace("Going to get source ID for deployment with ID " + deploymentID + ", esp " + espName +
+                    ', sourceName ' + sourceName + ", varName " + varName + ", varLongName " + varLongName +
+                    ", varUnits" + varUnits + ", logUnits " + logUnits + ", timestamp " + timestamp + ", data " + data);
 
-                // Look up the ancillary source ID from the deployment
-                me.getAncillaryDataSourceID(deploymentID, espName, sourceName, varName, varLongName, varUnits,
-                    logUnits, timestamp, data,
-                    function (err, sourceID, cbDeploymentID, cbEspName, cbSourceName, cbVarName, cbVarLongName, cbVarUnits, cbLogUnits, cbTimestamp, cbData) {
+                // Call the function to return the value text to add to prep for the insert
+                me.getAncillaryDataInsertText(deploymentID, espName, sourceName, varName, varLongName, varUnits,
+                    logUnits, timestamp, data, function (err, insertText) {
+
                         // Check for error
                         if (err) {
                             // And send the error back
@@ -2416,7 +2550,7 @@ function DataAccess(opts) {
                         } else {
 
                             // Make sure we have an ID
-                            if (sourceID) {
+                            if (insertText) {
                                 // Check to see if a comma is necessary
                                 if (valueText !== null) {
                                     valueText += ',';
@@ -2425,8 +2559,7 @@ function DataAccess(opts) {
                                 }
 
                                 // Append the insert value
-                                valueText += '(' + sourceID +
-                                    ',\'' + cbTimestamp + '\',' + cbData + ')';
+                                valueText += insertText;
                             } else {
                                 // Log it and keep going
                                 logger.error("No source ID found for deployment ID " + deploymentID +
@@ -2481,8 +2614,62 @@ function DataAccess(opts) {
             }
         } else {
             if (callback)
-                callback(new Error("Not enough parameters, should have " +
-                    "(deploymentID, espName, ancillaryDataArray, callback"));
+                callback(new Error("Not enough parameters, should have (deploymentID, espName, ancillaryDataArray, " +
+                    "callback"));
+        }
+    }
+
+    /**
+     * This method takes in all the information needed to find the correct source ID for the ancillary data and then
+     * it builds the phrase (text) that can be used to insert the data record given into the database.
+     * @param deploymentID
+     * @param espName
+     * @param sourceName
+     * @param varName
+     * @param varLongName
+     * @param varUnits
+     * @param logUnits
+     * @param timestamp
+     * @param data
+     * @param callback
+     */
+    this.getAncillaryDataInsertText = function (deploymentID, espName, sourceName, varName, varLongName, varUnits, logUnits, timestamp, data, callback) {
+        // First let's make sure we have all the information we need
+        if (deploymentID && espName && sourceName && varName && varLongName && varUnits && logUnits && timestamp && data) {
+
+            // Look up the ancillary source ID from the deployment
+            me.getAncillaryDataSourceID(deploymentID, espName, sourceName, varName, varLongName, varUnits,
+                logUnits, timestamp, data, function (err, sourceID) {
+                    // Check for error
+                    if (err) {
+                        // And send the error back
+                        if (callback)
+                            callback(err);
+                    } else {
+
+                        // Make sure we have an ID
+                        if (sourceID) {
+
+                            // Create the insert text phrase
+                            var insertText = '(' + sourceID + ',\'' + timestamp + '\',' + data + ')';
+
+                            if (callback)
+                                callback(null, insertText);
+                        } else {
+                            // Log it and send the error back
+                            var errorText = "No source ID found for deployment ID " + deploymentID + " of esp " +
+                                espName + " with source:(name = " + sourceName + ", varName = " + varName + ", " +
+                                "varLongName = " + varLongName + ", varUnits = " + varUnits + ", logUnits = " +
+                                logUnits + ")";
+                            logger.error(errorText);
+                            if (callback)
+                                callback(new Error(errorText));
+                        }
+                    }
+                });
+        } else {
+            if (callback)
+                callback(new Error('Not enough parameters given for the function'));
         }
     }
 
@@ -2584,13 +2771,17 @@ function DataAccess(opts) {
         }
     }
 
-    // This method uses the information in the database to synchronize a file that represents the parsed
-    // ancillary data from the various sources.
+    /**
+     *
+     * @param deployment
+     * @param basedir
+     * @param callback
+     */
     this.syncAncillaryDataFileWithDatabase = function (deployment, basedir, callback) {
         // Grab a reference to this
         var self = this;
 
-        logger.debug('Will syncronize ancillary data from deployment ' +
+        logger.debug('Will synchronize ancillary data from deployment ' +
             deployment.name + ' using base dir ' + basedir);
 
         logger.debug("The current ancillary files being syncd are:", self.ancillaryFilesBeingSyncd);
@@ -2979,8 +3170,6 @@ function DataAccess(opts) {
             });
         }
     }
-
-
 }
 
 // Export the factory method

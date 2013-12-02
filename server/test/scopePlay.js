@@ -12,7 +12,7 @@ var logger = log4js.getLogger('scopePlay');
 logger.setLevel("trace");
 
 // The FTP sync object
-var ftpsync = require('../ftpsync').ftpSync;
+var ftpsync = require('../ftpsync').deploymentFileSync;
 
 // Create the FTP synchronizer
 var ftp = new ftpsync("trace");

@@ -10,7 +10,7 @@ log4js.addAppender(log4js.appenders.file('./logs/CrawlerEventHandler.log'), 'Cra
 var logger = log4js.getLogger('CrawlerEventHandler');
 
 // The constructor
-function CrawlerEventHandler(ftpSync, dataAccess, logParser, baseDir, opts) {
+function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
     logger.info("CrawlerEventHandler will use base directory located at " + baseDir);
     logger.info("Creating CrawlerEventHandler with logger level " + opts.loggerLevel);
     // Check for logging level
@@ -22,10 +22,7 @@ function CrawlerEventHandler(ftpSync, dataAccess, logParser, baseDir, opts) {
     var me = this;
 
     // Assign the ftp synchronization client locally
-    this.ftpSync = ftpSync;
-
-    // Assign the DataAccess object
-    this.dataAccess = dataAccess;
+    this.deploymentFileSync = deploymentFileSync;
 
     // Assign the logParser
     this.logParser = logParser;
@@ -42,64 +39,43 @@ function CrawlerEventHandler(ftpSync, dataAccess, logParser, baseDir, opts) {
 
         // This event happens when the FTP crawler downloads or updates a file local
         // on this server
-        this.ftpSync.on('ftpFileUpdated', this.handleFTPFileUpdated);
-
-        // This event happens when ancillary data has been updated in the
-        // persistent store
-        this.logParser.on('ancillaryDataPersisted', this.handleAncillaryDataPersisted);
+        this.deploymentFileSync.on('ftpFileUpdated', this.handleFTPFileUpdated);
     }
 
     // *************************************************************************
     // This is the function to handle the event when a file was updated locally
     // from an FTP server
     // *************************************************************************
-    this.handleFTPFileUpdated = function (data) {
-        logger.info('FTP client updated the local file: ', data.file);
+    this.handleFTPFileUpdated = function (message) {
+        logger.debug('FTP client updated the local file: ', message.file);
 
         // Make sure we have a deployment
-        if (data.deployment) {
+        if (message.deployment) {
             // Make sure it has an esp
-            if (data.deployment.esp) {
+            if (message.deployment.esp) {
                 // Make sure it has a log file listed
-                if (data.deployment.esp.logFile) {
+                if (message.deployment.esp.logFile) {
                     // Make sure the incoming event has a local file listed
-                    if (data.file) {
-
-                        // TODO kgomes, if the file is a .tif file and the deployment has an entry in the image
-                        // list, make sure the onDisk flag is set (this aligns things if image files are downloaded
-                        // after their log entries are parsed).
+                    if (message.file) {
 
                         // Now build the location of where the deployment's log file should be locally
                         var localLogFile = me.baseDir + path.sep + 'instances' + path.sep +
-                            data.deployment.esp.name + path.sep + 'deployments' + path.sep + data.deployment.name +
-                            path.sep + 'data' + path.sep + 'raw' + path.sep + data.deployment.esp.logFile;
+                            message.deployment.esp.name + path.sep + 'deployments' + path.sep + message.deployment.name +
+                            path.sep + 'data' + path.sep + 'raw' + path.sep + message.deployment.esp.logFile;
                         logger.debug('Deployment says log file should be located at ' + localLogFile);
 
                         // Now match against what came in
-                        if (localLogFile === data.file) {
-                            logger.debug('It\'s the log file, parse it!');
-                            me.logParser.submitLogFileForParsing(data.deployment, data.file, function (err, deployment) {
-                                logger.debug('Log file for deployment ' + deployment.name + ' of ESP ' + deployment.esp.name +
-                                    ' finished parsing');
+                        if (localLogFile === message.file) {
+                            logger.info('Local log file ' + localLogFile + ' was updated and needs parsing');
+                            me.logParser.parseLogFile(message.deployment, message.file, message.stats, function (err) {
+                                if (err)
+                                    logger.error("Error returned submitting a log file for parsing:", err);
                             });
                         }
                     }
                 }
             }
         }
-    };
-
-    // *************************************************************************
-    // This function handles the event that some ancillary data was updated
-    // in the persistent store.  It basically calls the method to synchronize
-    // the database ancillary data with the file representation of it.
-    // *************************************************************************
-    this.handleAncillaryDataPersisted = function(eventData) {
-        logger.debug("Got event that ancillary data was persisted from deployment " +
-            eventData.deployment.name + ' using basedir ' + me.baseDir);
-        dataAccess.syncAncillaryDataFileWithDatabase(eventData.deployment, me.baseDir, function(err, result){
-           logger.debug("syncAncillaryDataFileWithDatabase callback called");
-        });
     };
 }
 

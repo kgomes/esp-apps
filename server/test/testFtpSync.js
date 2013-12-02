@@ -12,12 +12,12 @@ var logger = log4js.getLogger('testFtpSync');
 logger.setLevel("trace");
 
 // The FTP sync object
-var ftpsync = require('../ftpsync').ftpSync;
+var ftpsync = require('../ftpsync').deploymentFileSync;
 
 // Grab the test deployment
 var deployment = require('./deployment1.json');
 var basedir = '/Users/kgomes/Documents/Web/esp/services/espweb/static/data';
-logger.info("Test of ftpSync will be done using deployment:");
+logger.info("Test of deploymentFileSync will be done using deployment:");
 logger.info(deployment);
 logger.info("And basedir " + basedir);
 

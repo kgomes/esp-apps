@@ -20,12 +20,9 @@ if (espCfg.crawlerOptions.loggerLevel) {
     logger.setLevel(espCfg.crawlerOptions.loggerLevel);
 }
 
-// The directory where the esp and data lives
-var espDataDir = espCfg.dataDir;
-
 // Create the object that will be responsible for handling the
 // synchronization of files from FTP servers
-var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions);
+var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions, espCfg.dataDir);
 
 // Create the object used to interface to the data stores
 var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions);
@@ -34,7 +31,7 @@ var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions);
 var lp = require('./LogParser').createLogParser(da, espCfg.dataDir, espCfg.logParserOptions);
 
 // Create an event handler
-require('./CrawlerEventHandler').createCrawlerEventHandler(dfs, da, lp, espCfg.dataDir, espCfg.eventHandlerOptions);
+require('./CrawlerEventHandler').createCrawlerEventHandler(dfs, lp, espCfg.dataDir, espCfg.eventHandlerOptions);
 
 // Go ahead and call the first processing of deployments since we are in start
 try {
@@ -77,10 +74,9 @@ function processDeployment(deployment) {
         deployment.esp.ftpPort &&
         deployment.esp.name &&
         deployment.name &&
-        deployment.esp.ftpWorkingDir &&
-        espDataDir) {
+        deployment.esp.ftpWorkingDir) {
         try {
-            dfs.syncDeployment(deployment, espDataDir, function (error) {
+            dfs.syncDeployment(deployment, function (error) {
                 if (error) {
                     logger.error('Error returned from FTP sync for deployment ' + deployment.name);
                     logger.error(error);

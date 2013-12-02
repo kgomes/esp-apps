@@ -10,7 +10,7 @@ log4js.addAppender(log4js.appenders.file('./logs/EventHandler.log'), 'EventHandl
 var logger = log4js.getLogger('EventHandler');
 
 // The constructor
-//function EventHandler(io, ftpSync, dataAccess, logParser, baseDir, opts) {
+//function EventHandler(io, deploymentFileSync, dataAccess, logParser, baseDir, opts) {
 function EventHandler(io, opts) {
     logger.info("Creating EventHandler with logger level " + opts.loggerLevel);
     // Check for logging level

@@ -176,7 +176,7 @@ da.persistDeployment(testDeployment, function (err, deployment) {
         var logFile1 = './real.log';
 
         // Run the parser after a pause of 5 seconds
-        lp.submitLogFileForParsing(deployment, logFile1, function (err, deployment) {
+        lp.parseLogFile(deployment, logFile1, function (err, deployment) {
             logger.debug("After parsing, deployment looks like");
             logger.debug(deployment);
             // TODO deleted the ancillary sources and ancillary data from data storage

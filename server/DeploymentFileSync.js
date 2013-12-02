@@ -21,7 +21,7 @@ var logger = log4js.getLogger('DeploymentFileSync');
 util.inherits(DeploymentFileSync, eventEmitter);
 
 // The constructor function
-function DeploymentFileSync(opts) {
+function DeploymentFileSync(opts, basedir) {
 
     // Grab a handle for scoping
     var me = this;
@@ -31,140 +31,169 @@ function DeploymentFileSync(opts) {
         logger.setLevel(opts.loggerLevel);
     }
 
+    // A flag that indicates if a syncronization is underway
+    var inProcess = false;
+
     // This is the array of deployments being processed
-    var deploymentIDsInProcess = [];
+    var deploymentsToSync = [];
 
-    // This is the method that takes in a Deployment and a base directory and syncronizes the
+    // This is the base directory where all deployment files will be synchronized to locally
+    var basedir = basedir;
+
+    // This is the method that takes in a Deployment and synchronizes the
     // files that are on the remote server to the local base directory
-    this.syncDeployment = function (deployment, basedir, callback) {
-        logger.debug("Starting syncDeployment with deployment " + deployment.name + " and basedir " + basedir);
+    this.syncDeployment = function (deployment, callback) {
+        logger.debug("syncDeployment called with deployment " + deployment.name + "(basedir=" + basedir + ")");
 
-        // Check to see if it is in the array of processing deployments
-        if (deploymentIDsInProcess.indexOf(deployment._id) !== -1) {
-            logger.debug('Deployment ' + deployment.name + ' is already queued for FTP sync');
+        // First check to see if the deployment is in the queue for processing
+        if (checkForDeploymentInQueue(deployment)) {
+            logger.debug("Deployment " + deployment.name + " already in queue for sync.");
+            // Just callback to the caller
             if (callback)
                 callback(null);
         } else {
-            // Put it in the queue
-            logger.info("Adding Deployment ID: " + deployment._id);
-            deploymentIDsInProcess.push(deployment._id);
-            logger.debug("Added deployment with ID of " + deployment._id + " to list of deployments to sync");
-            logger.debug("deploymentIDsInProcess after insert:", deploymentIDsInProcess);
+            logger.debug("Deployment " + deployment.name + " not in queue, will be added for sync.");
+            // Since it's not in the queue, add it
+            deploymentsToSync.push(deployment);
 
-            // Create the FTP client that the deployment will use
-            var ftpClient = new JSFtp({
-                host: deployment.esp.ftpHost,
-                port: deployment.esp.ftpPort,
-                user: deployment.esp.ftpUsername,
-                pass: deployment.esp.ftpPassword
-            });
+            // Send the callback to the caller
+            if (callback)
+                callback(null);
 
-            logger.trace("ftpClient ", ftpClient);
-            logger.trace("ftpClient.socket ", ftpClient.socket);
-            // Add event handlers
-            ftpClient.on('progress', function (progress) {
-                logger.debug("FTP " + progress.action + " " + progress.filename + "->" + progress.transferred);
-            });
-            ftpClient.on('timeout', function (timeout) {
-                logger.error('Timeout: ', timeout);
-            });
-            ftpClient.on('connect', function (connect) {
-                logger.trace('Connect: ', connect);
-            });
-            ftpClient.on('error', function (error) {
-                logger.error('Error: ', error);
-                // Remove the deployment ID from the list
-                removeIDFromList(deployment._id);
-
-                logger.error("Will close FTP client");
-                ftpClient.raw.quit(function (err, data) {
-                    logger.error("err on FTPClient quit:", err);
-                    logger.error("data on FTPClient quit:", data);
-                    if (callback)
-                        callback(error);
-                });
-            });
-            ftpClient.on('data', function (data) {
-                logger.trace('Data: ', data);
-                if (data.code === 226) ftpClient.raw['stat'](function (res) {
-                    logger.trace("stat response: ", res);
-                });
-            });
-            ftpClient.on('close', function (close) {
-                logger.trace('Close: ', close);
-            });
-            ftpClient.on('end', function (end) {
-                logger.trace('End: ', end);
-            });
-            ftpClient.on('cmdSend', function (cmdSend) {
-                logger.trace('CmdSend: ', cmdSend);
-            });
-
-            // Make sure it was created
-            if (ftpClient) {
-
-                // Grab the local directory
-                var localDirectory = path.join(basedir, 'instances', deployment.esp.name, 'deployments',
-                    deployment.name, 'data', 'raw');
-
-                // The array of files to sync
-                var filesToSync = {};
-
-                // Populate the array of files to sync
-                getListOfFilesToSync(localDirectory, deployment.esp.ftpWorkingDir, ftpClient, filesToSync,
-                    function (error) {
-                        // Log an error if one was found
-                        if (error) {
-                            logger.error("Error returned in callback from getListOfFilesToSync:", error);
-                        }
-
-                        // The array of the file that were sync'd successfully
-                        var filesThatWereSyncd = {};
-
-                        logger.debug('For deployment ' + deployment.name + ' of ESP ' + deployment.esp.name +
-                            ', the files that need syncing are: ', filesToSync);
-                        syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, function (error) {
-                            // Log the error if found
-                            if (error) {
-                                logger.error("Error returned from call to sync files: ", error);
-                            }
-
-                            // This is where I need to now go through the list of files that were sync'd and
-                            // emit events as to which ones were synchronized
-                            logger.debug("Done with sync and " + Object.keys(filesThatWereSyncd).length +
-                                " files were successfully synchronized");
-                            for (syncdLocalFile in filesThatWereSyncd) {
-                                // Send notification that local file was updated
-                                me.emit('ftpFileUpdated', {
-                                    deployment: deployment,
-                                    file: syncdLocalFile
-                                });
-                            }
-
-
-                            // Remove the ID from the list of deployments to process
-                            removeIDFromList(deployment._id);
-
-                            // Send the callback
-                            if (callback)
-                                callback(error);
-                        });
-                    });
-            } else {
-                logger.warn("No FTPClient was created");
-
-                // Remove the ID from the list
-                removeIDFromList(deployment._id);
-
-                // Send error to the callback
-                if (callback)
-                    callback(new Error("No FTP client was created for deployment " + deployment.name));
-            }
-
+            // Now call the method to sync a deployment off the queue
+            syncDeploymentOffQueue();
         }
     }
 
-    // This method takes in a local directory and a remote directory
+    /**
+     * This function simply checks to see if the deployment is already listed in the queue of deployments
+     * to process.  It matches on deployment._id
+     * @param deployment
+     */
+    function checkForDeploymentInQueue(deployment) {
+        // The flag to indicate if the deployment is in the queue
+        var inQueue = false;
+
+        // Loop over the deployment queue
+        for (var i = 0; i < deploymentsToSync.length; i++) {
+            if (deploymentsToSync[i]._id === deployment._id)
+                inQueue = true;
+        }
+
+        // Now return the flag
+        return inQueue;
+    }
+
+    /**
+     * This method checks to see if there is currently processing happening and if not, starts a new
+     * synchronization if there are any deployment queued up
+     */
+    function syncDeploymentOffQueue() {
+        // First check the flag.  If we are processing something, just ignore the call
+        if (!inProcess) {
+            logger.debug("syncDeploymentOffQueue called and nothing is processing");
+
+            // First check to see if there is anything in the queue to process
+            if (deploymentsToSync && deploymentsToSync.length > 0) {
+                logger.debug("There are " + deploymentsToSync.length + " deployments left to sync");
+                // First set the flag to say we are in process
+                inProcess = true;
+
+                // OK, let's just work with the first one in the queue
+                var deploymentToSync = deploymentsToSync[0];
+                logger.info("Synchronizing deployment " + deploymentToSync.name);
+
+                // First create the object to track the files that will need synchronization
+                var filesNeedingSync = {};
+
+                // Next create the object that will track which files were actually syncronized
+                var filesSynchronized = {};
+
+                // Create the FTP client that will be used to sync search and sync files
+                var ftpClient = new JSFtp({
+                    host: deploymentToSync.esp.ftpHost,
+                    port: deploymentToSync.esp.ftpPort,
+                    user: deploymentToSync.esp.ftpUsername,
+                    pass: deploymentToSync.esp.ftpPassword
+                });
+
+                // Add an error handler to clean up if there is an FTP error
+                ftpClient.on('error', function (error) {
+                    logger.error('FTPClient threw an error trying to syc files from deployment ' +
+                        deploymentToSync.name, error);
+                    logger.error('Will close the client, clear the flag, ' +
+                        'and remove it from the queue');
+
+                    // Clear the current sync
+                    clearCurrentSync(ftpClient);
+                });
+
+                // Create the local path where the files for the deployment should go
+                var localDirectory = path.join(basedir, 'instances', deploymentToSync.esp.name, 'deployments',
+                    deploymentToSync.name, 'data', 'raw');
+
+                // Call the method to grab the full list of all the files that need to be sync'd between
+                // the local and remote directories (this is a recursive call).
+                getListOfFilesToSync(localDirectory, deploymentToSync.esp.ftpWorkingDir, ftpClient, filesNeedingSync,
+                    function (err) {
+                        // First check for an error
+                        if (err) {
+                            logger.error("Error occurred during getListOfFilesToSync " +
+                                "so nothing will be syncd:", err);
+
+                            // Clear the current sync
+                            clearCurrentSync(ftpClient);
+                        } else {
+                            // We successfully retrieved the list of all the files to be synchronized.
+                            logger.debug("We should be done with getting the list of files to " +
+                                "sync and the list is", filesNeedingSync);
+                            if (Object.keys(filesNeedingSync).length > 0) {
+                                syncFiles(deploymentToSync, filesNeedingSync, ftpClient, filesSynchronized, function (err) {
+                                    // Check for an error
+                                    if (err) {
+                                        logger.error("Error trying to sync remote to local files:", err);
+                                    } else {
+                                        logger.debug("All remote files should be syncd for deployment " +
+                                            deploymentToSync.name);
+                                        // Now emit the listing of files that were sync'd
+                                        for (var syncdFile in filesSynchronized) {
+                                            me.emit('ftpFileUpdated', {
+                                                deployment: deploymentToSync,
+                                                file: syncdFile,
+                                                stats: filesSynchronized[syncdFile]
+                                            });
+                                        }
+                                    }
+
+                                    // Since all the files should be syncd, clear the sync and move on
+                                    clearCurrentSync(ftpClient);
+                                });
+                            } else {
+                                logger.info("No files need synchronizing");
+                                clearCurrentSync(ftpClient);
+                            }
+                        }
+                    });
+            } else {
+                // Nothing to process so return
+                logger.debug("No deployment queued up for sync, will simply return");
+                return;
+            }
+        } else {
+            // Ignore the call and just return
+            logger.debug("syncDeploymentOffQueue called and it is currently processing so the call is ignored");
+            return;
+        }
+    }
+
+    /**
+     * TODO kgomes document this
+     * @param localDirectory
+     * @param remoteDirectory
+     * @param ftpClient
+     * @param filesToSync
+     * @param callback
+     */
     function getListOfFilesToSync(localDirectory, remoteDirectory, ftpClient, filesToSync, callback) {
         logger.debug("getListOfFilesToSync: Local: " + localDirectory + ", Remote: " + remoteDirectory);
 
@@ -180,6 +209,9 @@ function DeploymentFileSync(opts) {
             }
         } catch (error) {
             logger.error("Error caught trying to make local directory:", error);
+            // Send it back to the caller
+            if (callback)
+                callback(error);
         }
 
         // Make sure the local directory exists
@@ -187,6 +219,7 @@ function DeploymentFileSync(opts) {
             try {
                 // Get the remote listing of the directory
                 ftpClient.ls(remoteDirectory, function (err, res) {
+
                     // Check for an error
                     if (err) {
                         logger.error("Error during listing of remote directory " + remoteDirectory + ":", err);
@@ -195,6 +228,7 @@ function DeploymentFileSync(opts) {
                     } else {
                         // The number of files to handle
                         var numFiles = res.length;
+                        logger.debug("The remote directory has " + numFiles + " listed in it");
 
                         // If there are no files, just execute the callback
                         if (numFiles === 0) {
@@ -206,7 +240,7 @@ function DeploymentFileSync(opts) {
                         // If here, loop over the listing of files
                         res.forEach(function (file) {
 
-                            // A bit of a hack, but grab a remote directory name with ending /
+                            // A bit of a hack, but create a remote directory name with ending / for later
                             var remoteDirectoryWithSlash = remoteDirectory;
                             if (remoteDirectoryWithSlash.substring(remoteDirectoryWithSlash.length - 1) !== '/') {
                                 remoteDirectoryWithSlash += '/';
@@ -214,25 +248,29 @@ function DeploymentFileSync(opts) {
 
                             // If it is a directory, recursively call syncDirectory
                             if (file.type === 1) {
-                                // Now sync remote and local directory recursively
                                 getListOfFilesToSync(path.join(localDirectory, file.name),
                                     remoteDirectoryWithSlash + file.name, ftpClient,
                                     filesToSync, function (err) {
-                                        // Log the error if there is one
+                                        // Log the error if there is one and just bail out with callback
                                         if (err) {
                                             logger.error("Error in callback during sync of remote directory " +
                                                 remoteDirectoryWithSlash + file.name);
-                                        }
-
-                                        // Decrement the counter
-                                        numFiles--;
-
-                                        // Check for exit condition
-                                        if (numFiles <= 0) {
-                                            logger.debug('Done processing files from remote directory ' +
-                                                remoteDirectory);
                                             if (callback)
-                                                callback(null);
+                                                callback(err);
+                                            return;
+                                        } else {
+
+                                            // Decrement the counter
+                                            numFiles--;
+
+                                            // Check for exit condition
+                                            if (numFiles <= 0) {
+                                                logger.debug('Done processing files from remote directory ' +
+                                                    remoteDirectory);
+                                                if (callback)
+                                                    callback(null);
+                                                return;
+                                            }
                                         }
                                     });
                             } else {
@@ -246,7 +284,8 @@ function DeploymentFileSync(opts) {
                                     if (parseInt(file.size) !== stat.size) {
                                         logger.debug('Comparing sizes of remote ' + file.size +
                                             ' to local ' + stat.size);
-                                        logger.debug('Local file ' + localFile + ' size is different, will download');
+                                        logger.debug('Local file ' + localFile +
+                                            ' size is different, marking for sync ...');
                                         filesToSync[localFile] = (remoteDirectory + '/' +
                                             file.name).replace(new RegExp('//', 'g'), '/');
                                     }
@@ -259,6 +298,7 @@ function DeploymentFileSync(opts) {
                                         logger.debug('Done processing files from remote directory ' + remoteDirectory);
                                         if (callback)
                                             callback(null);
+                                        return;
                                     }
                                 } else {
                                     logger.debug('Local file ' + localFile + ' does not exist, marking for sync ...');
@@ -273,6 +313,7 @@ function DeploymentFileSync(opts) {
                                         logger.debug('Done processing files from remote directory ' + remoteDirectory);
                                         if (callback)
                                             callback(null);
+                                        return;
                                     }
                                 }
                             }
@@ -286,27 +327,31 @@ function DeploymentFileSync(opts) {
                     callback(error);
             }
         } else {
-            logger.warn("The local directory " + localDirectory + " appears to have not been created successfully");
+            logger.warn("The local directory " + localDirectory +
+                " appears to have not been created successfully");
             if (callback)
                 callback(new Error("The local directory " + localDirectory +
                     " appears to have not been created successfully"));
         }
     };
 
-    // This is a function that takes in an object which has keys of local files and properties of
-    // remote files that need to be sync'd.  It is called recursively
-    function syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, callback) {
-        logger.debug('There are ' + Object.keys(filesToSync).length + ' files to sync');
+    /**
+     * TODO kgomes document this
+     * @param deployment
+     * @param filesToSync
+     * @param ftpClient
+     * @param callback
+     */
+    function syncFiles(deployment, filesToSync, ftpClient, filesSynchronized, callback) {
+        logger.debug('syncFiles called for deployment ' + deployment.name + ' and there are ' +
+            Object.keys(filesToSync).length + ' files to sync');
+
         // Check for exit condition
         if (Object.keys(filesToSync).length === 0) {
-            logger.debug("Since no more file to process, will close the FTP connection");
-            // Close the FTP client as there are no more file to process
-            ftpClient.raw.quit(function (err, data) {
-                logger.debug("err on FTPClient quit:", err);
-                logger.debug("data on FTPClient quit:", data);
-                if (callback)
-                    callback(null);
-            });
+            logger.debug("No more files to sync");
+            if (callback)
+                callback(null);
+            return;
         } else {
             // Grab the local file name (key)
             var localFile = Object.keys(filesToSync)[0];
@@ -322,24 +367,27 @@ function DeploymentFileSync(opts) {
                     // Create the write stream to the local file
                     var localFileWriteStream = fs.createWriteStream(localFile, {'flags': 'w'});
 
-                    // Write a finish handler
+                    // Create the handler for when this write is complete
                     localFileWriteStream.on('finish', function () {
                         logger.debug("File " + localFile + " write finished");
+
                         // Now if the file is a TIFF image, for browser support we need to create
                         // a version that is a JPG.
                         if (localFile.indexOf('.tif') !== -1) {
                             logger.debug('The downloaded file was a tif, let\'s create a JPEG version');
-                            var jpgFilePath = localFile.replace(path.sep + 'data' + path.sep + 'raw' +
-                                path.sep + 'esp', path.sep + 'data' + path.sep + 'processed' + path.sep +
-                                'esp').replace('.tif', '.jpg');
-                            logger.debug('JPG Path will be ' + jpgFilePath);
 
-                            // Let's make sure the directory exists
-                            var pathSegments = jpgFilePath.split(path.sep);
-
-                            // Loop over the array (except the last which is the file name) to build the path
-                            var incrementalPath = '';
                             try {
+                                // The JPG path
+                                var jpgFilePath = localFile.replace(path.sep + 'data' + path.sep + 'raw' +
+                                    path.sep + 'esp', path.sep + 'data' + path.sep + 'processed' + path.sep +
+                                    'esp').replace('.tif', '.jpg');
+                                logger.debug('JPG Path will be ' + jpgFilePath);
+
+                                // Let's make sure the directory exists
+                                var pathSegments = jpgFilePath.split(path.sep);
+
+                                // Loop over the array (except the last which is the file name) to build the path
+                                var incrementalPath = '';
                                 for (var i = 0; i < pathSegments.length - 1; i++) {
                                     // the new path segment
                                     if (pathSegments[i] && pathSegments[i] !== '') {
@@ -353,23 +401,26 @@ function DeploymentFileSync(opts) {
                                         }
                                     }
                                 }
-                            } catch (error) {
-                                logger.error('Error caught trying to ensure directory ' + incrementalPath +
-                                    ' exists');
-                                logger.error(error);
-                            }
 
-                            // Convert it
-                            try {
+                                // Convert to a JPG
                                 im.convert([localFile, jpgFilePath], function (err, stdout) {
-                                    logger.debug("IM:Conversion done");
-                                    logger.debug("IM:Err", err);
-                                    logger.debug("IM:stdout", stdout);
+                                    if (err) {
+                                        logger.error("Error trying to create JPG " + jpgFilePath + ":", err);
+                                    } else {
+                                        logger.debug("JPG " + jpgFilePath + " conversion done");
+                                    }
                                 });
                             } catch (error) {
-                                logger.error("Error caught trying to create JPG version of TIFF");
+                                logger.error('Error caught trying to create JPG' + jpgFilePath + ':', error);
                             }
                         }
+
+                        // Grab the stats of the local file and add them to the object of files that were syncd.
+                        filesSynchronized[localFile] = fs.statSync(localFile);
+                        logger.debug("File that was synchronized has stats:", filesSynchronized[localFile]);
+
+                        // We recursively sync the files
+                        syncFiles(deployment, filesToSync, ftpClient, filesSynchronized, callback);
                     });
 
                     // Open the write stream
@@ -378,36 +429,32 @@ function DeploymentFileSync(opts) {
                         ftpClient.get(remoteFile, function (err, socket) {
                                 // Check for error first
                                 if (err) {
-                                    logger.error("Error trying to get socket for streaming remote file " +
+                                    logger.error("Error trying to get socket for downloading remote file " +
                                         remoteFile + ":", err);
-                                    // Even though there was an error, we will recursively keep going
-                                    syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, callback);
+
+                                    // Close the local file
+                                    localFileWriteStream.end();
                                 } else {
+
+                                    // Set up the handler to deal with the socket closing
+                                    socket.on("close", function (hadErr) {
+                                        logger.debug("Socket for file " + remoteFile + " is closed");
+                                        if (hadErr) {
+                                            logger.error('There was an error streaming remote file ' +
+                                                remoteFile, hadErr);
+                                        }
+
+                                        // Close the write
+                                        localFileWriteStream.end(function () {
+                                            logger.debug("Writing to file " + localFile + " ended");
+                                        });
+                                    });
 
                                     logger.debug("Got socket for remote file " + remoteFile);
 
                                     // Set up the handler to handle the data and have it write to the file
                                     socket.on("data", function (d) {
                                         localFileWriteStream.write(d);
-                                    });
-
-                                    // Set up the handler to deal with the socket closing
-                                    socket.on("close", function (hadErr) {
-                                        logger.debug("Socket for file " + remoteFile + " is closed");
-                                        if (hadErr)
-                                            logger.error('There was an error streaming remote file ' + remoteFile, hadErr);
-
-                                        // Close the write
-                                        localFileWriteStream.end(function () {
-                                            logger.debug("Writing to file " + localFile + " ended");
-                                        });
-
-                                        // Add the file to the object that tracks which files were successfully
-                                        // sync'd over FTP
-                                        filesThatWereSyncd[localFile] = remoteFile;
-
-                                        // We recursively sync the files
-                                        syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, callback);
                                     });
 
                                     // Start the streaming!
@@ -418,27 +465,42 @@ function DeploymentFileSync(opts) {
                     });
                 } catch (err) {
                     logger.debug("Error caught in FTP get:", err);
-                    // We still need to call the recurse to move on
-                    syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, callback);
+                    // While an error was caught, there is no reason not to keep trying
+                    syncFiles(deployment, filesToSync, ftpClient, filesSynchronized, callback);
                 }
             } else {
                 // The remote file was empty, nothing to do, just recurse
-                syncFiles(deployment, filesToSync, ftpClient, filesThatWereSyncd, callback);
+                syncFiles(deployment, filesToSync, ftpClient, filesSynchronized, callback);
+                return;
             }
         }
     };
 
-    // This is the function to remove the deployment ID from the list of IDs to process
-    function removeIDFromList(deploymentID) {
-        logger.info("Removing deployment ID " + deploymentID);
-        logger.debug("Will remove deployment ID " + deploymentID + " from list of IDs to process");
-        // Remove it from the queue
-        deploymentIDsInProcess.splice(deploymentIDsInProcess.indexOf(deploymentID), 1);
-        logger.debug("deploymentIDsInProcess after removal:", deploymentIDsInProcess);
-    };
+    /**
+     * This method takes in an FTPClient, closes the client and then clears out the currently processing deployment,
+     * resets any flags and calls the method to process off the queue again
+     * @param ftpClient
+     */
+    function clearCurrentSync(ftpClient) {
+        // Make sure the FTP client is closed
+        ftpClient.raw.quit(function (err, data) {
+            if (err)
+                logger.warn("err on FTPClient quit:", err);
+            logger.debug("data on FTPClient quit:", data);
+        });
+
+        // Remove the deployment from the top
+        deploymentsToSync.shift();
+
+        // Clear the in process flag
+        inProcess = false;
+
+        // Call the method to process off the queue again
+        syncDeploymentOffQueue();
+    }
 }
 
 // Export the factory method
-exports.createDeploymentFileSync = function (opts) {
-    return new DeploymentFileSync(opts);
+exports.createDeploymentFileSync = function (opts, basedir) {
+    return new DeploymentFileSync(opts, basedir);
 }
