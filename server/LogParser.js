@@ -3,7 +3,6 @@ var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var lazy = require('lazy');
-var LineByLineReader = require('line-by-line');
 var moment = require('moment');
 var eventEmitter = require('events').EventEmitter;
 
