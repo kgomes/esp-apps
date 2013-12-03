@@ -380,7 +380,8 @@ function LogParser(dataAccess, dataDir, opts) {
                         if (err) {
                             logger.error("Error trapped trying to update the deployment:", err);
                             // Return the updated deployment and ancillary data array to the callback
-                            callback(err);
+                            if (callback)
+                                callback(err);
                         } else {
                             logger.debug("Deployment with ID " + deployment._id + " should now be updated");
                             // Flush the ancillary data in data access
@@ -389,7 +390,8 @@ function LogParser(dataAccess, dataDir, opts) {
                                 if (err) {
                                     logger.error("Error trapped trying to flush the rest of the ancillary data:", err);
                                     // Return the updated deployment and ancillary data array to the callback
-                                    callback(err);
+                                    if (callback)
+                                        callback(err);
                                 } else {
                                     logger.debug("Last records should be flushed, let's update the deployment with " +
                                         "the ancillary statistics");
@@ -1130,7 +1132,7 @@ function LogParser(dataAccess, dataDir, opts) {
                                     });
                                 logger.trace("Pushed: " + ancillaryTimestamp.format() + ", " + sourceName + ", " +
                                     varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
-                                    varFromLookup.units + ", " + logUnits + ", " +  logData);
+                                    varFromLookup.units + ", " + logUnits + ", " + logData);
                             } else {
                                 me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
                                     [sourceName, varFromLookup.varName, varFromLookup.varLongName,
@@ -1138,9 +1140,9 @@ function LogParser(dataAccess, dataDir, opts) {
                                         logData], function (err) {
 
                                     });
-                                logger.trace("Pushed: " + lastTimestampUTC.format() + ", " +sourceName + ", " +
+                                logger.trace("Pushed: " + lastTimestampUTC.format() + ", " + sourceName + ", " +
                                     varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
-                                    varFromLookup.units + ", " + logUnits + ", " +  logData);
+                                    varFromLookup.units + ", " + logUnits + ", " + logData);
                             }
                         }
                     }

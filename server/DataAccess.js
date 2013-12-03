@@ -247,9 +247,11 @@ function DataAccess(opts) {
         if (returnFull) {
             this.couchDBConn.get(id, function (err, doc) {
                 if (err) {
-                    callback(err);
+                    if (callback)
+                        callback(err);
                 } else {
-                    callback(null, doc);
+                    if (callback)
+                        callback(null, doc);
                 }
             })
         } else {
@@ -264,6 +266,8 @@ function DataAccess(opts) {
                     // Check for an error first
                     if (err) {
                         logger.error('Error trying to get all deployments! ', err);
+                        if (callback)
+                            callback(err);
                     } else {
                         logger.debug('Got Deployments from CouchDB: ', res);
 
