@@ -3,32 +3,41 @@
         <div class="panel-group" id="pcr-accordion">
             <div class="panel panel-default" ng-repeat="(pcrType,pcrObject) in pcrTree">
                 <div class="panel-heading">
-                    <h4 class="panel-title">
+                    <h5 class="panel-title">
                         <a data-toggle="collapse" data-parent="#pcr-accordion" href="#pcr-collapse-{{pcrType}}">
                             {{pcrType}}
                         </a>
-                    </h4>
+                    </h5>
                 </div>
                 <div id="pcr-collapse-{{pcrType}}" class="panel-collapse collapse">
                     <div class="panel-body">
-                        <ul class="list-group">
-                            <li class="list-group-item" ng-repeat="(runName,timeObject) in pcrObject">
-                                {{runName}}
-                                <ul class="list-group">
-                                    <li class="list-group-item" ng-repeat="(epochMillis,varObject) in timeObject">
-                                        {{epochMillis | date:'MM/dd/yy'}}
-                                        <div ng-repeat="(varName,varData) in varObject">
-                                            <label class="checkbox">
-                                                <input type="checkbox"
-                                                       value="checkbox-{{deploymentID}}-pcr-{{pcrType}}-{{runName}}-{{epochMillis}}-{{varName}}"
-                                                       ng-click="selectPCRObject($event)">
-                                                {{varName}}
-                                            </label>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
+                        <div class="panel-group" id="pcr-accordion-{{pcrType}}">
+                            <div class="panel panel-default" ng-repeat="(columnName,timeObject) in pcrObject">
+                                <div class="panel-heading">
+                                    <h6 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#pcr-accordion-{{pcrType}}"
+                                           href="#pcr-collapse-{{pcrType}}-{{columnName | htmlIDConverter}}">
+                                            {{columnName}}
+                                        </a>
+                                    </h6>
+                                </div>
+                                <div id="pcr-collapse-{{pcrType}}-{{columnName | htmlIDConverter}}"
+                                     class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        <ul class="pcr-date-list">
+                                            <li ng-repeat="(epochMillis,varObject) in timeObject">
+                                                <label class="checkbox pcr-date-list-item-label">
+                                                    <input type="checkbox"
+                                                           value="checkbox-{{deploymentID}}-pcr-{{pcrType}}-{{columnName}}-{{epochMillis}}"
+                                                           ng-click="selectPCRObject($event)">
+                                                    {{epochMillis | date:'MM/dd/yy HH:mm'}}
+                                                </label>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -38,11 +47,14 @@
         <div class="btn-toolbar">
             <div class="btn-group">
                 <button type="button" class="btn btn-default btn-xs"
-                        ng-click="changeAxes('cycle')">#</button>
+                        ng-click="changeAxes('cycle')">#
+                </button>
                 <button type="button" class="btn btn-default btn-xs"
-                        ng-click="changeAxes('temperature')">T</button>
+                        ng-click="changeAxes('temperature')">T
+                </button>
                 <button type="button" class="btn btn-default btn-xs"
-                        ng-click="changeAxes('derivative')">df/dt</button>
+                        ng-click="changeAxes('derivative')">df/dt
+                </button>
             </div>
         </div>
         <div id="pcr-details-graph" class="pcr-details-graph"></div>

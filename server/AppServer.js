@@ -198,20 +198,16 @@ function AppServer(dataAccess, opts) {
     // A route to grab the image list associated with a specific ID
     this.server.get('/deployments/:id/images', this.deploymentRouter.getDeploymentImages);
 
-    // A route to grab the data values for a specific column name for a specific start time of a specific run
-    // name of a specific pcr type associated with a specific deployment
-    this.server.get('/deployments/:id/pcrs/:pcrType/:runName/:epochSecs/:columnName', this.deploymentRouter.getDeploymentPCRDataRecords);
-
-    // A route to grab the list of column names for a specific start time of a specific run name of a
-    // specific pcr type associated with a specific deployment
-    this.server.get('/deployments/:id/pcrs/:pcrType/:runName/:epochSecs', this.deploymentRouter.getDeploymentPCRColumnNames);
+    // A route to grab the data values for a specific column name for a specific start time of a specific
+    // pcr type associated with a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType/:columnName/:epochSecs', this.deploymentRouter.getDeploymentPCRDataRecords);
 
     // A route to grab the list of epochseconds which are the start times associated with a specific
-    // run name of a specific pcr type on a specific deployment
-    this.server.get('/deployments/:id/pcrs/:pcrType/:runName', this.deploymentRouter.getDeploymentPCREpochSeconds);
+    // column name of a specific pcr type on a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType/:columnName', this.deploymentRouter.getDeploymentPCREpochSeconds);
 
-    // A route to grab the list of run names that happened on a specific PCR type on a specific deployment
-    this.server.get('/deployments/:id/pcrs/:pcrType', this.deploymentRouter.getDeploymentPCRRunNames);
+    // A route to grab the list of column names that happened on a specific PCR type on a specific deployment
+    this.server.get('/deployments/:id/pcrs/:pcrType', this.deploymentRouter.getDeploymentPCRColumnNames);
 
     // A route to grab the list of pcr type run on a specific deployment
     this.server.get('/deployments/:id/pcrs', this.deploymentRouter.getDeploymentPCRTypes);

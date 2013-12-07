@@ -1,6 +1,27 @@
 /*
  This file lists the various filters that are used throughout the ESP web application
  */
+
+/**
+ * This filter removes any characters that cannot be used as an ID on an HTML element and replaces
+ * it with an underscore
+ */
+espApp.filter('htmlIDConverter', function () {
+
+    // The filter that will be returned
+    var htmlIDConverter = function (input) {
+        // Make sure there is an input
+        if (input){
+            // Replace any characters not valid as part of an ID with underscore
+            return input.replace(/[^A-Za-z-_0-9.]/g, "_")
+        } else {
+            return input;
+        }
+    };
+
+    return htmlIDConverter;
+});
+
 espApp.filter('detailCellContents', function () {
     // This is the filter to return
     var detailCellFilter = function (input) {

@@ -53,19 +53,19 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
         var paramArray = event.target.defaultValue.split("-");
         var pcrType = paramArray[3];
         var pcrRunName = paramArray[4];
-        var pcrStartEpochMillis = paramArray[5];
+        var pcrVariableName = paramArray[5];
+        var pcrStartEpochMillis = paramArray[6];
         var startDateOfPCR = new Date(0);
         startDateOfPCR.setUTCMilliseconds(pcrStartEpochMillis);
-        var pcrVariableName = paramArray[6];
 
         // Create an object key from the parameters
-        var objkey = pcrType + "-" + pcrRunName + "-" + pcrStartEpochMillis + "-" + pcrVariableName;
+        var objkey = pcrType + "-" + pcrRunName + "-" + pcrVariableName + "-" + pcrStartEpochMillis;
 
         // First thing to do is check to see if the user selected or deselected the pcr variable
         if (event.target.checked) {
 
             // Grab the data from the server
-            deploymentData.getPCRData($scope.deploymentID, pcrType, pcrRunName, pcrStartEpochMillis, pcrVariableName, function (pcrData) {
+            deploymentData.getPCRData($scope.deploymentID, pcrType + "-" + pcrRunName, pcrVariableName, pcrStartEpochMillis, function (pcrData) {
 
                 // If data was returned, add it to the local object for tracking of data
                 if (pcrData) {
@@ -115,7 +115,8 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
             var objkeyParts = objkey.split("-");
             var pcrType = objkeyParts[0];
             var pcrRunName = objkeyParts[1];
-            var pcrStartEpochMillis = objkeyParts[2];
+            var pcrVariableName = objkeyParts[2];
+            var pcrStartEpochMillis = objkeyParts[3];
             var startDateOfPCR = new Date(0);
             startDateOfPCR.setUTCMilliseconds(pcrStartEpochMillis);
 
@@ -135,7 +136,7 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
                 // Create the new series
                 var newSeries = {
                     id: objkey,
-                    name: pcrType + " " + pcrRunName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
+                    name: pcrType + " " + pcrRunName + " " + pcrVariableName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
                     tooltip: {
                         valueDecimals: 2
                     },
@@ -165,7 +166,8 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
             var objkeyParts = objkey.split("-");
             var pcrType = objkeyParts[0];
             var pcrRunName = objkeyParts[1];
-            var pcrStartEpochMillis = objkeyParts[2];
+            var pcrVariableName = objkeyParts[2];
+            var pcrStartEpochMillis = objkeyParts[3];
             var startDateOfPCR = new Date(0);
             startDateOfPCR.setUTCMilliseconds(pcrStartEpochMillis);
 
@@ -185,7 +187,7 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
                 // Create the new series
                 var newSeries = {
                     id: objkey,
-                    name: pcrType + " " + pcrRunName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
+                    name: pcrType + " " + pcrRunName + " " + pcrVariableName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
                     tooltip: {
                         valueDecimals: 2
                     },
@@ -215,7 +217,8 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
             var objkeyParts = objkey.split("-");
             var pcrType = objkeyParts[0];
             var pcrRunName = objkeyParts[1];
-            var pcrStartEpochMillis = objkeyParts[2];
+            var pcrVariableName = objkeyParts[2];
+            var pcrStartEpochMillis = objkeyParts[3];
             var startDateOfPCR = new Date(0);
             startDateOfPCR.setUTCMilliseconds(pcrStartEpochMillis);
 
@@ -249,7 +252,7 @@ espApp.controller("PCRDetailsController", function PCRDetailsController($scope, 
                 // Create the new series
                 var newSeries = {
                     id: objkey,
-                    name: pcrType + " " + pcrRunName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
+                    name: pcrType + " " + pcrRunName + " " + pcrVariableName + " (" + startDateOfPCR.format("m/dd/yy") + ")",
                     tooltip: {
                         valueDecimals: 2
                     },

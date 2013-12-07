@@ -220,32 +220,32 @@ function DeploymentRouter(dataAccess, opts) {
         }
     }
 
-    this.getDeploymentPCRRunNames = function (req, res) {
-        // Set the content type to JSON
-        res.contentType('application/json');
-
-        // Verify there is an ID and pcrType first
-        if (req.params.id && req.params.pcrType) {
-            me.dataAccess.getDeploymentPCRRunNames(req.params.id, req.params.pcrType, function (err, response) {
-                if (err) {
-                    // TODO kgomes: handle this error
-                } else {
-                    // Send the results
-                    res.json(response);
-                }
-            });
-        } else {
-            logger.warn("Not all parameters specified in getDeploymentPCRRunNames");
-        }
-    }
+//    this.getDeploymentPCRRunNames = function (req, res) {
+//        // Set the content type to JSON
+//        res.contentType('application/json');
+//
+//        // Verify there is an ID and pcrType first
+//        if (req.params.id && req.params.pcrType) {
+//            me.dataAccess.getDeploymentPCRRunNames(req.params.id, req.params.pcrType, function (err, response) {
+//                if (err) {
+//                    // TODO kgomes: handle this error
+//                } else {
+//                    // Send the results
+//                    res.json(response);
+//                }
+//            });
+//        } else {
+//            logger.warn("Not all parameters specified in getDeploymentPCRRunNames");
+//        }
+//    }
 
     this.getDeploymentPCREpochSeconds = function (req, res) {
         // Set the content type to JSON
         res.contentType('application/json');
 
         // Verify there is an ID and pcrType first
-        if (req.params.id && req.params.pcrType && req.params.runName) {
-            me.dataAccess.getDeploymentPCREpochSeconds(req.params.id, req.params.pcrType, req.params.runName,
+        if (req.params.id && req.params.pcrType) {
+            me.dataAccess.getDeploymentPCREpochSeconds(req.params.id, req.params.pcrType, req.params.columnName,
                 function (err, response) {
                     if (err) {
                         // TODO kgomes: handle this error
@@ -264,9 +264,9 @@ function DeploymentRouter(dataAccess, opts) {
         res.contentType('application/json');
 
         // Verify there are correct params
-        if (req.params.id && req.params.pcrType && req.params.runName && req.params.epochSecs) {
-            me.dataAccess.getDeploymentPCRColumnNames(req.params.id, req.params.pcrType, req.params.runName,
-                req.params.epochSecs, function (err, response) {
+        if (req.params.id && req.params.pcrType) {
+            me.dataAccess.getDeploymentPCRColumnNames(req.params.id, req.params.pcrType,
+                function (err, response) {
                     if (err) {
                         // TODO kgomes: handle this error
                     } else {
@@ -286,9 +286,9 @@ function DeploymentRouter(dataAccess, opts) {
         var sortBy = req.query.sortBy;
 
         // Verify there are correct params
-        if (req.params.id && req.params.pcrType && req.params.runName && req.params.epochSecs && req.params.columnName) {
-            me.dataAccess.getDeploymentPCRDataRecords(req.params.id, req.params.pcrType, req.params.runName,
-                req.params.epochSecs, req.params.columnName, function (err, response) {
+        if (req.params.id && req.params.pcrType && req.params.columnName && req.params.epochSecs) {
+            me.dataAccess.getDeploymentPCRDataRecords(req.params.id, req.params.pcrType, req.params.columnName,
+                req.params.epochSecs, function (err, response) {
                     if (err) {
                         // TODO kgomes: handle this error
                     } else {

@@ -405,8 +405,8 @@ function DataAccess(opts) {
     }
 
     // ***********************************************************
-    // This method queries for a list of PCR Types and Runs for
-    // the deployment with the given ID
+    // This method queries for a list of PCR Types
+    // the deployment with the given ID sorted by time
     // ***********************************************************
     this.getDeploymentPCRsByTime = function (id, callback) {
         logger.debug('Going to get pcrs sorted by time for deployment with ID: ' + id);
@@ -464,42 +464,42 @@ function DataAccess(opts) {
     // associated with the deployment with the given ID and the
     // given pcrType
     // ***********************************************************
-    this.getDeploymentPCRRunNames = function (id, pcrType, callback) {
-        logger.debug('Going to get pcr runNames array for deployment with ID: ' + id + ' and pcr type ' + pcrType);
-        var opts = {
-            key: [id, pcrType]
-        }
-        // Run the couch query
-        this.couchDBConn.view('deployments/pcrRunNames', opts, function (err, res) {
-                logger.debug("response", res);
-                logger.debug("res[0]", res[0]);
-                logger.debug("res[0].value", res[0].value);
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment prcRunNames');
-                    logger.error(err);
-                } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value);
-                    } else {
-                        callback(err, []);
-                    }
-                }
-            }
-        );
-    }
+//    this.getDeploymentPCRRunNames = function (id, pcrType, callback) {
+//        logger.debug('Going to get pcr runNames array for deployment with ID: ' + id + ' and pcr type ' + pcrType);
+//        var opts = {
+//            key: [id, pcrType]
+//        }
+//        // Run the couch query
+//        this.couchDBConn.view('deployments/pcrRunNames', opts, function (err, res) {
+//                logger.debug("response", res);
+//                logger.debug("res[0]", res[0]);
+//                logger.debug("res[0].value", res[0].value);
+//                // Check for an error first
+//                if (err) {
+//                    logger.error('Error trying to get deployment prcRunNames');
+//                    logger.error(err);
+//                } else {
+//                    if (res && res[0] && res[0].value) {
+//                        // Now pass it to the callback function
+//                        callback(err, res[0].value);
+//                    } else {
+//                        callback(err, []);
+//                    }
+//                }
+//            }
+//        );
+//    }
 
     // ***********************************************************
     // This method queries for an array of pcr epoch seconds
     // associated with the deployment with the given ID, the
     // given pcrType, and the given pcrRunName
     // ***********************************************************
-    this.getDeploymentPCREpochSeconds = function (id, pcrType, pcrRunName, callback) {
+    this.getDeploymentPCREpochSeconds = function (id, pcrType, columnName, callback) {
         logger.debug('Going to get pcr runNames array for deployment with ID: ' +
-            id + ' and pcr type ' + pcrType + ' and run name ' + pcrRunName);
+            id + ' and pcr type ' + pcrType + ' and column name ' + columnName);
         var opts = {
-            key: [id, pcrType, pcrRunName]
+            key: [id, pcrType, columnName]
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrEpochSeconds', opts, function (err, res) {
@@ -524,12 +524,11 @@ function DataAccess(opts) {
     // associated with the deployment with the given ID, the
     // given pcrType, the given pcrRunName, and the given epochSeconds
     // ***********************************************************
-    this.getDeploymentPCRColumnNames = function (id, pcrType, pcrRunName, epochSecs, callback) {
+    this.getDeploymentPCRColumnNames = function (id, pcrType, callback) {
         logger.debug('Going to get pcr column name array for deployment with ID: ' +
-            id + ' and pcr type ' + pcrType + ' and run name ' + pcrRunName + ' and epochSecs ' +
-            epochSecs);
+            id + ' and pcr type ' + pcrType);
         var opts = {
-            key: [id, pcrType, pcrRunName, epochSecs]
+            key: [id, pcrType]
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrColumnNames', opts, function (err, res) {
@@ -555,12 +554,12 @@ function DataAccess(opts) {
     // given pcrType, the given pcrRunName, the given epochSeconds
     // and the given column name
     // ***********************************************************
-    this.getDeploymentPCRDataRecords = function (id, pcrType, pcrRunName, epochSecs, columnName, callback) {
+    this.getDeploymentPCRDataRecords = function (id, pcrType, columnName, epochSecs, callback) {
         logger.debug('Going to get pcr data records array for deployment with ID: ' +
-            id + ' and pcr type ' + pcrType + ' and run name ' + pcrRunName + ' and epochSecs ' +
-            epochSecs + ' and column name ' + columnName);
+            id + ' and pcr type ' + pcrType + ' and column name ' + columnName + ' and epochSecs ' +
+            epochSecs);
         var opts = {
-            key: [id, pcrType, pcrRunName, epochSecs, columnName]
+            key: [id, pcrType, columnName, epochSecs]
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrDataRecords', opts, function (err, res) {
@@ -906,7 +905,7 @@ function DataAccess(opts) {
      * @param pcrs
      * @param callback
      */
-    this.updateDeployment = function (deploymentID, name, description, startDate, endDate, esp, errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback) {
+    this.updateDeployment = function (deploymentID, name, description, startDate, endDate, esp, ancillaryData, errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback) {
         // First make sure we have an deployment ID
         if (deploymentID) {
             // Next try to find a deployment with the given ID
@@ -921,6 +920,8 @@ function DataAccess(opts) {
                     if (deployment) {
                         // Now examine each of the parameters coming in and if they are specified, update the
                         // properties on the deployment
+
+                        // TODO kgomes, I should make sure to only update the document if something has changed.
 
                         // The name of the deployment
                         if (name) deployment.name = name;
@@ -951,6 +952,10 @@ function DataAccess(opts) {
                             if (esp.path) deployment.esp.path = esp.path;
                             if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
                         }
+
+                        // If ancillary data stats
+                        if (ancillaryData)
+                            deployment.ancillaryData = ancillaryData;
 
                         // Now any errors
                         if (errors) {
@@ -2425,7 +2430,7 @@ function DataAccess(opts) {
             if (!me.ancillaryDataRecordsToBeInserted[deploymentID]) {
                 // Create a new array
                 me.ancillaryDataRecordsToBeInserted[deploymentID] = [];
-                logger.debug("Create new ancillary array for deployment with ID " + deploymentID);
+                logger.trace("Create new ancillary array for deployment with ID " + deploymentID);
             }
 
             // Now push the record on the array
@@ -2437,7 +2442,7 @@ function DataAccess(opts) {
                 for (var i = 0; i < this.numAncillaryPointsToBatch; i++) {
                     recordsToProcess.push(me.ancillaryDataRecordsToBeInserted[deploymentID].shift());
                 }
-                logger.debug("Will process " + recordsToProcess.length + " records off the stack leaving "
+                logger.trace("Will process " + recordsToProcess.length + " ancillary data records off the stack leaving "
                     + me.ancillaryDataRecordsToBeInserted[deploymentID].length + " still to process");
                 me.batchInsertAncillaryData(deploymentID, espName, recordsToProcess, function (err, numRecords) {
 
@@ -2504,6 +2509,46 @@ function DataAccess(opts) {
     }
 
     /**
+     * This method just runs a SQL script to clean out duplicate rows from the ancillary database
+     * @param callback
+     */
+    this.cleanOutDuplicateAncillaryData = function (callback) {
+        // Connect to the database
+        pg.connect(me.pgConnectionString, function (err, client, done) {
+            // If there was an error, send it to the caller
+            if (err) {
+                logger.error('Error getting pooled connection');
+                logger.error(err);
+                if (callback)
+                    callback(err);
+            } else {
+                // Create the cleaning query and run it
+                client.query('DELETE FROM ancillary_data WHERE id IN (SELECT id FROM (SELECT id, row_number() over ' +
+                    '(partition BY timestamp_utc, ancillary_source_id_fk, value ORDER BY id) AS ' +
+                    'rnum FROM ancillary_data) t WHERE t.rnum > 1);', function (err, result) {
+
+                    // Check for errors
+                    if (err) {
+                        logger.error('Error cleaning duplicates');
+                        logger.error(err);
+
+                        // Send error to callback
+                        if (callback)
+                            callback(err);
+                    } else {
+                        logger.debug("Duplicates cleaned: ", result);
+                        // Close the DB connection
+                        done();
+
+                        // Send the result
+                        if (callback)
+                            callback(null);
+                    }
+                });
+            }
+        });
+    }
+    /**
      *
      * @param deploymentID
      * @param espName
@@ -2511,7 +2556,7 @@ function DataAccess(opts) {
      * @param callback
      */
     this.batchInsertAncillaryData = function (deploymentID, espName, ancillaryDataArray, callback) {
-        logger.debug('insertAncillaryDataArray called with data array size of ' + ancillaryDataArray.length +
+        logger.trace('insertAncillaryDataArray called with data array size of ' + ancillaryDataArray.length +
             ' and first record is ', ancillaryDataArray[0]);
 
 
@@ -2602,7 +2647,7 @@ function DataAccess(opts) {
                                             if (callback)
                                                 callback(err);
                                         } else {
-                                            logger.debug("Bulk insert complete. Result: ", result);
+                                            logger.trace("Bulk insert complete. Result: ", result);
                                             // Check to see if we are done and close the DB if that is the case
                                             done();
                                             // Send the result
@@ -2678,18 +2723,18 @@ function DataAccess(opts) {
     }
 
     /**
-     * This method takes in a deployment ID, looks up the deployment ancillary data statistics and then
+     * This method takes in a deployment, looks up the deployment ancillary data statistics and then
      * updates the information attached to the deployment with that from the ancillary database.
-     * @param deploymentID
+     * @param deployment
      * @param callback
      */
-    this.updateDeploymentWithAncillaryStats = function (deploymentID, callback) {
-        // First let's verify the deployment ID was provided
-        if (deploymentID) {
-            // OK, so the ID is provided, we first need to construct the object that matches the source
+    this.setDeploymentAncillaryStatsFromDatabase = function (deployment, callback) {
+        // First let's verify the deployment was provided
+        if (deployment) {
+            // OK, so the deployment is provided, we first need to construct the object that matches the source
             // information that is in the ancillary database.  Here is the query to get that information
             var querySourceInformation = 'SELECT * from ancillary_sources where deployment_id_fk = \'' +
-                deploymentID + '\'';
+                deployment._id + '\'';
             logger.debug("Going to query for ancillary source information using: " + querySourceInformation);
 
             // OK, let's connect up to the database
@@ -2749,20 +2794,11 @@ function DataAccess(opts) {
                             done();
 
                             // Now update the deployment
-                            me.setAncillaryData(deploymentID, ancillaryDataSources, function (err) {
-                                // If there is an error, send it back
-                                if (err) {
-                                    logger.error("Error trying to set the ancillary data on deployment with ID " +
-                                        deploymentID);
-                                    //
-                                    if (callback)
-                                        callback(err);
-                                } else {
-                                    // Send the result
-                                    if (callback)
-                                        callback(null);
-                                }
-                            });
+                            deployment.ancillaryData = ancillaryDataSources;
+
+                            // Send it back to the caller
+                            if (callback)
+                                callback(null, deployment);
                         }
                     });
 
@@ -2873,55 +2909,52 @@ function DataAccess(opts) {
                 // Add it to the array of files being syncd so we can track what is going on
                 self.ancillaryFilesBeingSyncd.push(filePath);
 
-                // Does the file currently exist?
-                fs.exists(filePath, function (exists) {
+                // Check to see if it exists
+                if (fs.existsSync(filePath)) {
+                    logger.debug('File already exists');
 
-                    if (exists) {
-                        logger.debug('File already exists');
+                    // Since the file exists, we need to grab the latest timestamp from the file so
+                    // we only append the data that is new.
+                    var instream = fs.createReadStream(filePath);
+                    var outstream = new stream;
+                    var rl = readline.createInterface(instream, outstream);
+                    var latestEpoch = null;
+                    var lineCounter = 0;
 
-                        // Since the file exists, we need to grab the latest timestamp from the file so
-                        // we only append the data that is new.
-                        var instream = fs.createReadStream(filePath);
-                        var outstream = new stream;
-                        var rl = readline.createInterface(instream, outstream);
-                        var latestEpoch = null;
-                        var lineCounter = 0;
+                    // Read down the file looking for the latest epoch seconds
+                    rl.on('line', function (line) {
+                        lineCounter++;
+                        latestEpoch = line.split(',')[0];
+                    });
 
-                        // Read down the file looking for the latest epoch seconds
-                        rl.on('line', function (line) {
-                            lineCounter++;
-                            latestEpoch = line.split(',')[0];
-                        });
+                    // Once the file is closed, query for more recent data and append to the file
+                    rl.on('close', function () {
+                        logger.debug("Reading of file done");
+                        logger.debug("last epoch for file " + filePath + " is " + latestEpoch);
 
-                        // Once the file is closed, query for more recent data and append to the file
-                        rl.on('close', function () {
-                            logger.debug("Reading of file done");
-                            logger.debug("last epoch for file " + filePath + " is " + latestEpoch);
+                        if (latestEpoch && lineCounter > 1) {
+                            // Grab the source IDs
+                            var sourceIDArray = getSourceIDs(deployment, source);
 
-                            if (latestEpoch && lineCounter > 1) {
-                                // Grab the source IDs
-                                var sourceIDArray = getSourceIDs(deployment, source);
-
-                                // TODO kgomes do I need to check to make sure sourceIDArray has elements?
-
-                                // Now build the query
+                            // Make sure there are sources to process
+                            if (sourceIDArray && sourceIDArray.length > 0) {
+                                // Create the proper query to grab all the data after the latest timestamp
                                 var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, ' +
-                                    'timestamp_utc, ancillary_source_id_fk, value from ancillary_data where (';
-                                for (var i = 0; i < sourceIDArray.length; i++) {
-                                    if (i > 0) {
-                                        query += ' OR';
-                                    }
-                                    query += ' ancillary_source_id_fk = ' + sourceIDArray[i];
-                                }
-                                query += ') and extract(epoch from timestamp_utc) > ' + latestEpoch;
-                                query += ' order by timestamp_utc asc'
-                                logger.debug("New query is: " + query);
+                                    'timestamp_utc, string_agg(trim(to_char(value,\'9999999999D999\')),\',\' ' +
+                                    'ORDER BY ancillary_source_id_fk) FROM ' +
+                                    'ancillary_data where ancillary_source_id_fk in (SELECT id from ancillary_sources ' +
+                                    'WHERE deployment_id_fk=\'' + deployment._id + '\' AND instrument_type=\'' +
+                                    source + '\') and extract(epoch from timestamp_utc) > ' + latestEpoch +
+                                    ' GROUP BY timestamp_utc ORDER BY timestamp_utc';
+                                logger.debug('Query string = ' + query);
 
                                 // Now write the data
-                                writeAncillaryData(filePath, query, sourceIDArray, function (err) {
-                                    logger.debug("Appending data complete", err);
+                                writeAncillaryData(filePath, query, function (err) {
+                                    if (err) {
+                                        logger.error("Error caught trying to write ancillary data to file:", err);
+                                    }
 
-                                    // Remove it from the tracker
+                                    // Clear the entry from the tracker
                                     var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
                                     logger.debug("File path was found at index " + filePathIndex + ", will remove it");
                                     self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
@@ -2932,30 +2965,8 @@ function DataAccess(opts) {
                                         callback(err);
                                 });
                             } else {
-                                // The file already existed, but there was no latest epoch timestamp
-                                // found.  This should not really happen, so we will send back an error
-                                var errorMessage = 'While file ' + filePath + ' already exists, it did not seem ' +
-                                    ' to have any existing data.  That is very strange';
+                                var errorMessage = 'No source ID array was returned, that is just not right!';
                                 logger.error(errorMessage);
-
-                                // Remove it from the tracker
-                                var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
-                                logger.debug("File path was found at index " + filePathIndex + ", will remove it");
-                                self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
-                                logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
-
-                                // Send an error back to caller
-                                if (callback)
-                                    callback(new Error(errorMessage));
-                            }
-                        });
-                    } else {
-                        logger.debug('File ' + filePath + ' does not exist, will create it and write header');
-                        // Write the header to the file first
-                        writeHeader(deployment, source, filePath, function (err) {
-                            // Check for an error
-                            if (err) {
-                                logger.error("Error trying to write header: ", err);
 
                                 // Clean the entry from the tracker
                                 var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
@@ -2963,66 +2974,103 @@ function DataAccess(opts) {
                                 self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                                 logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
 
-                                // Now send it back with the error
+                                // Send an error back to the caller
                                 if (callback)
-                                    callback(err);
-                            } else {
-                                // Grab sourceIDs
-                                var sourceIDArray = getSourceIDs(deployment, source);
+                                    callback(new Error(errorMessage));
+                            }
+                        } else {
+                            // The file already existed, but there was no latest epoch timestamp
+                            // found.  This should not really happen, so we will send back an error
+                            var errorMessage = 'While file ' + filePath + ' already exists, it did not seem ' +
+                                ' to have any existing data.  That is very strange';
+                            logger.error(errorMessage);
 
-                                // TODO kgomes do I need to check for elements here?
-                                if (sourceIDArray) {
-                                    // Create the proper query to grab all the data
-                                    var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, ' +
-                                        'timestamp_utc, ancillary_source_id_fk, value from ancillary_data where';
-                                    for (var i = 0; i < sourceIDArray.length; i++) {
-                                        if (i > 0) {
-                                            query += ' OR';
-                                        }
-                                        query += ' ancillary_source_id_fk = ' + sourceIDArray[i];
+                            // Remove it from the tracker
+                            var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                            logger.debug("File path was found at index " + filePathIndex + ", will remove it");
+                            self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
+                            logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
+
+                            // Send an error back to caller
+                            if (callback)
+                                callback(new Error(errorMessage));
+                        }
+                    });
+                } else {
+                    logger.debug('File ' + filePath + ' does not exist, will create it and write header');
+                    // Write the header to the file first
+                    writeHeader(deployment, source, filePath, function (err) {
+                        // Check for an error
+                        if (err) {
+                            logger.error("Error trying to write header: ", err);
+
+                            // Clean the entry from the tracker
+                            var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                            logger.debug("File path was found at index " + filePathIndex + ", will remove it");
+                            self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
+                            logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
+
+                            // Now send it back with the error
+                            if (callback)
+                                callback(err);
+                        } else {
+                            // Grab sourceIDs
+                            var sourceIDArray = getSourceIDs(deployment, source);
+
+                            // Make sure there are some IDs
+                            if (sourceIDArray && sourceIDArray.length > 0) {
+                                // Create the proper query to grab all the data
+                                var query = 'SELECT distinct extract(epoch from timestamp_utc) as epochseconds, ' +
+                                    'timestamp_utc, string_agg(trim(to_char(value,\'9999999999D999\')),\',\' ' +
+                                    'ORDER BY ancillary_source_id_fk) FROM ' +
+                                    'ancillary_data where ancillary_source_id_fk in (SELECT id from ancillary_sources ' +
+                                    'WHERE deployment_id_fk=\'' + deployment._id + '\' AND instrument_type=\'' +
+                                    source + '\') GROUP BY timestamp_utc ORDER BY timestamp_utc';
+                                logger.debug('Query string = ' + query);
+
+                                // Now write the data
+                                writeAncillaryData(filePath, query, function (err) {
+                                    if (err) {
+                                        logger.error("Error caught trying to write ancillary data to file:", err);
                                     }
-                                    query += ' order by timestamp_utc asc';
-                                    logger.debug('Query string = ' + query);
 
-                                    // Now write the data
-                                    writeAncillaryData(filePath, query, sourceIDArray, function (err) {
-                                        if (err) {
-                                            logger.error("Error caught trying to write ancillary data to file:", err);
-                                        }
-
-                                        // Clear the entry from the tracker
-                                        var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
-                                        logger.debug("File path was found at index " + filePathIndex + ", will remove it");
-                                        self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
-                                        logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
-
-                                        // Send it back to the caller
-                                        if (callback)
-                                            callback(err);
-                                    });
-                                } else {
-                                    var errorMessage = 'No source ID array was returned, that is just not right!';
-                                    logger.error(errorMessage);
-
-                                    // Clean the entry from the tracker
+                                    // Clear the entry from the tracker
                                     var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
                                     logger.debug("File path was found at index " + filePathIndex + ", will remove it");
                                     self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                                     logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
 
-                                    // Send an error back to the caller
+                                    // Send it back to the caller
                                     if (callback)
-                                        callback(new Error(errorMessage));
-                                }
+                                        callback(err);
+                                });
+                            } else {
+                                var errorMessage = 'No source ID array was returned, that is just not right!';
+                                logger.error(errorMessage);
+
+                                // Clean the entry from the tracker
+                                var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                                logger.debug("File path was found at index " + filePathIndex + ", will remove it");
+                                self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
+                                logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
+
+                                // Send an error back to the caller
+                                if (callback)
+                                    callback(new Error(errorMessage));
                             }
-                        });
-                    }
-                });
+                        }
+                    });
+                }
             }
         }
 
-        // This function is a convenience function to return the sourceIDs
-        // associated with a deployment and source
+        /**
+         * This method takes in a deployment and a source name and returns a sorted array
+         * of 'sourceID's that represent the ancillary entries in the database.
+         * @param deployment
+         * @param source
+         * @returns {Array}
+         */
         function getSourceIDs(deployment, source) {
             // The source IDs to return
             var sourceIDs = [];
@@ -3038,11 +3086,21 @@ function DataAccess(opts) {
                 }
             }
 
+            // Now sort them
+            sourceIDs.sort();
+
             // Return the result
             return sourceIDs;
         }
 
-        // This is a function that will write a header to a write stream
+        /**
+         * This is a function that will take the given deployment, source and file location
+         * and will write the appropriate header to the file
+         * @param deployment
+         * @param source
+         * @param filePath
+         * @param callback
+         */
         function writeHeader(deployment, source, filePath, callback) {
             // Now create a stream writer
             var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
@@ -3057,13 +3115,22 @@ function DataAccess(opts) {
             // The header
             var headerText = 'Timestamp(Epoch Seconds),Datetime';
 
-            // Create the line to write
-            for (var varEntry in deployment.ancillaryData[source]) {
-                logger.debug('Dealing with varEntry ', varEntry);
+            // Grab the source IDs in sorted order
+            var sourceIDsInOrder = getSourceIDs(deployment, source);
 
-                // Append the header text (adding comma if not the first entry)
-                headerText += ',' + deployment.ancillaryData[source][varEntry]['varLongName'] +
-                    ' (' + deployment.ancillaryData[source][varEntry]['units'] + ')';
+            // Loop over the source IDs
+            for (var i = 0; i < sourceIDsInOrder.length; i++) {
+                // Loop over the ancillary data entries to look for the correct source
+                for (var varEntry in deployment.ancillaryData[source]) {
+                    if (deployment.ancillaryData[source][varEntry]['sourceID'] === sourceIDsInOrder[i]) {
+                        logger.trace('Dealing with varEntry ', varEntry);
+
+                        // Append the header text (adding comma if not the first entry)
+                        headerText += ',' + deployment.ancillaryData[source][varEntry]['varLongName'] +
+                            ' (' + deployment.ancillaryData[source][varEntry]['units'] + ')';
+                        break;
+                    }
+                }
             }
             logger.debug('headerText: ', headerText);
 
@@ -3083,7 +3150,8 @@ function DataAccess(opts) {
 
         // This is a function that reads data from the ancillary database and appends to
         // the file specified.
-        function writeAncillaryData(filePath, query, sourceIDArray, callback) {
+        function writeAncillaryData(filePath, query, callback) {
+            // Grab reference
             // Now create a stream writer
             var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
 
@@ -3094,7 +3162,6 @@ function DataAccess(opts) {
                     callback(null);
             });
 
-            // TODO kgomes, should I surround this whole next block with try/catch?
             // Open it and start writing
             sourceStream.once('open', function (fd) {
                 // Check for the file handle
@@ -3119,48 +3186,49 @@ function DataAccess(opts) {
                                     if (callback)
                                         callback(err);
                                 } else {
-                                    logger.debug('Query came back with ' + result.rows.length + ' points');
+                                    // Check for results first
                                     if (result && result.rows && result.rows.length > 0) {
-                                        // A placeholder for the timestamp we are currently working with
-                                        var currentEpochSeconds = null;
-                                        var currentTimestamp = null;
-                                        var valueArray = [];
-                                        // Loop over all the rows
-                                        for (var i = 0; i < result.rows.length; i++) {
-                                            // Grab the values from the row
-                                            var tempEpochSeconds = result.rows[i]['epochseconds'];
-                                            var tempTimestamp = result.rows[i]['timestamp_utc'];
-                                            var tempAncSourceIDFK = result.rows[i]['ancillary_source_id_fk'];
-                                            var tempValue = result.rows[i]['value'];
+                                        // Make sure there are rows to be written
+                                        var numRows = result.rows.length;
+                                        logger.debug('Query came back with ' + numRows + ' rows');
 
-                                            // If it's the first row, save the timestamp
-                                            if (i === 0) {
-                                                currentEpochSeconds = tempEpochSeconds;
-                                                currentTimestamp = tempTimestamp;
-                                            }
+                                        // The row counter
+                                        var i = 0;
 
-                                            // Now if the timestamp has changed, we need to write the row
-                                            if (tempEpochSeconds !== currentEpochSeconds) {
-                                                var rowToWrite = currentEpochSeconds + ',' + currentTimestamp;
-                                                for (var j = 0; j < valueArray.length; j++) {
-                                                    rowToWrite += ',';
-                                                    rowToWrite += valueArray[j];
-                                                }
-                                                sourceStream.write(rowToWrite + '\n');
-                                                // Re-initialize things
-                                                currentEpochSeconds = tempEpochSeconds;
-                                                currentTimestamp = tempTimestamp;
-                                                valueArray = [];
+                                        // The function to write the results
+                                        function writeResults() {
+                                            logger.trace("Starting to write results to file");
+
+                                            // A boolean to indicate if the writing is backed up
+                                            var writeOK = true;
+
+                                            // Loop over the rows watching for write backups
+                                            do {
+                                                // Now write it to the file
+                                                writeOK = sourceStream.write(result.rows[i]['epochseconds'] + ',' +
+                                                    result.rows[i]['timestamp_utc'] + ',' + result.rows[i]['string_agg'] + '\n');
+
+                                                // Bump the counter
+                                                i++;
+                                            } while (i < numRows && writeOK);
+
+                                            // Check to see if all the writes are done
+                                            if (i < numRows) {
+                                                logger.trace("Writing stopped at line " + i + " will wait for drain");
+
+                                                // Since not done, set up a handler to watch for the buffer to
+                                                // drain and then start writing again
+                                                sourceStream.once('drain', writeResults);
+                                            } else {
+                                                logger.debug("All done writing to file, will end the write stream");
+                                                sourceStream.end();
+                                                done();
                                             }
-                                            // Search for the index where the source id is located
-                                            var sourceIDIndex = sourceIDArray.indexOf(tempAncSourceIDFK);
-                                            // Insert the value there
-                                            if (sourceIDIndex >= 0) valueArray[sourceIDIndex] = tempValue;
                                         }
-                                        logger.debug("Done looping over rows");
+
+                                        // Call the function to write the results
+                                        writeResults();
                                     }
-                                    sourceStream.end();
-                                    done();
                                 }
                             });
                         }

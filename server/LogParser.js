@@ -365,7 +365,10 @@ function LogParser(dataAccess, dataDir, opts) {
 
             // Add a handler for file read errors
             fileReadStream.on('error', function (err) {
-                // TODO kgomes add this!!!!!
+                logger.error("Error trapped trying to read the log file:", err);
+                // Return the updated deployment and ancillary data array to the callback
+                if (callback)
+                    callback(err);
             });
 
             // Add handler when the stream read end of file
@@ -374,75 +377,64 @@ function LogParser(dataAccess, dataDir, opts) {
                 // Log out end of file read
                 logger.debug("Completed reading of file " + logFile);
 
-                // Update the deployment in one pass
-                me.dataAccess.updateDeployment(deployment._id, null, null, null, null, null, errorsToBeAdded,
-                    samplesToBeAdded, protocolRunsToBeAdded, imagesToBeAdded, pcrDataArray, lineNumber, function (err) {
-                        if (err) {
-                            logger.error("Error trapped trying to update the deployment:", err);
-                            // Return the updated deployment and ancillary data array to the callback
-                            if (callback)
-                                callback(err);
-                        } else {
-                            logger.debug("Deployment with ID " + deployment._id + " should now be updated");
-                            // Flush the ancillary data in data access
-                            me.dataAccess.flushAncillaryDataRecords(deployment._id, deployment.esp.name, me.dataDir, function (err) {
-                                // If there was an error log it
+                // Flush the ancillary data records
+                me.dataAccess.flushAncillaryDataRecords(deployment._id, deployment.esp.name, me.dataDir, function (err) {
+                    // If there was an error log it
+                    if (err) {
+                        logger.error("Error trapped trying to flush the rest of the ancillary data:", err);
+                        // Return the updated deployment and ancillary data array to the callback
+                        if (callback)
+                            callback(err);
+                    } else {
+                        logger.debug("Flushed the last data records, let's clean out any duplicates");
+                        // Now let's run the method to clean up any duplicate ancillary data records that may have been
+                        // inserted
+                        me.dataAccess.cleanOutDuplicateAncillaryData(function (err) {
+                            // If there was an error, just log it, but keep going
+                            if (err) {
+                                logger.error("There was an error during cleaning of duplicates", err);
+                            }
+                            logger.debug("Duplicates cleaned, let's update the deployment with " +
+                                "the ancillary statistics");
+                            // Update the deployment's ancillary statistics with the information from the ancillary database
+                            me.dataAccess.setDeploymentAncillaryStatsFromDatabase(deployment, function (err, updatedDeployment) {
+                                // Check for errors first
                                 if (err) {
-                                    logger.error("Error trapped trying to flush the rest of the ancillary data:", err);
+                                    logger.error("Error trapped trying to update the deployment with ancillary stats:", err);
                                     // Return the updated deployment and ancillary data array to the callback
                                     if (callback)
                                         callback(err);
                                 } else {
-                                    logger.debug("Last records should be flushed, let's update the deployment with " +
-                                        "the ancillary statistics");
-                                    // This should mean that all the ancillary data has been flushed to the database
-                                    // so we should be good to sync up the deployment with the ancillary stats from
-                                    // the database
-                                    me.dataAccess.updateDeploymentWithAncillaryStats(deployment._id, function (err) {
-                                        if (err) {
-                                            logger.error("Error returned trying to sync ancillary stats: ", err);
-                                            // Send it back to the caller
-                                            if (callback)
-                                                callback(err);
-                                        } else {
-                                            logger.debug("OK, ancillary stats should be synchronized, let's create " +
-                                                "matching files that have all the ancillary data parsed into CSV files");
-                                            // And now since the deployment stats are updated and all records have been added, sync
-                                            // the CSV files with the data records. First grab the updated deployment by ID
-                                            me.dataAccess.getDeploymentByID(deployment._id, false, function (err, deployment) {
-                                                // Check for error first
-                                                if (err) {
-                                                    logger.error("There was an error trying to get the deployment after updating " +
-                                                        "ancillary data stats:", err);
-                                                    if (callback)
-                                                        callback(err);
-                                                } else {
-                                                    // Make sure a deployment was found
-                                                    if (deployment) {
-                                                        // Now sync the CSV data files with the ancillary data in the database
-                                                        me.dataAccess.syncAncillaryDataFileWithDatabase(deployment, me.dataDir, function (err, result) {
-                                                            if (err) {
-                                                                logger.error("Error trying to sync local CSV files with ancillary data:", err);
-                                                                if (callback)
-                                                                    callback(err);
-                                                            } else {
-                                                                logger.debug("syncAncillaryDataFileWithDatabase callback called");
-                                                                if (callback)
-                                                                    callback(null);
-                                                            }
-                                                        });
-                                                    } else {
+                                    // Update the deployment in one pass
+                                    me.dataAccess.updateDeployment(deployment._id, null, null, null, null, null,
+                                        updatedDeployment.ancillaryData, errorsToBeAdded, samplesToBeAdded, protocolRunsToBeAdded,
+                                        imagesToBeAdded, pcrDataArray, lineNumber, function (err) {
+                                            if (err) {
+                                                logger.error("Error trapped trying to update the deployment:", err);
+                                                // Return the updated deployment and ancillary data array to the callback
+                                                if (callback)
+                                                    callback(err);
+                                            } else {
+                                                logger.debug("Deployment with ID " + deployment._id + " should now be updated");
+                                                // Now sync the CSV data files with the ancillary data in the database
+                                                me.dataAccess.syncAncillaryDataFileWithDatabase(updatedDeployment, me.dataDir, function (err, result) {
+                                                    if (err) {
+                                                        logger.error("Error trying to sync local CSV files with ancillary data:", err);
                                                         if (callback)
-                                                            callback(new Error("No deployment with ID " + deployment._id + " was found"));
+                                                            callback(err);
+                                                    } else {
+                                                        logger.debug("syncAncillaryDataFileWithDatabase callback called");
+                                                        if (callback)
+                                                            callback(null);
                                                     }
-                                                }
-                                            });
-                                        }
-                                    });
+                                                });
+                                            }
+                                        });
                                 }
                             });
-                        }
-                    });
+                        });
+                    }
+                });
             });
 
             // Now loop over the lines in the log file
@@ -1020,7 +1012,7 @@ function LogParser(dataAccess, dataDir, opts) {
             // lines so split each instrument by line continuation character
             var entries = bodyBuffer.toString().split("\\");
             for (var i = 0; i < entries.length; i++) {
-                logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is AncillaryData: ", entries);
+                logger.trace("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is AncillaryData: ", entries);
 
                 // Split the source, hours, minutes and seconds from the data
                 var ancillarySplitMatches = entries[i].match(me.ancillarySplitPattern);
@@ -1174,7 +1166,7 @@ function LogParser(dataAccess, dataDir, opts) {
                 // Read in the file and then loop over each line in the file
                 var pcrType = null;
                 var pcrStartDate = null;
-                var pcrRunName = null;
+                //var pcrRunName = null;
                 var pcrRunStartDate = null;
                 var pcrRunNumberOfCycles = null;
                 var pcrColumnHeaders = null;
@@ -1203,9 +1195,9 @@ function LogParser(dataAccess, dataDir, opts) {
                         } else {
                             logger.trace("PCR: Header was found, start a new parsing");
                             // Set the PCR type
-                            pcrType = headerMatches[1];
+                            pcrType = headerMatches[1] + "-" + headerMatches[2];
                             // Set the name of the run
-                            pcrRunName = headerMatches[2];
+                            //pcrRunName = headerMatches[2];
                             // Set the PCR start date
                             pcrStartDate = startDate;
 
@@ -1217,8 +1209,8 @@ function LogParser(dataAccess, dataDir, opts) {
                             timestampColumn = -1;
                             celsiusColumn = -1;
 
-                            logger.trace("PCR: New PCR type " + pcrType + " with run named " + pcrRunName +
-                                " started at " + pcrStartDate + " which in epoch is " + pcrStartDate.unix());
+                            logger.trace("PCR: New PCR type " + pcrType + " started at " + pcrStartDate +
+                                " which in epoch is " + pcrStartDate.unix());
                         }
                     } else {
                         // Check for a column header
@@ -1273,23 +1265,17 @@ function LogParser(dataAccess, dataDir, opts) {
                                                 pcrData[pcrType] = {};
                                             }
 
-                                            // Now make sure the run name is there
-                                            if (!pcrData[pcrType][pcrRunName]) {
-                                                pcrData[pcrType][pcrRunName] = {};
-                                            }
-
-                                            // Now make sure the timestamp is already there
-                                            if (!pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis]) {
-                                                pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis] = {};
-                                            }
-
                                             // Make sure there is a pcr entry for the particular column
-                                            if (!pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]]) {
-                                                pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]] = [];
+                                            if (!pcrData[pcrType][pcrColumnHeaders[i]]) {
+                                                pcrData[pcrType][pcrColumnHeaders[i]] = {};
+                                            }
+                                            // Now make sure the timestamp is already there
+                                            if (!pcrData[pcrType][pcrColumnHeaders[i]][pcrRunStartDateEpochMillis]) {
+                                                pcrData[pcrType][pcrColumnHeaders[i]][pcrRunStartDateEpochMillis] = [];
                                             }
 
                                             // Now push the data
-                                            pcrData[pcrType][pcrRunName][pcrRunStartDateEpochMillis][pcrColumnHeaders[i]].push(dataRecord);
+                                            pcrData[pcrType][pcrColumnHeaders[i]][pcrRunStartDateEpochMillis].push(dataRecord);
                                         }
                                     }
                                 }

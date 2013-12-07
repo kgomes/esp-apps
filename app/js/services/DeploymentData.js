@@ -143,10 +143,10 @@ espApp.factory('deploymentData', function ($http, $log) {
         },
 
         // This method takes in various parameters for PCR data and retrieves the actual data
-        getPCRData: function (deploymentID, pcrType, pcrRunName, epochMillis, varName, successcb) {
+        getPCRData: function (deploymentID, pcrType, varName, epochMillis, successcb) {
             // Construct the URL to grab the PCR data
             var pcrDataUrl = "/deployments/" + deploymentID + "/pcrs/" + encodeURIComponent(pcrType) + "/" +
-                encodeURIComponent(pcrRunName) + "/" + epochMillis + "/" + encodeURIComponent(varName);
+                encodeURIComponent(varName) + "/" + epochMillis + "/";
             $log.log("pcrDataUrl: " + pcrDataUrl);
 
             // Make the call
