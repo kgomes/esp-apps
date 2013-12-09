@@ -2,18 +2,18 @@
    "_id": "_design/esps",
    "language": "javascript",
    "views": {
-       "allESPs": {
+       "all": {
            "map": "function(doc) {\n  if (doc.resource && doc.resource === 'Deployment' && doc.esp) {\n    emit(doc.esp,null);\n  }\n}",
            "reduce": "function(keys, values) {\n  return true;\n}"
        },
-       "espsInDeployment": {
-           "map": "function(doc) {\n  emit(doc.name, doc.esp);\n}"
+       "inDeployment": {
+           "map": "function(doc) {\n  if (doc.resource === 'Deployment') {\n    emit(doc.name, doc.esp);\n  }\n}"
        },
-       "allESPNames": {
+       "allNames": {
            "map": "function(doc) {\n  if (doc.resource && doc.resource === 'Deployment' && doc.esp && doc.esp.name) {\n    emit(doc.esp.name,null);\n  }\n}",
            "reduce": "function(keys, values) {\n  return true;\n}"
        },
-       "espNamesInDeployment": {
+       "inDeploymentNames": {
            "map": "function(doc) {\n  emit(doc.name, doc.esp.name);\n}"
        }
    }
