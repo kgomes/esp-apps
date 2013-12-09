@@ -1106,35 +1106,37 @@ function LogParser(dataAccess, dataDir, opts) {
                         var cleanDataMatches = cleanData.match(me.ancillaryDataPattern);
                         if (cleanDataMatches && cleanDataMatches.length > 0) {
 
-                            var logData = cleanDataMatches[1];
-                            var logUnits = cleanDataMatches[2];
+                            var logData = cleanDataMatches[1].trim();
+                            var logUnits = cleanDataMatches[2].trim();
                             var varFromLookup = me.ancillaryLookup[sourceName][logUnits];
                             // TODO insert check to make sure there is ancillary data in the lookup before going on!!!!!
+                            if (varFromLookup) {
 
-                            // Add the ancillary data to a local array for later processing
-                            // by the data access component
+                                // Check if we are supposed to use the ancillary timestamps or not
+                                if (me.useAncillaryTimestamps) {
+                                    me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
+                                        [sourceName, varFromLookup.varName, varFromLookup.varLongName,
+                                            varFromLookup.units, logUnits, ancillaryTimestamp.format(),
+                                            logData], function (err) {
 
-                            // Check if we are supposed to use the ancillary timestamps or not
-                            if (me.useAncillaryTimestamps) {
-                                me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
-                                    [sourceName, varFromLookup.varName, varFromLookup.varLongName,
-                                        varFromLookup.units, logUnits, ancillaryTimestamp.format(),
-                                        logData], function (err) {
+                                        });
+                                    logger.trace("Pushed: " + ancillaryTimestamp.format() + ", " + sourceName + ", " +
+                                        varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
+                                        varFromLookup.units + ", " + logUnits + ", " + logData);
+                                } else {
+                                    me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
+                                        [sourceName, varFromLookup.varName, varFromLookup.varLongName,
+                                            varFromLookup.units, logUnits, lastTimestampUTC.format(),
+                                            logData], function (err) {
 
-                                    });
-                                logger.trace("Pushed: " + ancillaryTimestamp.format() + ", " + sourceName + ", " +
-                                    varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
-                                    varFromLookup.units + ", " + logUnits + ", " + logData);
+                                        });
+                                    logger.trace("Pushed: " + lastTimestampUTC.format() + ", " + sourceName + ", " +
+                                        varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
+                                        varFromLookup.units + ", " + logUnits + ", " + logData);
+                                }
                             } else {
-                                me.dataAccess.addAncillaryDataRecord(deployment._id, deployment.esp.name,
-                                    [sourceName, varFromLookup.varName, varFromLookup.varLongName,
-                                        varFromLookup.units, logUnits, lastTimestampUTC.format(),
-                                        logData], function (err) {
-
-                                    });
-                                logger.trace("Pushed: " + lastTimestampUTC.format() + ", " + sourceName + ", " +
-                                    varFromLookup.varName + ", " + varFromLookup.varLongName + ", " +
-                                    varFromLookup.units + ", " + logUnits + ", " + logData);
+                                logger.error("No matching configuration was found for ancillary data from source " +
+                                    sourceName + " and log units " + logUnits);
                             }
                         }
                     }

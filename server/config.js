@@ -20,7 +20,7 @@ module.exports = {
 
     // Application server options
     appServerOptions: {
-        hostBaseUrl:'http://localhost',
+        hostBaseUrl: 'http://localhost',
         port: 8081,
         loggerLevel: 'info',
         // The UserRouter options
@@ -127,6 +127,16 @@ module.exports = {
                     varName: 'Diss O2',
                     varLongName: 'Computed Dissolved Oxygen',
                     units: 'ml/L'
+                },
+                'decibars': {
+                    varName: 'Press',
+                    varLongName: 'Pressure',
+                    units: 'decibars'
+                },
+                'S/m': {
+                    varName: 'Cond',
+                    varLongName: 'Conductivity',
+                    units: 'S/m'
                 }
             },
             Can: {

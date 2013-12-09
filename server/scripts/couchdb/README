@@ -1,0 +1,17 @@
+This directory contains the JSON documents that are the 'views' in the CouchDB for the ESP that
+are necessary for the application to operate correctly.
+
+In addition, here are a couple of helpful hints in dealing with CouchDB documents.  When the documents get very
+large, it is often times not possible to work with them in the Futon web interface.  When that happens, you will
+want to download the documents using curl, edit them and then re-post them to update them.  Here is an example:
+
+curl -X GET http://127.0.0.1:5984/esp/eb07aed2d84ab91672c105a6b2001897 > neo.json
+
+This command pulls down a CouchDB document from the localhost server, from the 'esp' database with a document
+ID of eb07aed2d84ab91672c105a6b2001897.  We then redirect that output to a JSON file so we can edit it.  Once
+the editing has been done, you can push the update using:
+
+curl -H "Content-Type:application/json" -d @neo.json -X PUT http://127.0.0.1:5984/esp/eb07aed2d84ab91672c105a6b2001897
+
+which will update the document on the server (assuming it has not changed since you downloaded it).
+

@@ -274,37 +274,51 @@ function DeploymentFileSync(opts, basedir) {
                                         }
                                     });
                             } else {
-                                // It is a file.  First thing to do is to see if the local file exists
-                                var localFile = path.join(localDirectory, file.name);
-                                if (fs.existsSync(localFile)) {
-                                    // Grab the file statistics
-                                    var stat = fs.statSync(localFile);
+                                // First make sure the file on the remote server has some bytes in it
+                                if (file.size > 0) {
+                                    // It is a file.  First thing to do is to see if the local file exists
+                                    var localFile = path.join(localDirectory, file.name);
+                                    if (fs.existsSync(localFile)) {
+                                        // Grab the file statistics
+                                        var stat = fs.statSync(localFile);
 
-                                    // Check to see if the file size if different
-                                    if (parseInt(file.size) !== stat.size) {
-                                        logger.debug('Comparing sizes of remote ' + file.size +
-                                            ' to local ' + stat.size);
-                                        logger.debug('Local file ' + localFile +
-                                            ' size is different, marking for sync ...');
+                                        // Check to see if the file size if different
+                                        if (parseInt(file.size) !== stat.size) {
+                                            logger.debug('Comparing sizes of remote ' + file.size +
+                                                ' to local ' + stat.size);
+                                            logger.debug('Local file ' + localFile +
+                                                ' size is different, marking for sync ...');
+                                            filesToSync[localFile] = (remoteDirectory + '/' +
+                                                file.name).replace(new RegExp('//', 'g'), '/');
+                                        }
+
+                                        // Decrement the counter
+                                        numFiles--;
+
+                                        // Check for exit condition
+                                        if (numFiles <= 0) {
+                                            logger.debug('Done processing files from remote directory ' + remoteDirectory);
+                                            if (callback)
+                                                callback(null);
+                                            return;
+                                        }
+                                    } else {
+                                        logger.debug('Local file ' + localFile + ' does not exist, marking for sync ...');
                                         filesToSync[localFile] = (remoteDirectory + '/' +
                                             file.name).replace(new RegExp('//', 'g'), '/');
-                                    }
 
-                                    // Decrement the counter
-                                    numFiles--;
+                                        // Decrement the counter
+                                        numFiles--;
 
-                                    // Check for exit condition
-                                    if (numFiles <= 0) {
-                                        logger.debug('Done processing files from remote directory ' + remoteDirectory);
-                                        if (callback)
-                                            callback(null);
-                                        return;
+                                        // Check for exit condition
+                                        if (numFiles <= 0) {
+                                            logger.debug('Done processing files from remote directory ' + remoteDirectory);
+                                            if (callback)
+                                                callback(null);
+                                            return;
+                                        }
                                     }
                                 } else {
-                                    logger.debug('Local file ' + localFile + ' does not exist, marking for sync ...');
-                                    filesToSync[localFile] = (remoteDirectory + '/' +
-                                        file.name).replace(new RegExp('//', 'g'), '/');
-
                                     // Decrement the counter
                                     numFiles--;
 
