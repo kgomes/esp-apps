@@ -445,73 +445,78 @@ function LogParser(dataAccess, dataDir, opts) {
                     // Bump Line Number
                     lineNumber++;
 
-                    // Look for a line continuation character
-                    if (line[line.length - 1] !== 92) {
-                        // Push it on the stack
-                        lineSegments.push(line);
+                    // First make sure there is a line!
+                    if (line) {
+                        // Look for a line continuation character
+                        if (line[line.length - 1] !== 92) {
+                            // Push it on the stack
+                            lineSegments.push(line);
 
-                        // Concatenate all lines to get the full buffer
-                        var completeLineBuffer = Buffer.concat(lineSegments);
+                            // Concatenate all lines to get the full buffer
+                            var completeLineBuffer = Buffer.concat(lineSegments);
 
-                        // Check for timezones and offsets first
-                        var tempTimezoneOffset = searchForTimezoneOffset(completeLineBuffer);
-                        if (tempTimezoneOffset) {
-                            timezoneOffset = tempTimezoneOffset;
-                        }
-                        var tempTimezoneOffsetHours = searchForTimezoneOffsetHours(completeLineBuffer);
-                        if (tempTimezoneOffsetHours) {
-                            timezoneOffsetHours = tempTimezoneOffsetHours;
-                        }
-
-                        // First, check the entry to see if it is a timemarker
-                        var tempTimestampUTC = searchForTime(completeLineBuffer, timestampUTC, timezoneOffset);
-
-                        // If a timestamp was returned, update the last known timestamp
-                        if (tempTimestampUTC) {
-
-                            logger.trace("Line " + lineNumber + " TS->" + tempTimestampUTC.format());
-                            // Set the timestamp to the one that was parsed
-                            timestampUTC = tempTimestampUTC;
-
-                            // Just log if the time seems to go backwards
-                            if (timestampUTC && tempTimestampUTC.diff(timestampUTC) < 0) {
-                                logger.warn("TIME WENT BACKWARDS!!!!");
-                                logger.warn("Line " + lineNumber + "->" + line);
-                                logger.warn("OLD:" + timestampUTC.format());
-                                logger.warn("NEW:" + tempTimestampUTC.format());
+                            // Check for timezones and offsets first
+                            var tempTimezoneOffset = searchForTimezoneOffset(completeLineBuffer);
+                            if (tempTimezoneOffset) {
+                                timezoneOffset = tempTimezoneOffset;
                             }
-                        } else {
-                            logger.trace("Line " + lineNumber + "->" + line.toString());
+                            var tempTimezoneOffsetHours = searchForTimezoneOffsetHours(completeLineBuffer);
+                            if (tempTimezoneOffsetHours) {
+                                timezoneOffsetHours = tempTimezoneOffsetHours;
+                            }
 
-                            // Since it is not a timestamp entry, try to update the legend if it's a legend entry
-                            updateLegend(completeLineBuffer, legend);
+                            // First, check the entry to see if it is a timemarker
+                            var tempTimestampUTC = searchForTime(completeLineBuffer, timestampUTC, timezoneOffset);
 
-                            // Try to find the current actor
-                            var tempCurrentActor = findActor(completeLineBuffer, legend);
-                            if (tempCurrentActor) currentActor = tempCurrentActor;
+                            // If a timestamp was returned, update the last known timestamp
+                            if (tempTimestampUTC) {
 
-                            // Make sure this wasn't a line that was already parse
+                                logger.trace("Line " + lineNumber + " TS->" + tempTimestampUTC.format());
+                                // Set the timestamp to the one that was parsed
+                                timestampUTC = tempTimestampUTC;
+
+                                // Just log if the time seems to go backwards
+                                if (timestampUTC && tempTimestampUTC.diff(timestampUTC) < 0) {
+                                    logger.warn("TIME WENT BACKWARDS!!!!");
+                                    logger.warn("Line " + lineNumber + "->" + line);
+                                    logger.warn("OLD:" + timestampUTC.format());
+                                    logger.warn("NEW:" + tempTimestampUTC.format());
+                                }
+                            } else {
+                                logger.trace("Line " + lineNumber + "->" + line.toString());
+
+                                // Since it is not a timestamp entry, try to update the legend if it's a legend entry
+                                updateLegend(completeLineBuffer, legend);
+
+                                // Try to find the current actor
+                                var tempCurrentActor = findActor(completeLineBuffer, legend);
+                                if (tempCurrentActor) currentActor = tempCurrentActor;
+
+                                // Make sure this wasn't a line that was already parse
+                                if (!deployment.lastLineParsedFromLogFile ||
+                                    deployment.lastLineParsedFromLogFile < lineNumber) {
+                                    // Now process the log entry since it was not a timestamp
+                                    processLogEntry(legend, currentActor, timezoneOffset,
+                                        lineNumber, completeLineBuffer, timestampUTC, deployment,
+                                        errorsToBeAdded, samplesToBeAdded, imagesToBeAdded,
+                                        protocolRunsToBeAdded, pcrDataArray);
+                                }
+                            }
+
+                            // Make sure we are keeping track of the last line that we parsed from the log file
                             if (!deployment.lastLineParsedFromLogFile ||
                                 deployment.lastLineParsedFromLogFile < lineNumber) {
-                                // Now process the log entry since it was not a timestamp
-                                processLogEntry(legend, currentActor, timezoneOffset,
-                                    lineNumber, completeLineBuffer, timestampUTC, deployment,
-                                    errorsToBeAdded, samplesToBeAdded, imagesToBeAdded,
-                                    protocolRunsToBeAdded, pcrDataArray);
+                                deployment.lastLineParsedFromLogFile = lineNumber;
                             }
-                        }
 
-                        // Make sure we are keeping track of the last line that we parsed from the log file
-                        if (!deployment.lastLineParsedFromLogFile ||
-                            deployment.lastLineParsedFromLogFile < lineNumber) {
-                            deployment.lastLineParsedFromLogFile = lineNumber;
+                            // Clear the line segment array
+                            lineSegments = [];
+                        } else {
+                            // Push the segment on the stack, but remove the line continuation
+                            lineSegments.push(line.slice(0, line.length));
                         }
-
-                        // Clear the line segment array
-                        lineSegments = [];
                     } else {
-                        // Push the segment on the stack, but remove the line continuation
-                        lineSegments.push(line.slice(0, line.length));
+                        logger.error("Line " + lineNumber + " came back empty from read, should not happen");
                     }
                 }
             );
