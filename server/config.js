@@ -192,6 +192,18 @@ module.exports = {
                     varLongName: 'PSU',
                     units: 'psu'
                 }
+            },
+            SatlanticISUS: {
+                'uM/L': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM/L'
+                },
+                'psu': {
+                    varName: 'PSU',
+                    varLongName: 'PSU',
+                    units: 'psu'
+                }
             }
         }
     },
