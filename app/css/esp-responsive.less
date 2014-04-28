@@ -1,0 +1,249 @@
+// For the html and body tags, use default unless the size is above an iPad portrait
+// then take up 100 % of the height of the screen
+html, body {
+  @media (min-width: 768px) {
+    background-color: #d3d3d3;
+    height: 100%;
+  }
+}
+
+// The main container will default to whatever size the internal components are
+// unless it is above an iPad portrait, then it moves to 100% height
+#container-main {
+  @media (min-width: 768px) {
+    height: 100%;
+  }
+}
+
+// The first row containing the navigation panel and the graph will default
+// to fixed sizes on small screen, but then will move to 50% height on anything
+// bigger than an iPad in portrait mode
+#row-one {
+  margin-left: 0px;
+  margin-right: 0px;
+  @media (min-width: 768px) {
+    height: 50%;
+  }
+}
+
+// The second row contains all the details and it will be a fixed size on small
+// screens, but will be 50% on anything larger than an iPad in portrait mode
+#row-two {
+  margin-left: 0px;
+  margin-right: 0px;
+  height: 400px;
+  @media (min-width: 768px) {
+    height: 50%;
+  }
+}
+
+#col-nav {
+  padding-right: 10px;
+  padding-left: 0px;
+  height: 200px;
+  @media (min-width: 768px) {
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    height: 100%;
+  }
+}
+
+#panel-nav {
+  margin-bottom: 0px;
+  height: 200px;
+  overflow: auto;
+  @media (min-width: 768px) {
+    height: 100%;
+  }
+}
+
+#panel-body-nav {
+}
+
+/* Styles for the group around the deployment selection button */
+#deployment-dropdown-btn-group {
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+/* And for the button itself */
+#deployment-dropdown-btn {
+  width: 100%;
+}
+
+#col-graph {
+  padding-left: 0px;
+  padding-right: 10px;
+  height: 422px;
+  @media (min-width: 768px) {
+    height: 100%;
+    padding-right: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}
+
+#panel-graph {
+  margin-bottom: 0px;
+  height: 100%;
+}
+
+#panel-body-graph {
+  padding: 0px;
+  height: 100%;
+}
+
+#panel-btn-toolbar-graph {
+
+}
+
+#graph {
+  height: 400px;
+  @media (min-width: 768px) {
+    height: calc(~'100% - 22px');
+  }
+}
+
+#col-detail {
+  padding: 0px;
+  height: 400px;
+  @media (min-width: 768px) {
+    padding: 5px;
+    height: 100%;
+  }
+}
+
+#panel-detail {
+  margin-bottom: 0px;
+  height: 400px;
+  @media (min-width: 768px) {
+    height: 100%;
+  }
+}
+
+#panel-body-detail {
+  padding: 0px;
+  height: 100%;
+  @media (min-width: 768px) {
+    padding: 10px;
+  }
+}
+
+.nav-tabs {
+  border-bottom: 0px;
+}
+
+.tabbable {
+  height: 400px;
+  @media (min-width: 768px) {
+    height: 100%;
+  }
+}
+
+.tab-content {
+  height: calc(~'100% - 42px');
+  @media (min-width: 768px) {
+  }
+}
+
+.tab-pane {
+  height: 100%;
+  div {
+    height: 100%;
+  }
+}
+
+.protocol-details-table {
+  overflow-y: scroll;
+  @media (min-width: 768px) {
+    padding-right: 2px;
+  }
+}
+
+.sample-details-table {
+  overflow-y: scroll;
+  @media (min-width: 768px) {
+    padding-right: 2px;
+  }
+}
+
+.image-details-row {
+  width: 100%;
+}
+
+.image-details-list {
+  overflow-y: scroll;
+  padding-right: 0px;
+}
+
+.image-details-image {
+  padding: 0px;
+}
+
+.row-image-details-image-name {
+  height: 15px !important;
+}
+
+.col-image-details-image-name {
+  height: 15px !important;
+}
+
+.image-details-image-name {
+  text-align: center;
+  font-size: 12px;
+  height: 15px !important;
+}
+
+.row-image-details-image-name {
+  margin: 0px;
+}
+
+.row-image-details-image-adjust-box {
+  margin: 0px;
+  height: calc(~'100% - 15px') !important;
+}
+
+.image-details-adjust-box-sliders {
+  padding-left: 15px;
+  padding-right: 0px;
+  height: 70px !important;
+  @media (min-width: 768px) {
+    height: 100% !important;
+  }
+}
+
+.ui-slider {
+  width: 90%;
+  height: 5px !important;
+  @media (min-width: 768px) {
+    width: 5px;
+    height: calc(~'50% - 25px') !important;
+  }
+}
+
+.ui-slider .ui-slider-handle {
+  width: 15px;
+  height: 15px;
+  left: -.7;
+}
+
+.col-image-or-canvas {
+  padding-left: 0px;
+  padding-right: 5px;
+  overflow-y: scroll;
+}
+
+#selected-image-canvas {
+  width: 100%;
+  height: 100%;
+}
+#selected-image-canvas > img {
+  width: 100%;
+}
+
+/* Styling for enabling the cloaking functions of AngularJS */
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none;
+}

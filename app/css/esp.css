@@ -21,12 +21,6 @@ body > .row {
     margin: 0px;
 }
 
-/* Styles for the group around the deployment selection button */
-#deployment-dropdown-btn-group {
-    width: 100%;
-    margin-bottom: 5px;
-}
-
 /* And for the button itself */
 #deployment-dropdown-btn {
     width: 100%;

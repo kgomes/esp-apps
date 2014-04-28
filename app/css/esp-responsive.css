@@ -1,0 +1,231 @@
+@media (min-width: 768px) {
+  html,
+  body {
+    background-color: #d3d3d3;
+    height: 100%;
+  }
+}
+@media (min-width: 768px) {
+  #container-main {
+    height: 100%;
+  }
+}
+#row-one {
+  margin-left: 0px;
+  margin-right: 0px;
+}
+@media (min-width: 768px) {
+  #row-one {
+    height: 50%;
+  }
+}
+#row-two {
+  margin-left: 0px;
+  margin-right: 0px;
+  height: 400px;
+}
+@media (min-width: 768px) {
+  #row-two {
+    height: 50%;
+  }
+}
+#col-nav {
+  padding-right: 10px;
+  padding-left: 0px;
+  height: 200px;
+}
+@media (min-width: 768px) {
+  #col-nav {
+    padding-right: 5px;
+    padding-left: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    height: 100%;
+  }
+}
+#panel-nav {
+  margin-bottom: 0px;
+  height: 200px;
+  overflow: auto;
+}
+@media (min-width: 768px) {
+  #panel-nav {
+    height: 100%;
+  }
+}
+/* Styles for the group around the deployment selection button */
+#deployment-dropdown-btn-group {
+  width: 100%;
+  margin-bottom: 5px;
+}
+/* And for the button itself */
+#deployment-dropdown-btn {
+  width: 100%;
+}
+#col-graph {
+  padding-left: 0px;
+  padding-right: 10px;
+  height: 422px;
+}
+@media (min-width: 768px) {
+  #col-graph {
+    height: 100%;
+    padding-right: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+}
+#panel-graph {
+  margin-bottom: 0px;
+  height: 100%;
+}
+#panel-body-graph {
+  padding: 0px;
+  height: 100%;
+}
+#graph {
+  height: 400px;
+}
+@media (min-width: 768px) {
+  #graph {
+    height: calc(100% - 22px);
+  }
+}
+#col-detail {
+  padding: 0px;
+  height: 400px;
+}
+@media (min-width: 768px) {
+  #col-detail {
+    padding: 5px;
+    height: 100%;
+  }
+}
+#panel-detail {
+  margin-bottom: 0px;
+  height: 400px;
+}
+@media (min-width: 768px) {
+  #panel-detail {
+    height: 100%;
+  }
+}
+#panel-body-detail {
+  padding: 0px;
+  height: 100%;
+}
+@media (min-width: 768px) {
+  #panel-body-detail {
+    padding: 10px;
+  }
+}
+.nav-tabs {
+  border-bottom: 0px;
+}
+.tabbable {
+  height: 400px;
+}
+@media (min-width: 768px) {
+  .tabbable {
+    height: 100%;
+  }
+}
+.tab-content {
+  height: calc(100% - 42px);
+}
+.tab-pane {
+  height: 100%;
+}
+.tab-pane div {
+  height: 100%;
+}
+.protocol-details-table {
+  overflow-y: scroll;
+}
+@media (min-width: 768px) {
+  .protocol-details-table {
+    padding-right: 2px;
+  }
+}
+.sample-details-table {
+  overflow-y: scroll;
+}
+@media (min-width: 768px) {
+  .sample-details-table {
+    padding-right: 2px;
+  }
+}
+.image-details-row {
+  width: 100%;
+}
+.image-details-list {
+  overflow-y: scroll;
+  padding-right: 0px;
+}
+.image-details-image {
+  padding: 0px;
+}
+.row-image-details-image-name {
+  height: 15px !important;
+}
+.col-image-details-image-name {
+  height: 15px !important;
+}
+.image-details-image-name {
+  text-align: center;
+  font-size: 12px;
+  height: 15px !important;
+}
+.row-image-details-image-name {
+  margin: 0px;
+}
+.row-image-details-image-adjust-box {
+  margin: 0px;
+  height: calc(100% - 15px) !important;
+}
+.image-details-adjust-box-sliders {
+  padding-left: 15px;
+  padding-right: 0px;
+  height: 70px !important;
+}
+@media (min-width: 768px) {
+  .image-details-adjust-box-sliders {
+    height: 100% !important;
+  }
+}
+.ui-slider {
+  width: 90%;
+  height: 5px !important;
+}
+@media (min-width: 768px) {
+  .ui-slider {
+    width: 5px;
+    height: calc(50% - 25px) !important;
+  }
+}
+.ui-slider .ui-slider-handle {
+  width: 15px;
+  height: 15px;
+  left: -0.7;
+}
+.col-image-or-canvas {
+  padding-left: 0px;
+  padding-right: 5px;
+  overflow-y: scroll;
+}
+#selected-image-canvas {
+  width: 100%;
+  height: 100%;
+}
+#selected-image-canvas > img {
+  width: 100%;
+}
+/* Styling for enabling the cloaking functions of AngularJS */
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak {
+  display: none;
+}

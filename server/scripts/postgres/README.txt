@@ -11,7 +11,7 @@ CREATE DATABASE esp_ancillary;
 
 CREATE USER espdba WITH PASSWORD 'thepassword';
 
-4. Then grant that user perimissions
+4. Then grant that user permissions
 
 GRANT ALL PRIVILEGES ON DATABASE esp_ancillary TO espdba;
 

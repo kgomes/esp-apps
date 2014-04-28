@@ -21,7 +21,7 @@ espApp.controller('GraphPanelController',
         // Create the HighCharts chart
         $scope.chart = new Highcharts.StockChart({
             chart: {
-                renderTo: 'graph-panel',
+                renderTo: 'graph',
                 type: 'line',
                 zoomType: 'x'
             },
@@ -100,25 +100,9 @@ espApp.controller('GraphPanelController',
             }
         });
 
-        // Set the size of the chart
-        $scope.chart.setSize(
-            $("#graph-column").width(),
-            $("#graph-column").height() - 10,
-            false
-        );
-
         // -------------------------------------------------------------------------
         // Event handlers
         // -------------------------------------------------------------------------
-
-        // A method to adjust the size of the chart when the window resizes
-        $(window).resize(function () {
-            $scope.chart.setSize(
-                $("#graph-column").width(),
-                $("#graph-column").height() - 10,
-                false
-            );
-        });
 
         // A method to handle events where an object was selected by the user
         $scope.$on('objectSelected', function (event, messageObject) {

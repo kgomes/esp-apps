@@ -1,5 +1,5 @@
 <div class='row image-details-row'>
-    <div class="col-md-5 image-details-list">
+    <div class="col-sm-6 image-details-list">
         <table class='table table-hover'>
             <thead>
             <tr>
@@ -21,16 +21,20 @@
             </tbody>
         </table>
     </div>
-    <div class="col-md-7 image-details-image">
-        <div class="image-details-image-name">{{selectedImageName}}</div>
-        <div class="image-details-image-adjust-box">
-            <div class="col-md-1 image-details-image-adjust-box-sliders">
+    <div class="col-sm-6 image-details-image">
+        <div class="row row-image-details-image-name">
+            <div class="col-sm-12 col-image-details-image-name">
+                <div class="image-details-image-name">{{selectedImageName}}</div>
+            </div>
+        </div>
+        <div class="row row-image-details-image-adjust-box">
+            <div id="image-details-adjust-box-sliders" class="col-sm-1 image-details-adjust-box-sliders">
                 B
                 <div id="selected-image-brightness-slider"></div>
                 C
                 <div id="selected-image-contrast-slider"></div>
             </div>
-            <div class="col-lg-11">
+            <div class="col-sm-11 col-image-or-canvas">
                 <span id="selected-image-canvas"></span>
             </div>
         </div>
