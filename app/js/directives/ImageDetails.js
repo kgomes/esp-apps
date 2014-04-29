@@ -147,6 +147,7 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
             // Set the sliders back to zero
             brightnessSlider.slider("value", 0);
             contrastSlider.slider("value", 0);
+
             // Create a new image object
             var img = new Image;
 

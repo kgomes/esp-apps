@@ -239,8 +239,52 @@ html, body {
   width: 100%;
   height: 100%;
 }
+
 #selected-image-canvas > img {
   width: 100%;
+}
+
+/* PCR related styles */
+.pcr-details-row {
+  margin: 0px;
+  overflow-y: scroll;
+}
+
+.pcr-details-selection-list {
+  padding: 0px;
+  overflow-y: scroll;
+  font-size: small;
+}
+
+.pcr-details-selection-list > .panel-group > .panel {
+  height: auto !important;
+}
+
+.pcr-date-list {
+  list-style-type: none;
+  padding-left: 0px;
+  font-style: normal;
+}
+
+.pcr-date-list-item-label {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  font-style: normal;
+}
+
+#pcr-graph-column {
+  height: 100%;
+  margin: 0px;
+  padding: 5px;
+}
+
+#pcr-graph-column > .btn-toolbar {
+  height: auto !important;
+}
+
+#pcr-details-graph {
+  height: calc(~'100% -22px') !important;
+  margin: 0px;
 }
 
 /* Styling for enabling the cloaking functions of AngularJS */
