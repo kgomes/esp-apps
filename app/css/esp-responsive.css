@@ -156,6 +156,14 @@
     padding-right: 2px;
   }
 }
+.error-details-table {
+  overflow-y: scroll;
+}
+@media (min-width: 768px) {
+  .error-details-table {
+    padding-right: 2px;
+  }
+}
 .image-details-row {
   width: 100%;
 }
