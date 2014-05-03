@@ -2180,13 +2180,13 @@ function DataAccess(opts) {
         // First thing to do is make sure we have a deployment ID and a ancillary data record
         if (deploymentID && espName) {
             // Now check other parameters
-            if (!sourceName || !varName || !varLongName || !varUnits || !logUnits) {
+            if (!sourceName || !varName || !varLongName || !logUnits) {
                 logger.error('Call did not have sufficient parameters:\nsourceName = ' + sourceName +
-                '\nvarName = ' + varName + '\nvarLongName = ' + varLongName + '\nvarUnits = ' + varUnits +
+                '\nvarName = ' + varName + '\nvarLongName = ' + varLongName +
                 '\nlogUnits = ' + logUnits);
                 if (callback)
                     callback(new Error('Call did not have sufficient parameters:\nsourceName = ' + sourceName +
-                        '\nvarName = ' + varName + '\nvarLongName = ' + varLongName + '\nvarUnits = ' + varUnits +
+                        '\nvarName = ' + varName + '\nvarLongName = ' + varLongName  +
                         '\nlogUnits = ' + logUnits));
             } else {
                 logger.trace("Will look for a source ID for:\ndeploymentID = " + deploymentID + "\nespName = " +
