@@ -2684,7 +2684,15 @@ function DataAccess(opts) {
      */
     this.getAncillaryDataInsertText = function (deploymentID, espName, sourceName, varName, varLongName, varUnits, logUnits, timestamp, data, callback) {
         // First let's make sure we have all the information we need
-        if (deploymentID && espName && sourceName && varName && varLongName && varUnits && logUnits && timestamp && data) {
+        if (typeof(deploymentID) !== 'undefined' && deploymentID != null &&
+            typeof(espName) !== 'undefined' && espName != null &&
+            typeof(sourceName) !== 'undefined' && sourceName != null &&
+            typeof(varName) !== 'undefined' && varName != null &&
+            typeof(varLongName) !== 'undefined' && varLongName != null &&
+            typeof(varUnits) !== 'undefined' && varUnits != null &&
+            typeof(logUnits) !== 'undefined' && logUnits != null &&
+            typeof(timestamp) !== 'undefined' && timestamp != null &&
+            typeof(data) !== 'undefined' && data != null) {
 
             // Look up the ancillary source ID from the deployment
             me.getAncillaryDataSourceID(deploymentID, espName, sourceName, varName, varLongName, varUnits,
@@ -2717,6 +2725,10 @@ function DataAccess(opts) {
                     }
                 });
         } else {
+            logger.error('Not enough parameters given for the function:\ndeploymentID = ' + deploymentID +
+                '\nespName = ' + espName + '\nsourceName = ' + sourceName + '\nvarName = ' + varName +
+                '\nvarLongName = ' + varLongName + '\nvarUnits = ' + varUnits + '\nlogUnits = ' + logUnits +
+                '\ntimestamp = ' + timestamp + '\ndata = ' + data);
             if (callback)
                 callback(new Error('Not enough parameters given for the function'));
         }
