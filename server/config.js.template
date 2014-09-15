@@ -78,6 +78,10 @@ module.exports = {
                 stringRep: '-0400',
                 hourOffset: -4
             },
+            'EST': {
+                stringRep: '-0500',
+                hourOffset: -5
+            },
             'GMT': {
                 stringRep: '0000',
                 hourOffset: 0
@@ -144,6 +148,11 @@ module.exports = {
                     varName: 'Temp',
                     varLongName: 'Temperature',
                     units: 'Degrees C'
+                },
+                '% Wet!': {
+                    varName: '% Wet!',
+                    varLongName: 'Percent Wet',
+                    units: '%'
                 },
                 '% humidity': {
                     varName: '% Humidity',
