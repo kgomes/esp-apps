@@ -259,7 +259,7 @@ function DataAccess(opts) {
             // of shallow deployments
             var opts = {
                 key: id
-            }
+            };
 
             // Query for all Deployments in the shallow form
             this.couchDBConn.view('deployments/all', opts, function (err, res) {
@@ -2182,11 +2182,11 @@ function DataAccess(opts) {
             // Now check other parameters
             if (!sourceName || !varName || !varLongName || !logUnits) {
                 logger.error('Call did not have sufficient parameters:\nsourceName = ' + sourceName +
-                '\nvarName = ' + varName + '\nvarLongName = ' + varLongName +
-                '\nlogUnits = ' + logUnits);
+                    '\nvarName = ' + varName + '\nvarLongName = ' + varLongName +
+                    '\nlogUnits = ' + logUnits);
                 if (callback)
                     callback(new Error('Call did not have sufficient parameters:\nsourceName = ' + sourceName +
-                        '\nvarName = ' + varName + '\nvarLongName = ' + varLongName  +
+                        '\nvarName = ' + varName + '\nvarLongName = ' + varLongName +
                         '\nlogUnits = ' + logUnits));
             } else {
                 logger.trace("Will look for a source ID for:\ndeploymentID = " + deploymentID + "\nespName = " +
@@ -2246,9 +2246,9 @@ function DataAccess(opts) {
                                             } else {
                                                 // Connection successful, try to query for ID
                                                 client.query('SELECT id from ancillary_sources where ' +
-                                                    'deployment_id_fk = $1 ' +
-                                                    'and esp_name = $2 and instrument_type = $3 ' +
-                                                    'and log_units = $4',
+                                                        'deployment_id_fk = $1 ' +
+                                                        'and esp_name = $2 and instrument_type = $3 ' +
+                                                        'and log_units = $4',
                                                     [deploymentID, espName, sourceName, logUnits],
                                                     function (err, result) {
                                                         // Check for any errors first
@@ -2283,9 +2283,9 @@ function DataAccess(opts) {
                                                                     // Return the ID to the caller
                                                                     if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
                                                                         me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                                            (null, result.rows[0].id, deploymentID, espName,
-                                                                                sourceName, varName, varLongName, varUnits,
-                                                                                logUnits, timestamp, data);
+                                                                        (null, result.rows[0].id, deploymentID, espName,
+                                                                            sourceName, varName, varLongName, varUnits,
+                                                                            logUnits, timestamp, data);
                                                                 }
 
                                                                 // Now clear the cached callbacks
@@ -2293,9 +2293,9 @@ function DataAccess(opts) {
                                                             } else {
                                                                 // Nothing is in the database yet, we need to insert one
                                                                 client.query('INSERT INTO ancillary_sources(' +
-                                                                    'deployment_id_fk, esp_name, instrument_type, ' +
-                                                                    'var_name, var_long_name, log_units, units) values ' +
-                                                                    '($1,$2,$3,$4,$5,$6,$7) RETURNING id',
+                                                                        'deployment_id_fk, esp_name, instrument_type, ' +
+                                                                        'var_name, var_long_name, log_units, units) values ' +
+                                                                        '($1,$2,$3,$4,$5,$6,$7) RETURNING id',
                                                                     [deploymentID, espName, sourceName, varName,
                                                                         varLongName, logUnits, varUnits],
                                                                     function (err, result) {
@@ -2327,9 +2327,9 @@ function DataAccess(opts) {
                                                                                 // Return the ID to the caller
                                                                                 if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
                                                                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                                                        (null, result.rows[0].id, deploymentID, espName,
-                                                                                            sourceName, varName, varLongName, varUnits,
-                                                                                            logUnits, timestamp, data);
+                                                                                    (null, result.rows[0].id, deploymentID, espName,
+                                                                                        sourceName, varName, varLongName, varUnits,
+                                                                                        logUnits, timestamp, data);
                                                                             }
 
                                                                             // Now clear the cached callbacks
@@ -2618,7 +2618,7 @@ function DataAccess(opts) {
                                 logger.error("No source ID found for deployment ID " + deploymentID +
                                     " of esp " + espName + " with source:(name = " + sourceName + ", varName = " +
                                     varName + ", varLongName = " + varLongName) + ", varUnits = " + varUnits +
-                                    ", logUnits = " + logUnits;
+                                ", logUnits = " + logUnits;
                             }
                         }
 

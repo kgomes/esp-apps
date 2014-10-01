@@ -10,6 +10,7 @@
         "supervisor": "0.5.3",
         "connect": "1.8.5",
         "express": "2.5.2",
+        "express-csv":"0.6.0",
         "socket.io": "0.8.7",
         "passport": "0.1.17",
         "passport-google": "0.3.0",

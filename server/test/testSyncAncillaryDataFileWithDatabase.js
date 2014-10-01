@@ -20,7 +20,7 @@ var da = require('../DataAccess').createDataAccess(espCfg.dataStoreOptions);
 var espDataDir = espCfg.dataDir;
 
 // Use the dataAccess to find a deployment
-var deploymentToUse = da.getDeploymentByID('1a018ecf9cf3b471c614a9d5af007186', function (err, deployment) {
+var deploymentToUse = da.getDeploymentByID('1a018ecf9cf3b471c614a9d5af007186', false, function (err, deployment) {
     logger.debug('Deployment that we are using is ' +  deployment.name + ' of ESP ' + deployment.esp.name);
     // Call the method to sync
     da.syncAncillaryDataFileWithDatabase(deployment, espDataDir, function(err, result) {
