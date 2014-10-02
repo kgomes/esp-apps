@@ -109,13 +109,6 @@ function DeploymentRouter(dataAccess, opts) {
                                 "Sample Start Date", "Sample Start Date (Julian)",
                                 "Sample End Date", "Sample End Date (Julian)", "Time To Sample (hh:mm:ss)",
                                 "Target Volume (ml)", "Actual Volume (ml)", "Difference (ml)",
-                                "Image 1 Filename", "Image 1 Exposure (seconds)",
-                                "Image 2 Filename", "Image 2 Exposure (seconds)",
-                                "Image 3 Filename", "Image 3 Exposure (seconds)",
-                                "Image 4 Filename", "Image 4 Exposure (seconds)",
-                                "Image 5 Filename", "Image 5 Exposure (seconds)",
-                                "Image 6 Filename", "Image 6 Exposure (seconds)",
-                                "Image 7 Filename", "Image 7 Exposure (seconds)",
                                 "WCR Sample Start Date", "WCR Sample Start Date (Julian)",
                                 "WCR Sample End Date", "WCR Sample End Date (Julian)",
                                 "WCR Time To Sample (hh:mm:ss)", "WCR Target Volume (ml)",
@@ -135,6 +128,9 @@ function DeploymentRouter(dataAccess, opts) {
                         // A counter to keep track of the number of images
                         var numImages = 0;
 
+                        // A placeholder to hang on to the most recent
+                        var mostRecentProtocolRun = null;
+
                         // Now loop over those timestamps
                         for (var i = 0; i < timestamps.length; i++) {
                             var currentTimestamp = timestamps[i];
@@ -145,10 +141,14 @@ function DeploymentRouter(dataAccess, opts) {
 
                             // Check to see if there is a protocol run
                             if (protocolRun) {
-                                // If there is data from the previous procotol run, push that onto the response array
+                                // Set it as the most recent protocol run
+                                mostRecentProtocolRun = protocolRun;
+
+                                // If there is data from the previous protocol run, push that onto the response array
                                 if (newline.length > 0) {
                                     arrayToReturn.push(newline);
                                 }
+
                                 // Create a date from the unix seconds
                                 var prStartDate = moment.unix(currentTimestamp / 1000);
 
@@ -157,7 +157,7 @@ function DeploymentRouter(dataAccess, opts) {
                                     (prStartDate.minutes() * 60) + (prStartDate.seconds())) / 86400)).toFixed(2);
 
                                 // Now start a new line with the protocol name and start time and date
-                                newline = [protocolRun.name, prStartDate.format(),
+                                newline = [protocolRun.name, prStartDate.format('YYYY-MM-DD HH:mm:ss Z'),
                                     prJulianDate];
 
                                 // Clear the image counter
@@ -170,57 +170,97 @@ function DeploymentRouter(dataAccess, opts) {
                                 var sampStartDate = moment.unix(currentTimestamp / 1000);
 
                                 // Calculate Julian date
-                                var sampJulianDate = (parseInt(sampStartDate.format('DDD')) + (((sampStartDate.hours() * 60 * 60) +
+                                var sampJulianStartDate = (parseInt(sampStartDate.format('DDD')) + (((sampStartDate.hours() * 60 * 60) +
                                     (sampStartDate.minutes() * 60) + (sampStartDate.seconds())) / 86400)).toFixed(2);
 
-                                // Calculate end date if there is one
+                                // Calculate end date if there is one and the sample duration
                                 var sampEndDate = null;
                                 var sampJulianEndDate = null;
+                                var sampDuration = null;
                                 if (sample.endts) {
-                                    var sampEndDate = moment.unix(sample.endts / 1000);
+                                    sampEndDate = moment.unix(sample.endts / 1000);
 
                                     // Calculate Julian date
-                                    var sampJulianEndDate = (parseInt(sampEndDate.format('DDD')) + (((sampEndDate.hours() * 60 * 60) +
+                                    sampJulianEndDate = (parseInt(sampEndDate.format('DDD')) + (((sampEndDate.hours() * 60 * 60) +
                                         (sampEndDate.minutes() * 60) + (sampEndDate.seconds())) / 86400)).toFixed(2);
+                                    sampDuration = moment.duration(sample.endts - currentTimestamp);
                                 }
-                                // check the actor to look for Archives
-                                if (sample.actor === 'WCR') {
-                                    newline[25] = sampStartDate.format();
-                                    newline[26] = sampJulianDate;
-                                    if (sample.endts) {
-                                        newline[27] = sampEndDate.format();
-                                        newline[28] = sampJulianEndDate;
-                                        // Time diff
-                                        var sampDuration = moment.duration(sample.endts - currentTimestamp);
-                                        newline[29] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+
+                                // Now, we need to check and see if it is a DWSM sample
+                                if (sample.dwsm) {
+                                    // We should clear the most recent protocol run so that the next set of
+                                    // samples does not get tacked on to any particular protocol run
+                                    mostRecentProtocolRun = null;
+                                }
+
+                                // Now check to see if there is a most recent protocol run.  If there is not, we
+                                // should start a new row to indicate this is a sample outside of any particular
+                                // protocol run.
+                                if (mostRecentProtocolRun === null) {
+                                    // If there is data from the previous line, push that onto the response array
+                                    if (newline.length > 0) {
+                                        arrayToReturn.push(newline);
                                     }
+
+                                    // If this is a DWSM, write that as the protocol, otherwise, just put
+                                    // other sample
+                                    if (sample.dwsm) {
+                                        newline = ['Sample-DWSM', '', ''];
+                                        // Clear the image counter
+                                        numImages = 0;
+                                    } else {
+                                        newline = ['Sample-Other', '', ''];
+                                        // Clear the image counter
+                                        numImages = 0;
+                                    }
+                                }
+
+                                // Now we just need to figure out if this is the first sample, or a linked archive
+                                // sample
+                                if (mostRecentProtocolRun && mostRecentProtocolRun.archive && sample.actor === 'WCR') {
+                                    // This is the combination that means it is a linked archive and should to in the
+                                    // second set of columns
+                                    newline[11] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                    newline[12] = sampJulianStartDate;
+                                    newline[13] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                    newline[14] = sampJulianEndDate;
+                                    newline[15] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
                                     if (sample.targetVolume) {
-                                        newline[30] = sample.targetVolume;
+                                        newline[16] = sample.targetVolume;
+                                    } else {
+                                        newline[16] = '';
                                     }
                                     if (sample.actualVolume) {
-                                        newline[31] = sample.actualVolume;
+                                        newline[17] = sample.actualVolume;
+                                    } else {
+                                        newline[17] = '';
                                     }
                                     if (sample.targetVolume && sample.actualVolume) {
-                                        newline[32] = sample.targetVolume - sample.actualVolume;
+                                        newline[18] = sample.targetVolume - sample.actualVolume;
+                                    } else {
+                                        newline[18] = '';
                                     }
                                 } else {
-                                    newline[3] = sampStartDate.format();
-                                    newline[4] = sampJulianDate;
-                                    if (sample.endts) {
-                                        newline[5] = sampEndDate.format();
-                                        newline[6] = sampJulianEndDate;
-                                        // Time diff
-                                        var sampDuration = moment.duration(sample.endts - currentTimestamp);
-                                        newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
-                                    }
+                                    // This means it is not a linked archive and should go in the first column
+                                    newline[3] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                    newline[4] = sampJulianStartDate;
+                                    newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                    newline[6] = sampJulianEndDate;
+                                    newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
                                     if (sample.targetVolume) {
                                         newline[8] = sample.targetVolume;
+                                    } else {
+                                        newline[8] = '';
                                     }
                                     if (sample.actualVolume) {
                                         newline[9] = sample.actualVolume;
+                                    } else {
+                                        newline[9] = '';
                                     }
                                     if (sample.targetVolume && sample.actualVolume) {
                                         newline[10] = sample.targetVolume - sample.actualVolume;
+                                    } else {
+                                        newline[10] = '';
                                     }
                                 }
                             }
@@ -229,9 +269,13 @@ function DeploymentRouter(dataAccess, opts) {
                                 // Bump the image counter
                                 numImages++;
 
+                                // Make sure the image header is there
+                                arrayToReturn[0][18 + numImages + numImages - 1] = "Image " + numImages + " Filename";
+                                arrayToReturn[0][19 + numImages + numImages - 1] = "Image " + numImages + " Exposure";
+
                                 // Add the image file name and exposure
-                                newline[10 + numImages + numImages - 1] = image.fullImagePath;
-                                newline[11 + numImages + numImages - 1] = image.exposure;
+                                newline[18 + numImages + numImages - 1] = image.fullImagePath;
+                                newline[19 + numImages + numImages - 1] = image.exposure;
                             }
                         }
 
@@ -239,7 +283,8 @@ function DeploymentRouter(dataAccess, opts) {
                         if (newline.length > 0) arrayToReturn.push(newline);
 
                         // Set the name of the file to download
-                        res.setHeader('Content-disposition', 'inline; filename=' + response.esp.name + '-' + response.name + '.csv');
+                        res.setHeader('Content-disposition', 'inline; filename=' +
+                            response.esp.name.replace(/\s+/g,'_') + '_' + response.name.replace(/\s+/g,'_') + '.csv');
 
                         // Now send the CSV data
                         res.csv(arrayToReturn);
