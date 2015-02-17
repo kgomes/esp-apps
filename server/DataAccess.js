@@ -3244,6 +3244,10 @@ function DataAccess(opts) {
 
                                         // Call the function to write the results
                                         writeResults();
+                                    } else {
+                                        logger.debug("No results, closing database client and write stream");
+                                        sourceStream.end();
+                                        done();
                                     }
                                 }
                             });
