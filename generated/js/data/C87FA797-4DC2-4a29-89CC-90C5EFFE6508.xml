@@ -1,0 +1,5 @@
+tocTab[tocTab.length] = new Array("0.6.1.1.1.1.1:1", "", "module", "EARoot/EA6/EA1/EA1/EA1/EA1/EA1/EA183.htm", "175.png", "77", "0", "", "Logical diagram0","{B321E3F9-099D-40fa-A592-E29BAAEB2FF1}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.1.1:2", "", "PassiveCallbackHandler", "EARoot/EA6/EA1/EA1/EA1/EA1/EA1/EA186.htm", "5.png", "E470", "0", "", "Class0","{66C090FB-EB20-4535-8F76-DEDA725C1136}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.1.1:3", "", "RdbmsCredential", "EARoot/EA6/EA1/EA1/EA1/EA1/EA1/EA187.htm", "5.png", "E471", "0", "", "Class0","{47069E36-5314-4cae-87B1-E8C5978935DD}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.1.1:4", "", "RdbmsLoginModule", "EARoot/EA6/EA1/EA1/EA1/EA1/EA1/EA188.htm", "5.png", "E472", "0", "", "Class0","{95789EE2-48B2-4957-A25E-982527116270}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.1.1:5", "", "RdbmsPrincipal", "EARoot/EA6/EA1/EA1/EA1/EA1/EA1/EA189.htm", "5.png", "E473", "0", "", "Class0","{8AFD8F4B-7F16-4c80-AD20-45D2688CA73E}");

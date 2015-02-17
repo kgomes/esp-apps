@@ -1,0 +1,11 @@
+tocTab[tocTab.length] = new Array("0.4:1", "", "Load Filtration Puck", "EARoot/EA4/EA100.htm", "185.png", "93", "0", "", "Sequence diagram0","{AE5A6F12-2F90-487b-AE94-375D22B3BE30}");
+tocTab[tocTab.length] = new Array("0.4:2", "", "Camera", "EARoot/EA4/EA103.htm", "6.png", "E640", "0", "", "Actor0","{CC905A21-C136-4352-90F3-8A809A15AC6E}");
+tocTab[tocTab.length] = new Array("0.4:3", "", "Collection Clamp", "EARoot/EA4/EA104.htm", "6.png", "E632", "0", "", "Actor0","{7AAECF95-EEEB-42f0-9A69-B95C2F72B223}");
+tocTab[tocTab.length] = new Array("0.4:4", "", "Collection Syringe", "EARoot/EA4/EA105.htm", "6.png", "E635", "0", "", "Actor0","{FF34C526-B62E-494c-830C-A8C465934E4F}");
+tocTab[tocTab.length] = new Array("0.4:5", "", "Heater", "EARoot/EA4/EA106.htm", "6.png", "E636", "0", "", "Actor0","{5010C9C4-D5C6-4071-AA28-DE09EE0D42B6}");
+tocTab[tocTab.length] = new Array("0.4:6", "", "Intake", "EARoot/EA4/EA107.htm", "6.png", "E633", "0", "", "Actor0","{040D9EA6-625B-431b-A035-3DA8A1BA7921}");
+tocTab[tocTab.length] = new Array("0.4:7", "", "Main Computer", "EARoot/EA4/EA108.htm", "6.png", "E630", "0", "", "Actor0","{EA591AC8-D51A-4fb5-AA46-99AF27228EFE}");
+tocTab[tocTab.length] = new Array("0.4:8", "", "Manipulator", "EARoot/EA4/EA109.htm", "6.png", "E637", "0", "", "Actor0","{A66D7E99-7FE5-49c0-87EC-567D8C99D8B2}");
+tocTab[tocTab.length] = new Array("0.4:9", "", "Processing Clamp", "EARoot/EA4/EA110.htm", "6.png", "E639", "0", "", "Actor0","{8F143764-09C9-4448-B44B-2183D637CDA5}");
+tocTab[tocTab.length] = new Array("0.4:10", "", "Processing Syringe", "EARoot/EA4/EA111.htm", "6.png", "E638", "0", "", "Actor0","{99C6F569-5AA7-4cec-A12A-E661FEE533E1}");
+tocTab[tocTab.length] = new Array("0.4:11", "", "Sampling Syringe", "EARoot/EA4/EA112.htm", "6.png", "E634", "0", "", "Actor0","{034CBE4F-4679-4fb3-ABDF-E66EAACC8C87}");

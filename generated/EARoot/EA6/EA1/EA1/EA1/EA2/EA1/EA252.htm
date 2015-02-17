@@ -1,0 +1,1521 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>components::LogFileInterpreterDialog::ParseLogFile</title>
+<link href="../../../../../../../css/ea.css" rel="stylesheet" type="text/css" />
+<script>
+function initPage(src) {	
+	if(parent==this&&(this.location+"").indexOf('EARoot')!=-1)
+		document.location=(this.location+"").substring(0,(this.location+"").indexOf('EARoot'))+"index"+(this.location+"").substring((this.location+"").lastIndexOf('.'))+"?goto="+((this.location+"").substring((this.location+"").indexOf('EARoot')+7,(this.location+"").lastIndexOf('.')).replace(/\//g,':').replace(/EA/g,""));
+	else
+		parent.initPage(src);
+}
+
+function nameClassifier(name, separator)
+{
+  var str = name;
+  var classifierName;
+  var node = document.getElementById('name_classifier');
+  if(node != null)
+  {
+    classifierName = node.innerHTML;
+  }
+  if(classifierName != "")
+  {
+   str += separator + classifierName;
+  }
+  
+  return str;
+}
+</script>
+</head>
+<body onload="initPage(this);" class="Content">
+<div class="pageHeader"></div>
+<div class="PageBody">
+	<div id="name_classifier" style="display: none;"></div>
+	<span class="ObjectTitle"><script type="text/javascript">document.write(nameClassifier("ParseLogFile", " : "))</script>  : Private   Class</span>
+	<table border="0" cellpadding="0" cellspacing="0" class="ObjectDetails">
+		<tr>
+			<td width="15%" class="ObjectDetailsTopic">Created:</td>
+			<td width="85%" class="ObjectDetailsValue">9/15/2011 4:35:21 PM</td>
+		</tr>
+		<tr>
+			<td class="ObjectDetailsTopic">Modified:</td>
+			<td class="ObjectDetailsValue">10/31/2011 5:09:01 PM</td>
+		</tr>
+		<tr style="height: 10px"><td colspan="2"></td></tr>
+		<tr>
+			<td class="ObjectDetailsTopic"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="proj" onclick="parent.toggleData(this.id)" />Project:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj00" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Author:</td>
+			<td class="ObjectDetailsValue">kgomes</td>
+		</tr>
+		<tr id="proj01" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Version:</td>
+			<td class="ObjectDetailsValue">1.0</td>
+		</tr>
+		<tr id="proj02" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Phase:</td>
+			<td class="ObjectDetailsValue">1.0</td>
+		</tr>
+		<tr id="proj03" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Status:</td>
+			<td class="ObjectDetailsValue">Proposed</td>
+		</tr>
+		<tr id="proj04" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Complexity:</td>
+			<td class="ObjectDetailsValue">Easy</td>
+		</tr>
+		<tr id="proj05" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Difficulty:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj06" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Priority:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj05" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Multiplicity:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr>
+			<td class="ObjectDetailsTopic"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="adv" onclick="parent.toggleData(this.id)" />Advanced:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="adv00" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">UUID:</td>
+			<td class="ObjectDetailsValue">{41E390D5-361C-4e61-8453-B578D38A8686}</td>
+		</tr>
+		<tr id="adv01" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Appears In:</td>
+			<td class="ObjectDetailsValue"><a href="EA202.htm">components</a></td>
+		</tr>
+	</table>
+	<div class="ObjectDetailsNotes">The swing worker to do the actual parsing </div>
+
+	<div class="TableGroup" id="TableGroup">
+		<ul class="ItemTitle">
+			<li onClick="parent.toggleItem('Operations');" id="OperationsTitle">Operations</li>
+		</ul>
+<div class="ItemBody" id="OperationsTable">
+	<table border="0" cellspacing="0" cellpadding="0" class="Table">
+		<tr>
+			<td width="100%" class="TableHeading">Operation</td>
+		</tr>
+						<tr>
+				<td width="100%" class="TableRow">
+					<i>Protected</i><br />
+					<strong>doInBackground</strong>():Void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1957" onclick="parent.toggleDiv('detailsDIVOperations1957','DetailsImageOperations1957')" />Details:
+						<div id="detailsDIVOperations1957" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("unchecked")@Override<br/>throws=Exception<br/></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processAncillaryDataLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{C61C3B31-58D7-4d91-9927-8200B54235AF}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{C61C3B31-58D7-4d91-9927-8200B54235AF}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C61C3B31-58D7-4d91-9927-8200B54235AF}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C61C3B31-58D7-4d91-9927-8200B54235AF}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C61C3B31-58D7-4d91-9927-8200B54235AF}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C61C3B31-58D7-4d91-9927-8200B54235AF}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{A21B2B5F-8C16-447b-BE63-730417E590CA}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{A21B2B5F-8C16-447b-BE63-730417E590CA}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A21B2B5F-8C16-447b-BE63-730417E590CA}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A21B2B5F-8C16-447b-BE63-730417E590CA}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A21B2B5F-8C16-447b-BE63-730417E590CA}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A21B2B5F-8C16-447b-BE63-730417E590CA}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">managedDeployment</div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1958" onclick="parent.toggleDiv('detailsDIVOperations1958','DetailsImageOperations1958')" />Details:
+						<div id="detailsDIVOperations1958" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in the log entry that contains ancillary data and the top level deployment to which it is associated and then extracts the data and attaches it to the Deployment 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processProcessRunLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{5B4446D9-EED5-438e-98A0-EA79F5B66141}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{5B4446D9-EED5-438e-98A0-EA79F5B66141}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{5B4446D9-EED5-438e-98A0-EA79F5B66141}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{5B4446D9-EED5-438e-98A0-EA79F5B66141}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{5B4446D9-EED5-438e-98A0-EA79F5B66141}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{5B4446D9-EED5-438e-98A0-EA79F5B66141}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{9EB5F1BC-1403-4db6-A3A4-B40BFB8BC9BB}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{D4127435-D815-43f0-87C4-CA25A4D7817F}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{D4127435-D815-43f0-87C4-CA25A4D7817F}" border="0" />logCalendar: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{D4127435-D815-43f0-87C4-CA25A4D7817F}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D4127435-D815-43f0-87C4-CA25A4D7817F}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{D4127435-D815-43f0-87C4-CA25A4D7817F}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D4127435-D815-43f0-87C4-CA25A4D7817F}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}" border="0" />lineInFile: int</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{3C3858BD-9FAB-4fb8-A107-82551D11D3D1}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">int multiLineStartLine,  TreeMap&lt;Date,  Event&gt; parsedLogEvents, </div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1959" onclick="parent.toggleDiv('detailsDIVOperations1959','DetailsImageOperations1959')" />Details:
+						<div id="detailsDIVOperations1959" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("unchecked")<br/></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processSampleStartLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{8FA1F2F9-254F-455d-A07C-EB08BD53828A}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{569A278A-969B-4821-9E15-A1EBC2C8721E}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{569A278A-969B-4821-9E15-A1EBC2C8721E}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{569A278A-969B-4821-9E15-A1EBC2C8721E}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{569A278A-969B-4821-9E15-A1EBC2C8721E}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{569A278A-969B-4821-9E15-A1EBC2C8721E}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{569A278A-969B-4821-9E15-A1EBC2C8721E}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}" border="0" />logCalendar: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{201BBB2E-158A-43e5-A4AC-BEBCE6C86999}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">TreeMap&lt;Date,  Event&gt; parsedLogEvents, </div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}" border="0" />lineInFile: int</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{26E311F5-7EA3-4405-9FB2-FC9AB99C74D9}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">int lineInFile,  boolean coreReset, </div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1960" onclick="parent.toggleDiv('detailsDIVOperations1960','DetailsImageOperations1960')" />Details:
+						<div id="detailsDIVOperations1960" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("unchecked")<br/></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processSampleStopLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C42F22C9-BCEF-47eb-AD0B-569A91D5F167}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C61EFB69-AF5C-44be-A9B7-038C5D957D56}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}" border="0" />logCalendar: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B67DAB42-EF4F-4b91-B6E4-903DDE63D14E}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{C85212CA-80DA-4a38-B065-3BAD1710ED59}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{C85212CA-80DA-4a38-B065-3BAD1710ED59}" border="0" />multiLineStartLine: int</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C85212CA-80DA-4a38-B065-3BAD1710ED59}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C85212CA-80DA-4a38-B065-3BAD1710ED59}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C85212CA-80DA-4a38-B065-3BAD1710ED59}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C85212CA-80DA-4a38-B065-3BAD1710ED59}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1961" onclick="parent.toggleDiv('detailsDIVOperations1961','DetailsImageOperations1961')" />Details:
+						<div id="detailsDIVOperations1961" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processImageCaptureLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{92D0678C-419B-4ebf-B2B7-AAFF7705036F}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">logEntry</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FD6AC8D8-872B-4f20-9B03-66BA1CE5102E}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{37FB5263-5BB5-4310-8125-7327F01FF7FE}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{37FB5263-5BB5-4310-8125-7327F01FF7FE}" border="0" />logCalendar: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{37FB5263-5BB5-4310-8125-7327F01FF7FE}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{37FB5263-5BB5-4310-8125-7327F01FF7FE}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{37FB5263-5BB5-4310-8125-7327F01FF7FE}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{37FB5263-5BB5-4310-8125-7327F01FF7FE}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1962" onclick="parent.toggleDiv('detailsDIVOperations1962','DetailsImageOperations1962')" />Details:
+						<div id="detailsDIVOperations1962" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("unchecked")<br/></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method processes a log entry and looks for an image capture line #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@param parsedLogEvents#lt;br /#gt;#lt;/p#gt;#lt;p#gt;@param lineInFile#lt;br /#gt;#lt;/p#gt;#lt;p#gt;@param coreReset#lt;br /#gt;#lt;/p#gt;#lt;p#gt;@param multiLineStartLine#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processDWSMStartLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{043BAB6B-E53D-4840-98FA-85DD887C3AE1}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}" border="0" />managedDeployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C7FBC726-87A9-4c1b-B09F-A012CC0456E0}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1963" onclick="parent.toggleDiv('detailsDIVOperations1963','DetailsImageOperations1963')" />Details:
+						<div id="detailsDIVOperations1963" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in a log entry that should be a indication that a DWSM sample has started. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processDWSMStopLogEntry</strong>(					<a href="#" onclick="parent.toggleData('param{1D217823-B9B3-40a9-AB92-909D24F84C96}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{1D217823-B9B3-40a9-AB92-909D24F84C96}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{1D217823-B9B3-40a9-AB92-909D24F84C96}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1D217823-B9B3-40a9-AB92-909D24F84C96}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{1D217823-B9B3-40a9-AB92-909D24F84C96}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1D217823-B9B3-40a9-AB92-909D24F84C96}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{0FD96D10-BBBD-4222-8606-6FD40A8FF7AA}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">deployment</div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1964" onclick="parent.toggleDiv('detailsDIVOperations1964','DetailsImageOperations1964')" />Details:
+						<div id="detailsDIVOperations1964" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in a log entry that indicates the end of a DWSM sample and then finds the most recent DWSM sample and then finishes the DWSM sample with the information in this log entry 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processErrorEntry</strong>(					<a href="#" onclick="parent.toggleData('param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{524136CE-5DBB-4ba9-BCFE-C2613049D21C}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{97BA5086-E520-404e-9499-1B0E3E78F6CF}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{97BA5086-E520-404e-9499-1B0E3E78F6CF}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{97BA5086-E520-404e-9499-1B0E3E78F6CF}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{97BA5086-E520-404e-9499-1B0E3E78F6CF}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{97BA5086-E520-404e-9499-1B0E3E78F6CF}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{97BA5086-E520-404e-9499-1B0E3E78F6CF}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">deployment</div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1965" onclick="parent.toggleDiv('detailsDIVOperations1965','DetailsImageOperations1965')" />Details:
+						<div id="detailsDIVOperations1965" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			The method to process error messages 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>processCoreReset</strong>(					<a href="#" onclick="parent.toggleData('param{A71D13F9-47DF-4693-884E-1A33226DB1D1}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{A71D13F9-47DF-4693-884E-1A33226DB1D1}" border="0" />logEntry: <a href="../EA2/EA261.htm">ESPLogEntry</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A71D13F9-47DF-4693-884E-1A33226DB1D1}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A71D13F9-47DF-4693-884E-1A33226DB1D1}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A71D13F9-47DF-4693-884E-1A33226DB1D1}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A71D13F9-47DF-4693-884E-1A33226DB1D1}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{7EF09AB9-7F0E-4705-8AC9-E7B3E741004C}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">deployment</div>
+</td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1966" onclick="parent.toggleDiv('detailsDIVOperations1966','DetailsImageOperations1966')" />Details:
+						<div id="detailsDIVOperations1966" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes a core reset log entry and creates the appropriate event and attaches to the deployment 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findLastActualEventInDeployment</strong>(					<a href="#" onclick="parent.toggleData('param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6D822FB2-BB1A-47d4-B0D9-F2694EEBE724}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA164.htm">Event</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1967" onclick="parent.toggleDiv('detailsDIVOperations1967','DetailsImageOperations1967')" />Details:
+						<div id="detailsDIVOperations1967" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			A method to search the deployment for the last event that was marked as actual #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findLatestEventWithAssociatedSampleWithNoCreator</strong>(					<a href="#" onclick="parent.toggleData('param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6D0B6C1B-2EA4-4c93-B0C3-47558E74DD43}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA164.htm">Event</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1968" onclick="parent.toggleDiv('detailsDIVOperations1968','DetailsImageOperations1968')" />Details:
+						<div id="detailsDIVOperations1968" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method looks at the incoming Deployment and tries to find an Event that has an associated Sample that does not have a creator yet. If more than one was found, it returns the one with the latest timestamp. The one returned should be an Event that was started that should have a Sample, but the sample has not run yet. NOTE: This method will return null if a core reset event happened after the last sample with no creator was found #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findLatestSamplingEventWithNoEndDate</strong>(					<a href="#" onclick="parent.toggleData('param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{EEC94BA0-EC19-4bee-A8A6-C2275AA51D4D}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA164.htm">Event</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1969" onclick="parent.toggleDiv('detailsDIVOperations1969','DetailsImageOperations1969')" />Details:
+						<div id="detailsDIVOperations1969" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method walks the given Deployment and locates the latest Sampling event that does not have an end date #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findLatestNonArchiveSample</strong>(					<a href="#" onclick="parent.toggleData('param{52225A1B-726E-45c5-A1F4-EE74C04B3899}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{52225A1B-726E-45c5-A1F4-EE74C04B3899}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{52225A1B-726E-45c5-A1F4-EE74C04B3899}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{52225A1B-726E-45c5-A1F4-EE74C04B3899}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{52225A1B-726E-45c5-A1F4-EE74C04B3899}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{52225A1B-726E-45c5-A1F4-EE74C04B3899}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA177.htm">Sample</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1970" onclick="parent.toggleDiv('detailsDIVOperations1970','DetailsImageOperations1970')" />Details:
+						<div id="detailsDIVOperations1970" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method walks the given Deployment and locates the latest Sample that could have images attached (i.e. not an archive sample) #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findActualProcessRunInDeployment</strong>(					<a href="#" onclick="parent.toggleData('param{E89B34A1-9818-41aa-9771-592054235A98}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{E89B34A1-9818-41aa-9771-592054235A98}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{E89B34A1-9818-41aa-9771-592054235A98}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E89B34A1-9818-41aa-9771-592054235A98}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{E89B34A1-9818-41aa-9771-592054235A98}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E89B34A1-9818-41aa-9771-592054235A98}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}" border="0" />processTypeName: String</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{4BE3112B-D2CA-45d1-B904-97F9EC292C01}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{B3CBA654-E365-44e1-BE45-977D5A1417EC}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{B3CBA654-E365-44e1-BE45-977D5A1417EC}" border="0" />startDate: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{B3CBA654-E365-44e1-BE45-977D5A1417EC}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B3CBA654-E365-44e1-BE45-977D5A1417EC}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{B3CBA654-E365-44e1-BE45-977D5A1417EC}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B3CBA654-E365-44e1-BE45-977D5A1417EC}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA164.htm">Event</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1971" onclick="parent.toggleDiv('detailsDIVOperations1971','DetailsImageOperations1971')" />Details:
+						<div id="detailsDIVOperations1971" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in the name of the process type and the date that a process of that type started and then tries to find a logged Event that matches that characterization on the existing deployment #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>findMostRecentDWSMSamplingEvent</strong>(					<a href="#" onclick="parent.toggleData('param{29823B18-5091-48f5-9B30-9FA70BC78736}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{29823B18-5091-48f5-9B30-9FA70BC78736}" border="0" />deployment: <a href="../../EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{29823B18-5091-48f5-9B30-9FA70BC78736}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{29823B18-5091-48f5-9B30-9FA70BC78736}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{29823B18-5091-48f5-9B30-9FA70BC78736}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{29823B18-5091-48f5-9B30-9FA70BC78736}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA164.htm">Event</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1972" onclick="parent.toggleDiv('detailsDIVOperations1972','DetailsImageOperations1972')" />Details:
+						<div id="detailsDIVOperations1972" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method will return the most recent top level sample that is tagged as a DWSM sample. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>createProcessRunFromProcessTypeNameDateAndTargetVolume</strong>(					<a href="#" onclick="parent.toggleData('param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}" border="0" />processNameToCreate: String</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{602851B9-D04B-4c50-8E8D-DA1B84EB1864}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}" border="0" />startDate: Calendar</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{49DFEDA9-FFEF-4ee7-BE59-8FFE8742C311}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}" border="0" />targetVolume: Double</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{169A1E58-E6BC-4bb9-9687-D15BEBD1BDDB}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}" border="0" />startLineInLogFile: int</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2BD70A3B-3F6E-40cd-88B8-D6393E3E8164}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}" border="0" />archiveVolume: Double</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FE38CB39-4E80-40eb-B6CA-0A5F470C093B}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="../../EA174.htm">ProcessRun</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1973" onclick="parent.toggleDiv('detailsDIVOperations1973','DetailsImageOperations1973')" />Details:
+						<div id="detailsDIVOperations1973" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in several parameters and creates a ProcessRun that matches the ProcessType specified (and also a archive process run if there is an archive volume) #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private</i><br />
+					<strong>removeParsedEntitiesFromEvent</strong>(					<a href="#" onclick="parent.toggleData('param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}" border="0" />eventToClean: <a href="../../EA164.htm">Event</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{51787BD8-BE2A-4a9f-A01F-A6B6EE57DB39}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2AD82E5F-2F78-4c3b-9810-D7E93758FD3D}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1974" onclick="parent.toggleDiv('detailsDIVOperations1974','DetailsImageOperations1974')" />Details:
+						<div id="detailsDIVOperations1974" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes a parent event and then walks all relationships to remove any entities that were parsed from a log file. This does not delete the entity itself. It also does not delete events that are deployments. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@param event#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Protected</i><br />
+					<strong>process</strong>(					<a href="#" onclick="parent.toggleData('param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}')" style="text-decoration: none; color: #000000;"><img src="../../../../../../../images/plus03.gif" align="absmiddle" id="param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}" border="0" />updates: List&lt;HashMap&lt;Integer,  String&gt;&gt;</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A41A9C19-3590-499e-ADB5-6CA0D8502A7B}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1975" onclick="parent.toggleDiv('detailsDIVOperations1975','DetailsImageOperations1975')" />Details:
+						<div id="detailsDIVOperations1975" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@Override<br/></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public</i><br />
+					<strong>done</strong>():void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations1976" onclick="parent.toggleDiv('detailsDIVOperations1976','DetailsImageOperations1976')" />Details:
+						<div id="detailsDIVOperations1976" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@Override<br/></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+
+		</table>
+</div>	</div>
+<div class="pageFooter"></div>
+ 
+</body>
+</html>

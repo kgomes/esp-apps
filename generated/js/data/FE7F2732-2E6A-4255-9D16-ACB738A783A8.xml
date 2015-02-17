@@ -1,0 +1,9 @@
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:1", "", "events", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA268.htm", "175.png", "81", "0", "", "Logical diagram0","{D2923D7E-CF2E-4971-AEE5-676B639B74DB}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:2", "", "DeploymentEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA271.htm", "5.png", "E534", "0", "", "Class0","{22EB698D-3C9D-4fb9-9FB5-246B99250B36}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:3", "", "FileEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA272.htm", "5.png", "E535", "0", "", "Class0","{8E83D5E4-EDD2-4387-BD9B-2A730F3FA892}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:4", "", "ImageEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA273.htm", "5.png", "E536", "0", "", "Class0","{249BB1E6-BF4B-4098-876D-C3D2EDBCFD72}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:5", "", "InstrumentEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA274.htm", "5.png", "E537", "0", "", "Class0","{4725FDAE-DC6D-4891-8879-1874F4AC67D4}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:6", "", "ProcessRunEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA275.htm", "5.png", "E538", "0", "", "Class0","{BB52B5EA-D07F-44af-A164-6E26ABC51961}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:7", "", "ProcessTypeEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA276.htm", "5.png", "E539", "0", "", "Class0","{869DF3E7-1AD3-4947-99D0-4E0923BAE1EE}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:8", "", "SampleEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA277.htm", "5.png", "E540", "0", "", "Class0","{8D9405AA-11FC-4968-8219-7A332FAA6769}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.2.4:9", "", "StatusEvent", "EARoot/EA6/EA1/EA1/EA1/EA2/EA4/EA278.htm", "5.png", "E541", "0", "", "Class0","{6F70725F-7E9E-4ebe-B5F7-5342C4D60C3A}");

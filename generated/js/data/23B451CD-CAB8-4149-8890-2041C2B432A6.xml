@@ -1,0 +1,3 @@
+tocTab[tocTab.length] = new Array("0.6.1.1.1.3:1", "", "ruby", "EARoot/EA6/EA1/EA1/EA1/EA3/EA292.htm", "175.png", "85", "0", "", "Logical diagram0","{7EEE039D-D06A-42b4-A1DF-A631E803F5FB}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.3:2", "", "LogReader", "EARoot/EA6/EA1/EA1/EA1/EA3/EA295.htm", "5.png", "E555", "0", "", "Class0","{5DB4E1CD-145A-4353-ABDA-293C88616892}");
+tocTab[tocTab.length] = new Array("0.6.1.1.1.3:3", "", "TestRubyEmbed", "EARoot/EA6/EA1/EA1/EA1/EA3/EA296.htm", "5.png", "E556", "0", "", "Class0","{9BF84E27-4DDE-47b5-9827-2188569D4FD2}");

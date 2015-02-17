@@ -1,0 +1,9 @@
+tocTab[tocTab.length] = new Array("0.6.1.1.2:1", "", "persistence", "EARoot/EA6/EA1/EA1/EA2/EA302.htm", "175.png", "76", "0", "", "Logical diagram0","{D19EE526-34BF-41b4-AACE-26A7263CEC11}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:2", "", "ConsumableAmountRules", "EARoot/EA6/EA1/EA1/EA2/EA305.htm", "5.png", "E460", "0", "", "Class0","{833DB7B3-BBD6-4779-8C86-F65BC1B393C8}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:3", "", "DeploymentEAO", "EARoot/EA6/EA1/EA1/EA2/EA306.htm", "5.png", "E461", "0", "", "Class0","{BF81E095-D148-4cae-959D-6452E93991D3}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:4", "", "EAO", "EARoot/EA6/EA1/EA1/EA2/EA307.htm", "5.png", "E463", "0", "", "Class0","{3CA3E8C6-FED2-4b70-8C2A-606F43F89315}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:5", "", "EAOException", "EARoot/EA6/EA1/EA1/EA2/EA308.htm", "5.png", "E464", "0", "", "Class0","{5C91B7BF-8D50-403f-B889-6C195D39DA5B}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:6", "", "EventEAO", "EARoot/EA6/EA1/EA1/EA2/EA309.htm", "5.png", "E465", "0", "", "Class0","{7DBCDE81-FBFA-42a2-8311-DAF173B1C7FE}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:7", "", "«interface» IEntity", "EARoot/EA6/EA1/EA1/EA2/EA310.htm", "8.png", "E466", "0", "", "Interface0","{B0BBFE1E-BC11-4cca-8A42-DD95D2A9C798}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:8", "", "TransactionLogger", "EARoot/EA6/EA1/EA1/EA2/EA311.htm", "5.png", "E467", "0", "", "Class0","{5F5C20F3-2756-4327-857D-735FA26E2276}");
+tocTab[tocTab.length] = new Array("0.6.1.1.2:9", "", "«enumeration» TransactionType", "EARoot/EA6/EA1/EA1/EA2/EA312.htm", "5.png", "E462", "E463", "", "Class0","{A648F5EF-B831-435a-BED9-EF2E0CCA203B}");

@@ -1,0 +1,2538 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>persistence::EAO</title>
+<link href="../../../../../css/ea.css" rel="stylesheet" type="text/css" />
+<script>
+function initPage(src) {	
+	if(parent==this&&(this.location+"").indexOf('EARoot')!=-1)
+		document.location=(this.location+"").substring(0,(this.location+"").indexOf('EARoot'))+"index"+(this.location+"").substring((this.location+"").lastIndexOf('.'))+"?goto="+((this.location+"").substring((this.location+"").indexOf('EARoot')+7,(this.location+"").lastIndexOf('.')).replace(/\//g,':').replace(/EA/g,""));
+	else
+		parent.initPage(src);
+}
+
+function nameClassifier(name, separator)
+{
+  var str = name;
+  var classifierName;
+  var node = document.getElementById('name_classifier');
+  if(node != null)
+  {
+    classifierName = node.innerHTML;
+  }
+  if(classifierName != "")
+  {
+   str += separator + classifierName;
+  }
+  
+  return str;
+}
+</script>
+</head>
+<body onload="initPage(this);" class="Content">
+<div class="pageHeader"></div>
+<div class="PageBody">
+	<div id="name_classifier" style="display: none;"></div>
+	<span class="ObjectTitle"><script type="text/javascript">document.write(nameClassifier("EAO", " : "))</script>  : Public   Class</span>
+	<table border="0" cellpadding="0" cellspacing="0" class="ObjectDetails">
+		<tr>
+			<td width="15%" class="ObjectDetailsTopic">Created:</td>
+			<td width="85%" class="ObjectDetailsValue">9/15/2011 4:34:29 PM</td>
+		</tr>
+		<tr>
+			<td class="ObjectDetailsTopic">Modified:</td>
+			<td class="ObjectDetailsValue">10/31/2011 5:09:08 PM</td>
+		</tr>
+		<tr style="height: 10px"><td colspan="2"></td></tr>
+		<tr>
+			<td class="ObjectDetailsTopic"><img src="../../../../../images/plus03.gif" align="absmiddle" id="proj" onclick="parent.toggleData(this.id)" />Project:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj00" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Author:</td>
+			<td class="ObjectDetailsValue">brian</td>
+		</tr>
+		<tr id="proj01" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Version:</td>
+			<td class="ObjectDetailsValue">1.0</td>
+		</tr>
+		<tr id="proj02" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Phase:</td>
+			<td class="ObjectDetailsValue">1.0</td>
+		</tr>
+		<tr id="proj03" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Status:</td>
+			<td class="ObjectDetailsValue">Proposed</td>
+		</tr>
+		<tr id="proj04" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Complexity:</td>
+			<td class="ObjectDetailsValue">Easy</td>
+		</tr>
+		<tr id="proj05" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Difficulty:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj06" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Priority:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="proj05" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Multiplicity:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr>
+			<td class="ObjectDetailsTopic"><img src="../../../../../images/plus03.gif" align="absmiddle" id="adv" onclick="parent.toggleData(this.id)" />Advanced:</td>
+			<td class="ObjectDetailsValue"></td>
+		</tr>
+		<tr id="adv00" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">UUID:</td>
+			<td class="ObjectDetailsValue">{3CA3E8C6-FED2-4b70-8C2A-606F43F89315}</td>
+		</tr>
+		<tr id="adv01" style="display: none;">
+			<td class="ObjectDetailsTopic" style="padding-left: 18px;">Appears In:</td>
+			<td class="ObjectDetailsValue"><a href="EA302.htm">persistence</a></td>
+		</tr>
+	</table>
+	<div class="ObjectDetailsNotes">EAO provides thread-safe database transactions for JPA persistent objects. The objects to be persisted must implement the {@link IEntity} interface. All method calls will open a database transaction if needed. However, you can control when the transaction is closed. Each method has 2 forms: &lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;h3#gt;Method Scope#lt;/h3#gt;&#160; Method scope transaction close the transaction when the method exits. It&#39;s the easiest scope to use as you do not need to explicitly close a transaction. &lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;pre#gt; EAO.insert(entity) //transaction starts and ends inside the method EAO.insert(entity, true) // same as above&lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;/pre#gt; &lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;h3#gt;Extended Scope#lt;/h3#gt;&#160; Make several methods calls within a single transaction &lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;pre#gt; EAO.insert(entity, false); EAO.insert(entity2, false);&#160; You will need to close the transaction either EAO.endTransaction(); EAO.insert(entity2, true) would&#39;ve also close the transaction &lt;br /&gt;&lt;/p&gt;&lt;p&gt;#lt;/pre#gt; &lt;br /&gt;&lt;/p&gt;</div>
+
+	<div class="TableGroup" id="TableGroup">
+		<ul class="ItemTitle">
+			<li onClick="parent.toggleItem('Attributes');" id="AttributesTitle">Attributes</li>
+			<li onClick="parent.toggleItem('Operations');" id="OperationsTitle">Operations</li>
+			<li onClick="parent.toggleItem('Links');" id="LinksTitle">Other Links</li>
+		</ul>
+<div class="ItemBody" id="AttributesTable">
+	<table border="0" cellspacing="0" cellpadding="0" class="Table">
+		<tr>
+			<td width="100%" class="TableHeading">Attribute</td>
+		</tr>
+						<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static const Logger</i><br /><strong>&nbsp;&nbsp;log</strong>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">										
+					<a href="#" onclick="parent.toggleData('DetailsImageAttributes2515')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="DetailsImageAttributes2515" border="0" />Details:</a>
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+					
+						<tr id="DetailsImageAttributes2515_00" style="display: none;">
+							<td width="75"><i>Alias:</i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_01" style="display: none;">
+							<td width="75"><i>Initial:</i></td>
+							<td>LoggerFactory.getLogger(EAO.class)</td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_02" style="display: none;">
+							<td width="75"><i>Stereotype: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_03" style="display: none;">
+							<td width="75"><i>Ordered: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_04" style="display: none;">
+							<td width="75"><i>Range: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_05" style="display: none;">
+							<td width="75"><i>Transient: </i></td>
+							<td>False</td>
+						</tr>
+						<tr id="DetailsImageAttributes2515_06" style="display: none;">
+							<td width="75"><i>Derived: </i></td>
+							<td>False</td>
+						</tr>
+							<tr id="DetailsImageAttributes2515_07" style="display: none;">
+							<td width="75"><i>IsID: </i></td>
+						<td>False</td>
+						</tr>
+					</table>
+					
+					
+						<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			The logger
+		</td>
+	</tr>
+</table></div>
+
+						
+				</td>
+			</tr>			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static ThreadLocal&lt;EntityManager&gt;</i><br /><strong>&nbsp;&nbsp;threadManager</strong>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">										
+					<a href="#" onclick="parent.toggleData('DetailsImageAttributes2516')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="DetailsImageAttributes2516" border="0" />Details:</a>
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+					
+						<tr id="DetailsImageAttributes2516_00" style="display: none;">
+							<td width="75"><i>Alias:</i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_01" style="display: none;">
+							<td width="75"><i>Initial:</i></td>
+							<td>new ThreadLocal<EntityManager>()</td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_02" style="display: none;">
+							<td width="75"><i>Stereotype: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_03" style="display: none;">
+							<td width="75"><i>Ordered: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_04" style="display: none;">
+							<td width="75"><i>Range: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_05" style="display: none;">
+							<td width="75"><i>Transient: </i></td>
+							<td>False</td>
+						</tr>
+						<tr id="DetailsImageAttributes2516_06" style="display: none;">
+							<td width="75"><i>Derived: </i></td>
+							<td>False</td>
+						</tr>
+							<tr id="DetailsImageAttributes2516_07" style="display: none;">
+							<td width="75"><i>IsID: </i></td>
+						<td>False</td>
+						</tr>
+					</table>
+					
+					
+						<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			A #lt;code#gt;ThreadLocal#lt;/code#gt; that contains the reference to the#lt;br /#gt;#lt;/p#gt;#lt;p#gt;#lt;code#gt;EntityManager#lt;/code#gt;. This is so that other objects in the thread can all use the same #lt;code#gt;EntityManager#lt;/code#gt;.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						
+				</td>
+			</tr>			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static ThreadLocal&lt;EntityTransaction&gt;</i><br /><strong>&nbsp;&nbsp;threadTransaction</strong>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">										
+					<a href="#" onclick="parent.toggleData('DetailsImageAttributes2517')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="DetailsImageAttributes2517" border="0" />Details:</a>
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+					
+						<tr id="DetailsImageAttributes2517_00" style="display: none;">
+							<td width="75"><i>Alias:</i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_01" style="display: none;">
+							<td width="75"><i>Initial:</i></td>
+							<td>new ThreadLocal<EntityTransaction>()</td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_02" style="display: none;">
+							<td width="75"><i>Stereotype: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_03" style="display: none;">
+							<td width="75"><i>Ordered: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_04" style="display: none;">
+							<td width="75"><i>Range: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_05" style="display: none;">
+							<td width="75"><i>Transient: </i></td>
+							<td>False</td>
+						</tr>
+						<tr id="DetailsImageAttributes2517_06" style="display: none;">
+							<td width="75"><i>Derived: </i></td>
+							<td>False</td>
+						</tr>
+							<tr id="DetailsImageAttributes2517_07" style="display: none;">
+							<td width="75"><i>IsID: </i></td>
+						<td>False</td>
+						</tr>
+					</table>
+					
+					
+						<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			A #lt;code#gt;ThreadLocal#lt;/code#gt; that contains the reference to a#lt;br /#gt;#lt;/p#gt;#lt;p#gt;#lt;code#gt;EntityTransaction#lt;/code#gt; so that other objects in the thread can use the same transaction.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						
+				</td>
+			</tr>			<tr>
+				<td width="100%" class="TableRow">
+					<i>Package static const EntityManagerFactory</i><br /><strong>&nbsp;&nbsp;ENTITY_MANAGER_FACTORY</strong>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">										
+					<a href="#" onclick="parent.toggleData('DetailsImageAttributes2518')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="DetailsImageAttributes2518" border="0" />Details:</a>
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+					
+						<tr id="DetailsImageAttributes2518_00" style="display: none;">
+							<td width="75"><i>Alias:</i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_01" style="display: none;">
+							<td width="75"><i>Initial:</i></td>
+							<td>Persistence
+			.createEntityManagerFactory("ESP")</td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_02" style="display: none;">
+							<td width="75"><i>Stereotype: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_03" style="display: none;">
+							<td width="75"><i>Ordered: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_04" style="display: none;">
+							<td width="75"><i>Range: </i></td>
+							<td></td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_05" style="display: none;">
+							<td width="75"><i>Transient: </i></td>
+							<td>False</td>
+						</tr>
+						<tr id="DetailsImageAttributes2518_06" style="display: none;">
+							<td width="75"><i>Derived: </i></td>
+							<td>False</td>
+						</tr>
+							<tr id="DetailsImageAttributes2518_07" style="display: none;">
+							<td width="75"><i>IsID: </i></td>
+						<td>False</td>
+						</tr>
+					</table>
+					
+					
+						<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This is one #lt;code#gt;EntityManagerFactory#lt;/code#gt; that will be used for all#lt;br /#gt;#lt;/p#gt;#lt;p#gt;#lt;code#gt;EAO#lt;/code#gt; instances.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						
+				</td>
+			</tr>
+	</table>
+</div>
+<div class="ItemBody" id="OperationsTable">
+	<table border="0" cellspacing="0" cellpadding="0" class="Table">
+		<tr>
+			<td width="100%" class="TableHeading">Operation</td>
+		</tr>
+						<tr>
+				<td width="100%" class="TableRow">
+					<i>Protected</i><br />
+					<strong>EAO</strong>():
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2519" onclick="parent.toggleDiv('detailsDIVOperations2519','DetailsImageOperations2519')" />Details:
+						<div id="detailsDIVOperations2519" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Default constructor is made protected so that nobody can directly instantiate an EAO object.
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>insert</strong>(					<a href="#" onclick="parent.toggleData('param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{24D74613-81B8-4fb3-92C6-E0D3DFE8A5E9}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to persist in the database</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2520" onclick="parent.toggleDiv('detailsDIVOperations2520','DetailsImageOperations2520')" />Details:
+						<div id="detailsDIVOperations2520" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Insert an object into the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>insert</strong>(					<a href="#" onclick="parent.toggleData('param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{AC92FD62-6EE7-4e77-A74C-A6DED8B73702}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to persist in the database</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{134BAE4B-757B-49e6-ACFB-0033DE6346F8}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2521" onclick="parent.toggleDiv('detailsDIVOperations2521','DetailsImageOperations2521')" />Details:
+						<div id="detailsDIVOperations2521" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Insert an object into the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>update</strong>(					<a href="#" onclick="parent.toggleData('param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F8C61BF9-6B4C-4ed6-82F4-A9A9B9AC3512}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object whose fields are being updated in the database.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2522" onclick="parent.toggleDiv('detailsDIVOperations2522','DetailsImageOperations2522')" />Details:
+						<div id="detailsDIVOperations2522" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Update an object in the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>update</strong>(					<a href="#" onclick="parent.toggleData('param{896C8F70-2536-4956-A949-8EEC29110349}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{896C8F70-2536-4956-A949-8EEC29110349}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{896C8F70-2536-4956-A949-8EEC29110349}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{896C8F70-2536-4956-A949-8EEC29110349}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{896C8F70-2536-4956-A949-8EEC29110349}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{896C8F70-2536-4956-A949-8EEC29110349}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object whose fields are being updated in the database.</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{335F2EC8-E820-41f1-BABC-B52F8146DEBC}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2523" onclick="parent.toggleDiv('detailsDIVOperations2523','DetailsImageOperations2523')" />Details:
+						<div id="detailsDIVOperations2523" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Update an object in the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>merge</strong>(					<a href="#" onclick="parent.toggleData('param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B9B5C021-34A0-4e74-9BD8-9261DCD622DD}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2524" onclick="parent.toggleDiv('detailsDIVOperations2524','DetailsImageOperations2524')" />Details:
+						<div id="detailsDIVOperations2524" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>merge</strong>(					<a href="#" onclick="parent.toggleData('param{5F1FE173-7A8F-49d6-9295-746419778834}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{5F1FE173-7A8F-49d6-9295-746419778834}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{5F1FE173-7A8F-49d6-9295-746419778834}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{5F1FE173-7A8F-49d6-9295-746419778834}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{5F1FE173-7A8F-49d6-9295-746419778834}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{5F1FE173-7A8F-49d6-9295-746419778834}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{FC868D99-7BE3-4120-8EEA-D7ED52326415}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{FC868D99-7BE3-4120-8EEA-D7ED52326415}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{FC868D99-7BE3-4120-8EEA-D7ED52326415}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FC868D99-7BE3-4120-8EEA-D7ED52326415}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{FC868D99-7BE3-4120-8EEA-D7ED52326415}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{FC868D99-7BE3-4120-8EEA-D7ED52326415}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2525" onclick="parent.toggleDiv('detailsDIVOperations2525','DetailsImageOperations2525')" />Details:
+						<div id="detailsDIVOperations2525" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>refresh</strong>(					<a href="#" onclick="parent.toggleData('param{875E32CA-6CE8-4b86-B842-542859D03B66}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{875E32CA-6CE8-4b86-B842-542859D03B66}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{875E32CA-6CE8-4b86-B842-542859D03B66}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{875E32CA-6CE8-4b86-B842-542859D03B66}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{875E32CA-6CE8-4b86-B842-542859D03B66}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{875E32CA-6CE8-4b86-B842-542859D03B66}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object that will be refreshed</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2526" onclick="parent.toggleDiv('detailsDIVOperations2526','DetailsImageOperations2526')" />Details:
+						<div id="detailsDIVOperations2526" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Refresh the object with data in persistent store 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>refresh</strong>(					<a href="#" onclick="parent.toggleData('param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{95B2CF2D-0C0E-46ed-8A86-7D963E390F80}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object that will be refreshed</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D54DD062-E352-4d08-8831-2BCBA2BA06DB}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2527" onclick="parent.toggleDiv('detailsDIVOperations2527','DetailsImageOperations2527')" />Details:
+						<div id="detailsDIVOperations2527" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Refresh the object with data in persistent store 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>delete</strong>(					<a href="#" onclick="parent.toggleData('param{2253A1EB-80E4-4c4b-B509-67247B2748DD}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{2253A1EB-80E4-4c4b-B509-67247B2748DD}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{2253A1EB-80E4-4c4b-B509-67247B2748DD}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2253A1EB-80E4-4c4b-B509-67247B2748DD}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{2253A1EB-80E4-4c4b-B509-67247B2748DD}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2253A1EB-80E4-4c4b-B509-67247B2748DD}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to delete from the database</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2528" onclick="parent.toggleDiv('detailsDIVOperations2528','DetailsImageOperations2528')" />Details:
+						<div id="detailsDIVOperations2528" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Deletes an object from the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>delete</strong>(					<a href="#" onclick="parent.toggleData('param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{62CB2344-AD08-45d1-8EF0-1F5EC1DCCF76}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to delete from the database</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{566DCA81-3154-47bc-94BD-1E88FF708027}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{566DCA81-3154-47bc-94BD-1E88FF708027}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{566DCA81-3154-47bc-94BD-1E88FF708027}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{566DCA81-3154-47bc-94BD-1E88FF708027}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{566DCA81-3154-47bc-94BD-1E88FF708027}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{566DCA81-3154-47bc-94BD-1E88FF708027}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction well be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2529" onclick="parent.toggleDiv('detailsDIVOperations2529','DetailsImageOperations2529')" />Details:
+						<div id="detailsDIVOperations2529" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Deletes an object from the database 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakAnyNonCascadedRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E07C2D1C-5E6A-48cc-919F-8B2C66448A56}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">entity</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2530" onclick="parent.toggleDiv('detailsDIVOperations2530','DetailsImageOperations2530')" />Details:
+						<div id="detailsDIVOperations2530" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			A method to break any bidirectional relationships on an entity that are not defined as cascading 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakAncillaryDataRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{D63C823F-6FD1-4913-B066-F05FCE033A72}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{D63C823F-6FD1-4913-B066-F05FCE033A72}" border="0" />ancillaryData: <a href="../EA1/EA156.htm">AncillaryData</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{D63C823F-6FD1-4913-B066-F05FCE033A72}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D63C823F-6FD1-4913-B066-F05FCE033A72}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{D63C823F-6FD1-4913-B066-F05FCE033A72}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{D63C823F-6FD1-4913-B066-F05FCE033A72}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">ancillaryData</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2531" onclick="parent.toggleDiv('detailsDIVOperations2531','DetailsImageOperations2531')" />Details:
+						<div id="detailsDIVOperations2531" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This is the method that cleans up any relationships for ancillary datas 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakCommentRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}" border="0" />comment: <a href="../EA1/EA160.htm">Comment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B7B966C7-786C-4319-8D76-E1CA2AB2DC99}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">comment</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2532" onclick="parent.toggleDiv('detailsDIVOperations2532','DetailsImageOperations2532')" />Details:
+						<div id="detailsDIVOperations2532" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This is the method to remove any links external to the comment 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakEventRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{556C38AF-7FDD-431f-A31B-F3706DB2F383}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{556C38AF-7FDD-431f-A31B-F3706DB2F383}" border="0" />event: <a href="../EA1/EA164.htm">Event</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{556C38AF-7FDD-431f-A31B-F3706DB2F383}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{556C38AF-7FDD-431f-A31B-F3706DB2F383}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{556C38AF-7FDD-431f-A31B-F3706DB2F383}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{556C38AF-7FDD-431f-A31B-F3706DB2F383}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">event</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2533" onclick="parent.toggleDiv('detailsDIVOperations2533','DetailsImageOperations2533')" />Details:
+						<div id="detailsDIVOperations2533" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes in an Event and makes sure any bidirectional relationships are broken first 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakDeploymentRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{24903DC0-8F8F-4533-9BF8-675EF0852B62}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{24903DC0-8F8F-4533-9BF8-675EF0852B62}" border="0" />deployment: <a href="../EA1/EA163.htm">Deployment</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{24903DC0-8F8F-4533-9BF8-675EF0852B62}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{24903DC0-8F8F-4533-9BF8-675EF0852B62}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{24903DC0-8F8F-4533-9BF8-675EF0852B62}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{24903DC0-8F8F-4533-9BF8-675EF0852B62}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">deployment</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2534" onclick="parent.toggleDiv('detailsDIVOperations2534','DetailsImageOperations2534')" />Details:
+						<div id="detailsDIVOperations2534" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes care of removing any relationships that are not handled by cascading 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakProcessRunRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{82D66736-403F-41c2-98E4-687FC0B41996}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{82D66736-403F-41c2-98E4-687FC0B41996}" border="0" />processRun: <a href="../EA1/EA174.htm">ProcessRun</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{82D66736-403F-41c2-98E4-687FC0B41996}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{82D66736-403F-41c2-98E4-687FC0B41996}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{82D66736-403F-41c2-98E4-687FC0B41996}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{82D66736-403F-41c2-98E4-687FC0B41996}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">processRun</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2535" onclick="parent.toggleDiv('detailsDIVOperations2535','DetailsImageOperations2535')" />Details:
+						<div id="detailsDIVOperations2535" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method cleans up the relationship with any process run that is associated with this one as an archive 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakEventTypeRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{7E6D088A-3920-413a-A617-F39D5981015F}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{7E6D088A-3920-413a-A617-F39D5981015F}" border="0" />eventType: <a href="../EA1/EA165.htm">EventType</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{7E6D088A-3920-413a-A617-F39D5981015F}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{7E6D088A-3920-413a-A617-F39D5981015F}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{7E6D088A-3920-413a-A617-F39D5981015F}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{7E6D088A-3920-413a-A617-F39D5981015F}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">eventType</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2536" onclick="parent.toggleDiv('detailsDIVOperations2536','DetailsImageOperations2536')" />Details:
+						<div id="detailsDIVOperations2536" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method makes sure all the Event links to the incoming EventType are broken 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakGeneArrayValueRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}" border="0" />geneArrayValue: <a href="../EA1/EA168.htm">GeneArrayValue</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{2F6D3DE6-BB35-4df9-B2F2-7729601BB459}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2537" onclick="parent.toggleDiv('detailsDIVOperations2537','DetailsImageOperations2537')" />Details:
+						<div id="detailsDIVOperations2537" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method breaks the relationship between genearrayvalue and images #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakImageRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}" border="0" />image: <a href="../EA1/EA170.htm">Image</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1E524BAC-1C3D-4b4c-8CF1-00AAB225C2BD}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">image</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2538" onclick="parent.toggleDiv('detailsDIVOperations2538','DetailsImageOperations2538')" />Details:
+						<div id="detailsDIVOperations2538" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method break all the relationships between other objects and images 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakInstrumentRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}" border="0" />instrument: <a href="../EA1/EA171.htm">Instrument</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{23F870CA-AA26-4aef-AFB5-10EFFF0EEB34}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2539" onclick="parent.toggleDiv('detailsDIVOperations2539','DetailsImageOperations2539')" />Details:
+						<div id="detailsDIVOperations2539" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method takes care of any relationships that need to be removed for instruments (i.e. deletes any deployment associated with it) #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakProcessTypeRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}" border="0" />processType: <a href="../EA1/EA175.htm">ProcessType</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A7FC5584-467D-44d6-8203-B23D10BCF3FF}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">processType</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2540" onclick="parent.toggleDiv('detailsDIVOperations2540','DetailsImageOperations2540')" />Details:
+						<div id="detailsDIVOperations2540" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method breaks any relationship with a ProcessType object 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakSampleRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{83314C38-E92C-4718-8D5B-89AB420359DB}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{83314C38-E92C-4718-8D5B-89AB420359DB}" border="0" />sample: <a href="../EA1/EA177.htm">Sample</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{83314C38-E92C-4718-8D5B-89AB420359DB}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{83314C38-E92C-4718-8D5B-89AB420359DB}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{83314C38-E92C-4718-8D5B-89AB420359DB}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{83314C38-E92C-4718-8D5B-89AB420359DB}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">sample</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2541" onclick="parent.toggleDiv('detailsDIVOperations2541','DetailsImageOperations2541')" />Details:
+						<div id="detailsDIVOperations2541" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method break all the relationships between other objects and samples 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakThumbnailRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{3F0F03A8-A690-4f77-B549-BA028CBDE634}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{3F0F03A8-A690-4f77-B549-BA028CBDE634}" border="0" />thumbnail: <a href="../EA1/EA178.htm">Thumbnail</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{3F0F03A8-A690-4f77-B549-BA028CBDE634}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{3F0F03A8-A690-4f77-B549-BA028CBDE634}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{3F0F03A8-A690-4f77-B549-BA028CBDE634}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{3F0F03A8-A690-4f77-B549-BA028CBDE634}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2542" onclick="parent.toggleDiv('detailsDIVOperations2542','DetailsImageOperations2542')" />Details:
+						<div id="detailsDIVOperations2542" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method breaks the bidirectional relationship between thumbnail and image #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>breakTimezoneRelationships</strong>(					<a href="#" onclick="parent.toggleData('param{0925DAC8-4018-4311-AF79-862473FE9DD3}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{0925DAC8-4018-4311-AF79-862473FE9DD3}" border="0" />timezone: <a href="../EA1/EA179.htm">Timezone</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{0925DAC8-4018-4311-AF79-862473FE9DD3}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{0925DAC8-4018-4311-AF79-862473FE9DD3}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{0925DAC8-4018-4311-AF79-862473FE9DD3}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{0925DAC8-4018-4311-AF79-862473FE9DD3}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">timezone</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2543" onclick="parent.toggleDiv('detailsDIVOperations2543','DetailsImageOperations2543')" />Details:
+						<div id="detailsDIVOperations2543" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			This method breaks any relationships 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>insertOrUpdate</strong>(					<a href="#" onclick="parent.toggleData('param{6EB2A681-F560-4c23-9102-2A8337D27951}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{6EB2A681-F560-4c23-9102-2A8337D27951}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{6EB2A681-F560-4c23-9102-2A8337D27951}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6EB2A681-F560-4c23-9102-2A8337D27951}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{6EB2A681-F560-4c23-9102-2A8337D27951}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{6EB2A681-F560-4c23-9102-2A8337D27951}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to insert or update.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2544" onclick="parent.toggleDiv('detailsDIVOperations2544','DetailsImageOperations2544')" />Details:
+						<div id="detailsDIVOperations2544" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Updates or inserts an object into the database depending on if the object exists in the database or not. 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>insertOrUpdate</strong>(					<a href="#" onclick="parent.toggleData('param{C849CFA8-3672-440d-AC3A-E05B86824580}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{C849CFA8-3672-440d-AC3A-E05B86824580}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C849CFA8-3672-440d-AC3A-E05B86824580}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C849CFA8-3672-440d-AC3A-E05B86824580}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C849CFA8-3672-440d-AC3A-E05B86824580}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C849CFA8-3672-440d-AC3A-E05B86824580}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The entity object to insert or update.</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{1FA26452-8DB9-4d9c-B382-A96B2D8D36ED}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2545" onclick="parent.toggleDiv('detailsDIVOperations2545','DetailsImageOperations2545')" />Details:
+						<div id="detailsDIVOperations2545" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Updates or inserts an object into the database depending on if the object exists in the database or not. It returns the object that was, or is (if endTransaction if false), the result from the transaction. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return an #lt;code#gt;IEntity#lt;/code#gt; that was, or is, in the transaction.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>find</strong>(					<a href="#" onclick="parent.toggleData('param{F490F1F7-399E-4eba-9651-14EA9A56FC90}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{F490F1F7-399E-4eba-9651-14EA9A56FC90}" border="0" />clazz: Class&lt;T&gt;</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{F490F1F7-399E-4eba-9651-14EA9A56FC90}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F490F1F7-399E-4eba-9651-14EA9A56FC90}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{F490F1F7-399E-4eba-9651-14EA9A56FC90}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F490F1F7-399E-4eba-9651-14EA9A56FC90}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The class of the entity object to be retrieved</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{A3136A86-4D92-433a-A03F-03DB8499B026}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{A3136A86-4D92-433a-A03F-03DB8499B026}" border="0" />primaryKey: Object</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A3136A86-4D92-433a-A03F-03DB8499B026}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A3136A86-4D92-433a-A03F-03DB8499B026}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A3136A86-4D92-433a-A03F-03DB8499B026}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A3136A86-4D92-433a-A03F-03DB8499B026}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The primary key of the entity object</div>
+</td>
+						</tr>
+					</table>
+):T
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2546" onclick="parent.toggleDiv('detailsDIVOperations2546','DetailsImageOperations2546')" />Details:
+						<div id="detailsDIVOperations2546" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>generic=<T><br/></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Find an object by it&#39;s primary key #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return The matching entity object or null if no match was found.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>find</strong>(					<a href="#" onclick="parent.toggleData('param{F523C886-4560-428b-852C-8FEE6F9203C8}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{F523C886-4560-428b-852C-8FEE6F9203C8}" border="0" />clazz: Class&lt;T&gt;</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{F523C886-4560-428b-852C-8FEE6F9203C8}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F523C886-4560-428b-852C-8FEE6F9203C8}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{F523C886-4560-428b-852C-8FEE6F9203C8}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{F523C886-4560-428b-852C-8FEE6F9203C8}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The class of the entity object to be retrieved</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}" border="0" />primaryKey: Object</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{AA2BFE9A-E1FA-4fc9-8921-E3A9CB040D2C}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The primary key of the entity object</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{CD622856-C27C-409d-954D-991F97064063}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{CD622856-C27C-409d-954D-991F97064063}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{CD622856-C27C-409d-954D-991F97064063}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{CD622856-C27C-409d-954D-991F97064063}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{CD622856-C27C-409d-954D-991F97064063}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{CD622856-C27C-409d-954D-991F97064063}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):T
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2547" onclick="parent.toggleDiv('detailsDIVOperations2547','DetailsImageOperations2547')" />Details:
+						<div id="detailsDIVOperations2547" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>generic=<T><br/></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Find an object by it&#39;s primary key #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return The matching entity object or null if no match was found.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Private static</i><br />
+					<strong>processTransaction</strong>(					<a href="#" onclick="parent.toggleData('param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{C57A268F-3988-4b93-8DAF-E3C95E8B3240}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{309FDE7B-658E-44d4-8613-D51986A4ED53}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{309FDE7B-658E-44d4-8613-D51986A4ED53}" border="0" />transactionType: <a href="EA312.htm">TransactionType</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{309FDE7B-658E-44d4-8613-D51986A4ED53}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{309FDE7B-658E-44d4-8613-D51986A4ED53}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{309FDE7B-658E-44d4-8613-D51986A4ED53}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{309FDE7B-658E-44d4-8613-D51986A4ED53}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{E826326A-3EF8-4b61-A823-2EC02FA28BB5}03" style="display: none;">
+							<td width="50"></td>
+							<td></td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2548" onclick="parent.toggleDiv('detailsDIVOperations2548','DetailsImageOperations2548')" />Details:
+						<div id="detailsDIVOperations2548" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			The method that will actually perform the transaction based on the type that is supplied. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return an #lt;code#gt;IEntity#lt;/code#gt; that was, or is (if endTransaction is false), in the transaction after the transaction occurred.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>findByNamedQuery</strong>(					<a href="#" onclick="parent.toggleData('param{175413AC-080C-43e2-910F-C9757D068940}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{175413AC-080C-43e2-910F-C9757D068940}" border="0" />name: String</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{175413AC-080C-43e2-910F-C9757D068940}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{175413AC-080C-43e2-910F-C9757D068940}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{175413AC-080C-43e2-910F-C9757D068940}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{175413AC-080C-43e2-910F-C9757D068940}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The name of the query to execute</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{03593EC5-68EE-40c3-9866-60E1BE1479E8}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{03593EC5-68EE-40c3-9866-60E1BE1479E8}" border="0" />namedParameters: Map&lt;String,  Object&gt;</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{03593EC5-68EE-40c3-9866-60E1BE1479E8}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{03593EC5-68EE-40c3-9866-60E1BE1479E8}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{03593EC5-68EE-40c3-9866-60E1BE1479E8}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{03593EC5-68EE-40c3-9866-60E1BE1479E8}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">A Map&lt;String,  Object&gt; of the &#39;named&#39; parameters to assign in the query</div>
+</td>
+						</tr>
+					</table>
+):List
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2549" onclick="parent.toggleDiv('detailsDIVOperations2549','DetailsImageOperations2549')" />Details:
+						<div id="detailsDIVOperations2549" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("rawtypes")<br/></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Executes a named query using a map of named parameters #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return A list of objects returned by the query.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>findByNamedQuery</strong>(					<a href="#" onclick="parent.toggleData('param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}" border="0" />name: String</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{A2753DC5-594E-4d7a-87FC-090B09CE8A49}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The name of the query to execute</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}" border="0" />namedParameters: Map&lt;String,  Object&gt;</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{92FF5AFD-4E00-45ce-9AAA-7A546034A885}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">A Map&lt;String,  Object&gt; of the &#39;named&#39; parameters to assign in the query</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{B71E5A9B-B1CE-4b6e-9D51-E6479D525EBB}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):List
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2550" onclick="parent.toggleDiv('detailsDIVOperations2550','DetailsImageOperations2550')" />Details:
+						<div id="detailsDIVOperations2550" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i>Tags:</i><span style="margin-left: .7cm;"> </span></td>
+							<td>annotations=@SuppressWarnings("rawtypes")<br/></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Executes a named query using a map of named parameters #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return A list of objects returned by the query.#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>loadLazyRelations</strong>(					<a href="#" onclick="parent.toggleData('param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{41650F1E-4AD5-43d5-A54B-844CABE7F55D}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The persistent object whose children will be loaded from the database.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2551" onclick="parent.toggleDiv('detailsDIVOperations2551','DetailsImageOperations2551')" />Details:
+						<div id="detailsDIVOperations2551" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Many one-to-many relations are lazy loaded in JPA. For convenience, this method will load all lazy relations of an IEntity object. This method has no effect on objects that are not persistent 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>loadLazyRelations</strong>(					<a href="#" onclick="parent.toggleData('param{8183E712-2602-4ab0-8491-93B0F9CA1F58}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{8183E712-2602-4ab0-8491-93B0F9CA1F58}" border="0" />entity: <a href="EA310.htm">IEntity</a></a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{8183E712-2602-4ab0-8491-93B0F9CA1F58}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{8183E712-2602-4ab0-8491-93B0F9CA1F58}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{8183E712-2602-4ab0-8491-93B0F9CA1F58}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{8183E712-2602-4ab0-8491-93B0F9CA1F58}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">The persistent object whose children will be loaded from the database.</div>
+</td>
+						</tr>
+					</table>
+					<a href="#" onclick="parent.toggleData('param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}')" style="text-decoration: none; color: #000000;"><img src="../../../../../images/plus03.gif" align="absmiddle" id="param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}" border="0" />endTransaction: boolean</a>, 
+					<table border="0" cellspacing="0" cellpadding="0" class="Table" style="padding: 4px 18px;">
+						<tr id="param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}00" style="display: none;">
+							<td width="50"><strong>Default:</strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}01" style="display: none;">
+							<td width="50"><strong>Kind:</strong></td>
+							<td>in</td>
+						</tr>
+						<tr id="param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}02" style="display: none;">
+							<td width="50"><strong>Stereotype: </strong></td>
+							<td></td>
+						</tr>
+						<tr id="param{57ACF2DE-FB19-4629-8803-4B31B5A5A32A}03" style="display: none;">
+							<td width="50"></td>
+							<td><div class="ObjectDetailsNotes">if true the transaction will be ended when the method exits. If false then the transaction will be kept open and can be reused by the current thread.</div>
+</td>
+						</tr>
+					</table>
+):<a href="EA310.htm">IEntity</a>
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2552" onclick="parent.toggleDiv('detailsDIVOperations2552','DetailsImageOperations2552')" />Details:
+						<div id="detailsDIVOperations2552" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Many one-to-many relations are lazy loaded in JPA. For convenience, this method will load all lazy relations of an IEntity object. This method has no effect on objects that are not persistent 
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>startTransaction</strong>():EntityManager
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2553" onclick="parent.toggleDiv('detailsDIVOperations2553','DetailsImageOperations2553')" />Details:
+						<div id="detailsDIVOperations2553" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Start a database transaction. Also initializes the EntityManager and returns an instance of it. #lt;br /#gt;#lt;/p#gt;#lt;p#gt;@return An EntityManager for interacting with the database. DO NOT close this as it may be shared by other methods on the same thread. If you need to force commit your changes to the database use#lt;br /#gt;#lt;/p#gt;#lt;p#gt;#lt;i#gt;entityManager.flush()#lt;/i#gt; #lt;b#gt;NOT#lt;/b#gt;#lt;br /#gt;#lt;/p#gt;#lt;p#gt;#lt;i#gt;entityManager.close()#lt;/i#gt;#lt;br /#gt;#lt;/p#gt;
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td width="100%" class="TableRow">
+					<i>Public static</i><br />
+					<strong>endTransaction</strong>():void
+				</td>
+			</tr>
+			<tr>
+				<td class="TableRowBottomDashed"  colspan="1">
+					<div class="DetailsDivParent"><img src="../../../../../images/minus03.gif" align="absmiddle" id="DetailsImageOperations2554" onclick="parent.toggleDiv('detailsDIVOperations2554','DetailsImageOperations2554')" />Details:
+						<div id="detailsDIVOperations2554" class="DetailsDiv" >
+					<i>Sequential  </i>
+					<table>
+						<tr>
+							<td valign = "top"><i></i><span style="margin-left: .7cm;"> </span></td>
+							<td></td>
+						</tr>
+					</table>
+					
+					
+					<div class="ObjectDetailsNotes"><table>
+	<tr>
+		<td valign="top">
+			<i>Notes: </i><span style="margin-left: .4cm;"> </span>
+		</td>
+		<td>
+			Close any open transaction used on the current thread.
+		</td>
+	</tr>
+</table></div>
+
+						</div>
+					</div>
+				</td>
+			</tr>
+
+		</table>
+</div>		<div class="ItemBody" id="LinksTable">
+			<table align="center" border="0" cellspacing="0" cellpadding="0" class="Table">
+				<tr>
+					<td width="30%" class="TableHeading">Object</td>
+					<td width="10%" class="TableHeading">Type</td>
+					<td width="10%" class="TableHeading">Connection</td>
+					<td width="10%" class="TableHeading">Direction</td>
+					<td width="40%" class="TableHeading">Notes</td>
+				</tr>
+				<tr>
+					<td width="30%" class="TableRow" valign="top"><a href="EA306.htm">DeploymentEAO</a></td>
+					<td width="10%" class="TableRow" valign="top">Class</td>
+					<td width="10%" class="TableRow" valign="top">Generalization</td>
+					<td width="10%" class="TableRow" valign="top">From</td>
+					<td width="40%" class="TableRow" valign="top">&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="30%" class="TableRow" valign="top"><a href="EA309.htm">EventEAO</a></td>
+					<td width="10%" class="TableRow" valign="top">Class</td>
+					<td width="10%" class="TableRow" valign="top">Generalization</td>
+					<td width="10%" class="TableRow" valign="top">From</td>
+					<td width="40%" class="TableRow" valign="top">&nbsp;</td>
+				</tr>
+
+			</table>
+		</div>
+	</div>
+<div class="pageFooter"></div>
+ 
+</body>
+</html>
