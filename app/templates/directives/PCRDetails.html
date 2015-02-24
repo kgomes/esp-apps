@@ -26,12 +26,14 @@
                                     <div class="panel-body">
                                         <ul class="pcr-date-list">
                                             <li ng-repeat="(epochMillis,varObject) in timeObject">
-                                                <label class="checkbox pcr-date-list-item-label">
-                                                    <input type="checkbox"
-                                                           value="checkbox-{{deploymentID}}-pcr-{{pcrType}}-{{columnName}}-{{epochMillis}}"
-                                                           ng-click="selectPCRObject($event)">
-                                                    {{epochMillis | date:'MM/dd/yy HH:mm'}}
-                                                </label>
+                                                <div class="checkbox">
+                                                    <label class="pcr-date-list-item-label">
+                                                        <input type="checkbox"
+                                                               value="checkbox-{{deploymentID}}-pcr-{{pcrType}}-{{columnName}}-{{epochMillis}}"
+                                                               ng-click="selectPCRObject($event)">
+                                                        {{epochMillis | date:'MM/dd/yy HH:mm'}}
+                                                    </label>
+                                                </div>
                                             </li>
                                         </ul>
                                     </div>
