@@ -2,3 +2,4 @@ node_modules
 esp_cfg.json
 data
 app/lib
+espmob/www/lib
