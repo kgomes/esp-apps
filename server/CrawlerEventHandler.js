@@ -160,8 +160,8 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
                             fallback: "Image taken",
                             color: "good",
                             text: message.image.imageFilename + " (" + message.image.exposure + "s - " +
-                            message.image.xPixels + "px X " + message.image.yPixels + "px)",
-                            image_url: me.hostBaseUrl + message.image.imageUrl
+                            message.image.xPixels + "px X " + message.image.yPixels + "px)\n" +
+                            "<" + encodeURI(me.hostBaseUrl + message.image.imageUrl) + ">"
                         };
                     } else {
                         attachmentToSend = {
@@ -178,9 +178,8 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
                         " (" + message.image.exposure + "s)",
                         channel: channel,
                         username: "esps",
-                        attachments: [
-                            attachmentToSend
-                        ]
+                        attachments: [attachmentToSend]
+
                     };
 
                     // Add it to the slack queue
