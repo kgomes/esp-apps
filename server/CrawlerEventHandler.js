@@ -154,32 +154,23 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
                     logger.debug("Message was an image processed event");
 
                     // We need to build the attachment first
-                    var attachmentToSend;
+                    var textToSend;
                     if (message.image.downloaded) {
-                        attachmentToSend = {
-                            fallback: "Image taken",
-                            color: "good",
-                            text: message.image.imageFilename + " (" + message.image.exposure + "s - " +
-                            message.image.xPixels + "px X " + message.image.yPixels + "px)\n" +
+                        textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
+                            " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
+                            message.image.yPixels + "px)\n" +
                             "<" + encodeURI(me.hostBaseUrl + message.image.imageUrl) + ">"
-                        };
                     } else {
-                        attachmentToSend = {
-                            fallback: "Image taken",
-                            color: "good",
-                            text: message.image.imageFilename + " (" + message.image.exposure + "s - " +
-                            message.image.xPixels + "px X " + message.image.yPixels + "px)"
-                        };
+                        textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
+                            " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
+                            message.image.yPixels + "px)"
                     }
 
                     // Create the message to send
                     var messageToSend = {
-                        text: "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
-                        " (" + message.image.exposure + "s)",
+                        text: textToSend,
                         channel: channel,
-                        username: "esps",
-                        attachments: [attachmentToSend]
-
+                        username: "esps"
                     };
 
                     // Add it to the slack queue
