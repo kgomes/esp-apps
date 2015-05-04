@@ -20,7 +20,7 @@ module.exports = {
 
     // Application server options
     appServerOptions: {
-        hostBaseUrl:'Put the base URL of the application here(for example http://esp.mycompany.com',
+        hostBaseUrl:'Put the base URL of the application here (for example http://esp.mycompany.com)',
         port: 8081,
         loggerLevel: 'info',
         // The UserRouter options
@@ -256,6 +256,8 @@ module.exports = {
 
     // The EventHandler options
     eventHandlerOptions: {
-        loggerLevel: 'info'
+        loggerLevel: 'info',
+        hostBaseUrl: 'Put the base URL of the application here (for example http://esp.mycompany.com)',
+        slackWebHookURL: 'This is they URL of the incoming webhook for the Slack service (if you use it)'
     }
 };

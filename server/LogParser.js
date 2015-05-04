@@ -60,7 +60,7 @@ function LogParser(dataAccess, dataDir, opts) {
     // Some regular expression patterns
     this.timestampPattern1 = new RegExp(/^@(\D+)(\d+\.\d+)/);
     this.timestampPattern2 = new RegExp(/^@(\d+\.\d+)(\D+)/);
-    this.errorPattern = new RegExp(/BadNews.\S+\s+"(.*)",:Subject=>"(.*)"/);
+    this.errorPattern = new RegExp(/BadNews.\S+\s+(.*)/);
     this.ancillaryPattern = new RegExp(/^Can@.*/);
     this.ancillarySplitPattern = new RegExp(/^(\S+)@(\d{2}):(\d{2}):(\d{2}),(.*)$/);
     this.ancillaryDataPattern = new RegExp(/^(-*\d+\.*\d*)(.*)$/);
@@ -841,10 +841,19 @@ function LogParser(dataAccess, dataDir, opts) {
             // Create a new error object
             var newError = {
                 actor: currentActor,
-                subject: errorMatches[2],
+                subject: "Error from ESP " + deployment.esp.name,
                 message: errorMatches[1]
             };
             logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is Error:", newError);
+
+            // Emit the error event
+            me.emit('parseEvent', {
+                source: deployment.esp.name,
+                notifySlack: deployment.notifySlack,
+                type: 'error',
+                timestampUTC: lastTimestampUTC.valueOf(),
+                error: newError
+            });
 
             // Add it to the object to be added to the deployment later
             errorsToBeAdded[lastTimestampUTC.valueOf()] = newError;
@@ -911,6 +920,15 @@ function LogParser(dataAccess, dataDir, opts) {
 
             logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is Image:", image);
 
+            // Emit the error event
+            me.emit('parseEvent', {
+                source: deployment.esp.name,
+                notifySlack: deployment.notifySlack,
+                type: 'imageProcessed',
+                timestampUTC: lastTimestampUTC.valueOf(),
+                image: image
+            });
+
             // Add the image to the array of images to be added to the deployment
             imagesToBeAdded[lastTimestampUTC.valueOf()] = image;
 
@@ -943,6 +961,15 @@ function LogParser(dataAccess, dataDir, opts) {
             }
 
             logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is ProtocolRun:", protocolRun);
+
+            // Emit the error event
+            me.emit('parseEvent', {
+                source: deployment.esp.name,
+                notifySlack: deployment.notifySlack,
+                type: 'protocolRunStarted',
+                timestampUTC: lastTimestampUTC.valueOf(),
+                protocolRun: protocolRun
+            });
 
             // Add it to the array of protocols run to be added to the deployment
             protocolRunsToBeAdded[lastTimestampUTC.valueOf()] = protocolRun;
@@ -985,6 +1012,16 @@ function LogParser(dataAccess, dataDir, opts) {
                 targetVolume: sampleStartMatches[1]
             }
             logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is Normal Sample:", newSample);
+
+            // Emit the error event
+            me.emit('parseEvent', {
+                source: deployment.esp.name,
+                notifySlack: deployment.notifySlack,
+                type: 'sampleStarted',
+                timestampUTC: lastTimestampUTC.valueOf(),
+                sample: newSample
+            });
+
             // Now add it to the local sample tracking object
             samplesBeingParsed[lastTimestampUTC.valueOf()] = newSample;
 
@@ -1011,6 +1048,17 @@ function LogParser(dataAccess, dataDir, opts) {
                 }
                 logger.debug("Line " + lineNumber + " TS->" + lastTimestampUTC.format() + " is Normal Sample End:", samplesBeingParsed[latestOpenSampleTS]);
             }
+
+            // Emit the error event
+            me.emit('parseEvent', {
+                source: deployment.esp.name,
+                notifySlack: deployment.notifySlack,
+                type: 'sampleCompleted',
+                timestampUTC: lastTimestampUTC.valueOf(),
+                sample: samplesBeingParsed[latestOpenSampleTS]
+            });
+
+
         } else if (ancillaryMatches && ancillaryMatches.length > 0) {
 
             // We are dealing with ancillary data and they are often over multiple

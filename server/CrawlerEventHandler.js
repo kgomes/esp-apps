@@ -1,5 +1,7 @@
-// Read in the ESP application configuration
+// Set up required libraries
 var path = require('path');
+var moment = require('moment');
+var Slack = require('node-slackr');
 
 // Configure logging
 var log4js = require('log4js');
@@ -9,13 +11,29 @@ log4js.addAppender(log4js.appenders.file('./logs/CrawlerEventHandler.log'), 'Cra
 // Grab the logger
 var logger = log4js.getLogger('CrawlerEventHandler');
 
+// The host base URL
+var hostBaseUrl;
+
+// The slack connection
+var slack;
+
 // The constructor
 function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
     logger.info("CrawlerEventHandler will use base directory located at " + baseDir);
     logger.info("Creating CrawlerEventHandler with logger level " + opts.loggerLevel);
+
     // Check for logging level
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
+    }
+
+    if (opts.hostBaseUrl) {
+        this.hostBaseUrl = opts.hostBaseUrl;
+    }
+    // Check to see if the Slack WebHook URL was specified
+    if (opts.slackWebHookURL) {
+        logger.info("Crawler will send message to Slack at URL " + opts.slackWebHookURL);
+        this.slack = new Slack(opts.slackWebHookURL);
     }
 
     // Grab a handle to this object for scope management
@@ -30,6 +48,10 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
     // Assign the local base directory where all data should be
     this.baseDir = baseDir;
 
+    // Create an array that will act as a queue for slack messages so we can make sure we don't send messages
+    // too fast
+    this.slackQueue = [];
+
     // ****************************************************************
     // This sets up the various handlers on the FTP synchronizer and the
     // socket.io client<->server interactions
@@ -40,6 +62,9 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
         // This event happens when the FTP crawler downloads or updates a file local
         // on this server
         this.deploymentFileSync.on('ftpFileUpdated', this.handleFTPFileUpdated);
+
+        // Register the event handler to process events from the LogParser
+        this.logParser.on('parseEvent', this.handleLogParserEvents);
     }
 
     // *************************************************************************
@@ -77,6 +102,187 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
             }
         }
     };
+
+    // *************************************************************************
+    // This is the function to handle the event when a file was updated locally
+    // from an FTP server
+    // *************************************************************************
+    this.handleLogParserEvents = function (message) {
+        logger.debug("Got log parsing event", message);
+
+        // Make sure there is a message first
+        if (message) {
+            // Now check to see if the message is even supposed to be published to Slack
+            if (message.notifySlack) {
+                // Create the channel name to push to based on the source of the message
+                var channel = "#esp-" + message.source.toLowerCase();
+                logger.debug("Will publish to slack channel " + channel);
+
+                // Format the timestamp
+                var humanReadableDate;
+                if (message.timestampUTC) {
+                    humanReadableDate = moment(message.timestampUTC).format('YYYY-MM-DD HH:mm:ss ZZ');
+                }
+
+                // Check to see if the type of event is an error
+                if (message.type == "error") {
+                    logger.debug("Parsed event was an error");
+
+                    // Check to see if the Slack WebHook was defined
+                    if (me.slack && message.error && message.source) {
+
+                        // Create the message to send
+                        var messageToSend = {
+                            text: "_" + humanReadableDate + "_\n*ERROR*: " + message.error.subject,
+                            channel: channel,
+                            username: "esps",
+                            attachments: [
+                                {
+                                    fallback: "ERROR Occurred",
+                                    color: "danger",
+                                    text: "Actor: " + message.error.actor + "\n" +
+                                    "Message: " + message.error.message
+                                }
+                            ]
+                        };
+
+                    }
+
+                    // Add it to the slack queue
+                    me.slackQueue.push(messageToSend);
+                } else if (message.type == 'imageProcessed') {
+                    logger.debug("Message was an image processed event");
+
+                    // We need to build the attachment first
+                    var attachmentToSend;
+                    if (message.image.downloaded) {
+                        attachmentToSend = {
+                            fallback: "Image taken",
+                            color: "good",
+                            text: message.image.imageFilename + " (" + message.image.exposure + "s - " +
+                            message.image.xPixels + "px X " + message.image.yPixels + "px)",
+                            image_url: me.hostBaseUrl + message.image.imageUrl
+                        };
+                    } else {
+                        attachmentToSend = {
+                            fallback: "Image taken",
+                            color: "good",
+                            text: message.image.imageFilename + " (" + message.image.exposure + "s - " +
+                            message.image.xPixels + "px X " + message.image.yPixels + "px)"
+                        };
+                    }
+
+                    // Create the message to send
+                    var messageToSend = {
+                        text: "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
+                        " (" + message.image.exposure + "s)",
+                        channel: channel,
+                        username: "esps",
+                        attachments: [
+                            attachmentToSend
+                        ]
+                    };
+
+                    // Add it to the slack queue
+                    me.slackQueue.push(messageToSend);
+                } else if (message.type == 'protocolRunStarted') {
+                    logger.debug("Message was a protocol run started");
+
+                    // Create the message to send
+                    var messageToSend = {
+                        text: "_" + humanReadableDate + "_\n*Protocol Run Started*: " + message.protocolRun.name,
+                        channel: channel,
+                        username: "esps",
+                        attachments: [
+                            {
+                                fallback: "Protocol Run Started",
+                                color: "good",
+                                text: "Actor: " + message.protocolRun.actor + "\n" +
+                                "Target Volume: " + message.protocolRun.targetVol
+                            }
+                        ]
+                    };
+                    // Add it to the slack queue
+                    me.slackQueue.push(messageToSend);
+                } else if (message.type == 'sampleStarted') {
+                    logger.debug("Message was a sample started");
+
+                    // Create the message to send
+                    var messageToSend = {
+                        text: "_" + humanReadableDate + "_\n*Sample Started*",
+                        channel: channel,
+                        username: "esps",
+                        attachments: [
+                            {
+                                fallback: "Sample Started",
+                                color: "good",
+                                text: "Actor: " + message.sample.actor + "\n" +
+                                "Target Volume: " + message.sample.targetVolume
+                            }
+                        ]
+                    };
+                    // Add it to the slack queue
+                    me.slackQueue.push(messageToSend);
+                } else if (message.type == 'sampleCompleted') {
+                    logger.debug("Message was sample completed");
+
+                    // See if we can calculate the sample difference
+                    var volDiff;
+                    if (message.sample.targetVolume && message.sample.actualVolume) {
+                        volDiff = message.sample.targetVolume - message.sample.actualVolume;
+                    }
+
+                    // The color of the message
+                    var colorOfAttachment = 'good';
+                    if (volDiff && volDiff !== 0) {
+                        colorOfAttachment = 'warning';
+                    }
+                    // Create the message to send
+                    var messageToSend = {
+                        text: "_" + humanReadableDate + "_\n*Sample Completed*",
+                        channel: channel,
+                        username: "esps",
+                        attachments: [
+                            {
+                                fallback: "Sample Completed",
+                                color: colorOfAttachment,
+                                text: "Actor: " + message.sample.actor + "\n" +
+                                "Target Volume: " + message.sample.targetVolume + "\n" +
+                                "Actual Volume: " + message.sample.actualVolume + "\n" +
+                                "Volume Diff: " + volDiff
+                            }
+                        ]
+                    };
+
+                    // Add it to the slack queue
+                    me.slackQueue.push(messageToSend);
+                }
+
+            } else {
+                logger.debug("Not going to send to Slack");
+            }
+        }
+    };
+
+    // Now set up a time to send any messages from the slack queue every 5 seconds
+    setInterval(function () {
+        // Check to see if there is a message in the slack queue
+        if (me.slackQueue.length > 0) {
+            // Pop the next message
+            var messageToSend = me.slackQueue.shift();
+            logger.debug("Will send message to slack", messageToSend);
+
+            // Send the message
+            me.slack.notify(messageToSend, function (err, result) {
+                if (err) {
+                    logger.error("Error trying to send to slack: ", err);
+                } else {
+                    logger.debug("Send to slack looks OK", result);
+                }
+            });
+        }
+
+    }, 1000 * 5);
 }
 
 // Export the factory method

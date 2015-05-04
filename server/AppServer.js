@@ -50,6 +50,13 @@ function AppServer(dataAccess, opts) {
     // Create the express server
     this.server = express.createServer();
 
+    // Set up the middleware to allow CORS
+    this.server.use(function(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    });
+
     // Set up the 'all environment' configuration
     this.server.configure(function () {
         me.server.use(connect.bodyParser());
