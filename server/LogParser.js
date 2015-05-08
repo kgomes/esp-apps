@@ -375,7 +375,7 @@ function LogParser(dataAccess, dataDir, opts) {
             fileReadStream.on('end', function (err) {
 
                 // Log out end of file read
-                logger.debug("Completed reading of file " + logFile);
+                logger.info("Completed reading of file " + logFile);
 
                 // Flush the ancillary data records
                 me.dataAccess.flushAncillaryDataRecords(deployment._id, deployment.esp.name, me.dataDir, function (err) {
@@ -386,7 +386,7 @@ function LogParser(dataAccess, dataDir, opts) {
                         if (callback)
                             callback(err);
                     } else {
-                        logger.debug("Flushed the last data records, let's clean out any duplicates");
+                        logger.info("Flushed the last data records, let's clean out any duplicates");
                         // Now let's run the method to clean up any duplicate ancillary data records that may have been
                         // inserted
                         me.dataAccess.cleanOutDuplicateAncillaryData(function (err) {
@@ -394,7 +394,7 @@ function LogParser(dataAccess, dataDir, opts) {
                             if (err) {
                                 logger.error("There was an error during cleaning of duplicates", err);
                             }
-                            logger.debug("Duplicates cleaned, let's update the deployment with " +
+                            logger.info("Duplicates cleaned, let's update the deployment with " +
                                 "the ancillary statistics");
                             // Update the deployment's ancillary statistics with the information from the ancillary database
                             me.dataAccess.setDeploymentAncillaryStatsFromDatabase(deployment, function (err, updatedDeployment) {
@@ -405,6 +405,7 @@ function LogParser(dataAccess, dataDir, opts) {
                                     if (callback)
                                         callback(err);
                                 } else {
+                                    logger.info("Will set stats on deployment");
                                     // Update the deployment in one pass
                                     me.dataAccess.updateDeployment(deployment._id, null, null, null, null, null,
                                         updatedDeployment.ancillaryData, errorsToBeAdded, samplesToBeAdded, protocolRunsToBeAdded,
@@ -415,7 +416,8 @@ function LogParser(dataAccess, dataDir, opts) {
                                                 if (callback)
                                                     callback(err);
                                             } else {
-                                                logger.debug("Deployment with ID " + deployment._id + " should now be updated");
+                                                logger.info("Deployment with ID " + deployment._id +
+                                                    " should now be updated, will sync ancillary data to files");
                                                 // Now sync the CSV data files with the ancillary data in the database
                                                 me.dataAccess.syncAncillaryDataFileWithDatabase(updatedDeployment, me.dataDir, function (err, result) {
                                                     if (err) {
@@ -423,7 +425,7 @@ function LogParser(dataAccess, dataDir, opts) {
                                                         if (callback)
                                                             callback(err);
                                                     } else {
-                                                        logger.debug("syncAncillaryDataFileWithDatabase callback called");
+                                                        logger.info("Files syncd, returning to callback");
                                                         if (callback)
                                                             callback(null);
                                                     }

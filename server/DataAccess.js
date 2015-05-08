@@ -2484,7 +2484,7 @@ function DataAccess(opts) {
                 while (me.ancillaryDataRecordsToBeInserted[deploymentID].length > 0) {
                     recordsToProcess.push(me.ancillaryDataRecordsToBeInserted[deploymentID].shift());
                 }
-                logger.debug("Will process " + recordsToProcess.length + " records off the stack leaving "
+                logger.info("Will process " + recordsToProcess.length + " records off the stack leaving "
                     + me.ancillaryDataRecordsToBeInserted[deploymentID].length + " still to process");
                 me.batchInsertAncillaryData(deploymentID, espName, recordsToProcess, function (err, numRecords) {
                     if (err) {
@@ -2498,7 +2498,7 @@ function DataAccess(opts) {
 
                 });
             } else {
-                logger.debug("Deployment with ID " + deploymentID + " had no more ancillary data to process");
+                logger.info("Deployment with ID " + deploymentID + " had no more ancillary data to process");
                 if (callback)
                     callback(null);
             }
@@ -2526,6 +2526,7 @@ function DataAccess(opts) {
                 if (callback)
                     callback(err);
             } else {
+                logger.info("Going to clean out any duplicate ancillary data records");
                 // Create the cleaning query and run it
                 client.query('DELETE FROM ancillary_data WHERE id IN (SELECT id FROM (SELECT id, row_number() over ' +
                     '(partition BY timestamp_utc, ancillary_source_id_fk, value ORDER BY id) AS ' +
@@ -2540,7 +2541,7 @@ function DataAccess(opts) {
                         if (callback)
                             callback(err);
                     } else {
-                        logger.debug("Duplicates cleaned: ", result);
+                        logger.info("Duplicates cleaned: ", result);
                         // Close the DB connection
                         done();
 
@@ -2760,7 +2761,6 @@ function DataAccess(opts) {
                     logger.error("Error on trying to get database client: ", err);
                     if (callback)
                         callback(err);
-                    return;
                 } else {
                     // OK, we have a good connection (client), let's run the query
                     client.query(querySourceInformation, function (err, result) {
@@ -2771,7 +2771,6 @@ function DataAccess(opts) {
                             logger.error(err);
                             if (callback)
                                 callback(err);
-                            return;
                         } else {
                             logger.debug('Query came back with ' + result.rows.length + ' source rows');
 
@@ -2837,10 +2836,10 @@ function DataAccess(opts) {
         // Grab a reference to this
         var self = this;
 
-        logger.debug('Will synchronize ancillary data from deployment ' +
+        logger.info('Will synchronize ancillary data from deployment ' +
             deployment.name + ' using base dir ' + basedir);
 
-        logger.debug("The current ancillary files being syncd are:", self.ancillaryFilesBeingSyncd);
+        logger.info("The current ancillary files being syncd are:", self.ancillaryFilesBeingSyncd);
 
         // First thing to do is make sure there is ancillary data listed under the deployment
         if (deployment.ancillaryData) {
@@ -2855,7 +2854,7 @@ function DataAccess(opts) {
                 // Loop over the data sources and pass of to function to retain scope
                 // of 'source'
                 for (var source in deployment.ancillaryData) {
-                    logger.debug('Working with source ' + source);
+                    logger.info('Working with source ' + source);
                     // Bump the counter
                     sourceCounter++;
 
@@ -2868,7 +2867,7 @@ function DataAccess(opts) {
                         // If there are no more sources being processed, send it
                         // back to the caller, otherwise, don't do anything
                         if (sourceCounter === 0) {
-                            logger.debug("No more sources to process, exiting");
+                            logger.info("No more sources to process, exiting");
 
                             // If there was an error, send it back
                             // TODO kgomes In reality, if I am here and there is no error
@@ -2899,12 +2898,12 @@ function DataAccess(opts) {
 
         // This is a function that processes each source from a deployment
         function processSource(deployment, source, callback) {
-            logger.debug('Processing source ', source);
+            logger.info('Processing source ', source);
 
             // Now build the CSV file for this source
             var filePath = path.join(basedir, 'instances', deployment.esp.name, 'deployments',
                 deployment.name, 'data', 'processed', source + '.csv');
-            logger.debug('File path is ', filePath);
+            logger.info('File path is ', filePath);
             // We first need to make sure the base directory is built
             var pathElements = filePath.split(path.sep);
             var growPath = '';
@@ -2917,7 +2916,7 @@ function DataAccess(opts) {
 
             // Check to see if it is being sync'd already
             if (self.ancillaryFilesBeingSyncd.indexOf(filePath) >= 0) {
-                logger.debug('File ' + filePath + ' is already being syncd so will ignore request');
+                logger.warn('File ' + filePath + ' is already being syncd so will ignore request');
                 if (callback)
                     callback(null);
             } else {
@@ -2927,7 +2926,7 @@ function DataAccess(opts) {
 
                 // Check to see if it exists
                 if (fs.existsSync(filePath)) {
-                    logger.debug('File already exists');
+                    logger.info('File already exists');
 
                     // Since the file exists, we need to grab the latest timestamp from the file so
                     // we only append the data that is new.
@@ -2945,8 +2944,8 @@ function DataAccess(opts) {
 
                     // Once the file is closed, query for more recent data and append to the file
                     rl.on('close', function () {
-                        logger.debug("Reading of file done");
-                        logger.debug("last epoch for file " + filePath + " is " + latestEpoch);
+                        logger.info("Reading of file done");
+                        logger.info("last epoch for file " + filePath + " is " + latestEpoch);
 
                         if (latestEpoch && lineCounter > 1) {
                             // Grab the source IDs
@@ -3013,7 +3012,7 @@ function DataAccess(opts) {
                         }
                     });
                 } else {
-                    logger.debug('File ' + filePath + ' does not exist, will create it and write header');
+                    logger.info('File ' + filePath + ' does not exist, will create it and write header');
                     // Write the header to the file first
                     writeHeader(deployment, source, filePath, function (err) {
                         // Check for an error
@@ -3180,6 +3179,7 @@ function DataAccess(opts) {
 
             // Open it and start writing
             sourceStream.once('open', function (fd) {
+                logger.info("Opening ancillary data file for writing");
                 // Check for the file handle
                 if (fd) {
                     // Let's run the query
@@ -3206,7 +3206,7 @@ function DataAccess(opts) {
                                     if (result && result.rows && result.rows.length > 0) {
                                         // Make sure there are rows to be written
                                         var numRows = result.rows.length;
-                                        logger.debug('Query came back with ' + numRows + ' rows');
+                                        logger.info('Will write ' + numRows + ' rows to the file');
 
                                         // The row counter
                                         var i = 0;
@@ -3236,7 +3236,7 @@ function DataAccess(opts) {
                                                 // drain and then start writing again
                                                 sourceStream.once('drain', writeResults);
                                             } else {
-                                                logger.debug("All done writing to file, will end the write stream");
+                                                logger.info("All done writing to file, will end the write stream");
                                                 sourceStream.end();
                                                 done();
                                             }
