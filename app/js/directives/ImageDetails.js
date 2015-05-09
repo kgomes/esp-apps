@@ -77,6 +77,11 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
 
     // Create sliders out of the two divs for brightness and contrast
     if (webGLSupported) {
+
+        // Make the sliders draggable on the iPad
+        brightnessSlider.slider().draggable();
+        contrastSlider.slider().draggable();
+
         if ($(window).width() < 768) {
             brightnessSlider.slider({
                 orientation: 'horizontal',

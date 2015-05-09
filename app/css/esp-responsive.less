@@ -1,3 +1,15 @@
+// Framework overrides
+// Bootstrap: This one makes the tabs in the details pane thinner
+.nav > li > a {
+  padding: 2px 15px;
+}
+
+// Font-awesome:
+.fa-download {
+  padding-bottom: 0px;
+  padding-top: 0px;
+}
+
 // For the html and body tags, use default unless the size is above an iPad portrait
 // then take up 100 % of the height of the screen
 html, body {
@@ -102,7 +114,7 @@ html, body {
 #graph {
   height: 400px;
   @media (min-width: 768px) {
-    height: calc(~'100% - 22px');
+    height: ~"calc(100% - 22px)";
   }
 }
 
@@ -144,7 +156,7 @@ html, body {
 }
 
 .tab-content {
-  height: calc(~'100% - 42px');
+  height: ~"calc(100% - 42px)";
   @media (min-width: 768px) {
   }
 }
@@ -153,6 +165,27 @@ html, body {
   height: 100%;
   div {
     height: 100%;
+  }
+}
+
+.fixed-header {
+  height: 100%;
+  margin-bottom: 0px;
+  overflow-y: hidden;
+  thead {
+    background-color: #d7d7d7;
+    display: block;
+    tr {
+      display: block;
+    }
+  }
+  tbody {
+    height: ~"calc(100% - 32px)";
+    display: block;
+    overflow-y: scroll;
+    tr {
+      display: block;
+    }
   }
 }
 
@@ -182,8 +215,25 @@ html, body {
 }
 
 .image-details-list {
-  overflow-y: scroll;
+  font-size: x-small;
+  overflow-x: hidden;
+  height: 100%;
   padding-right: 0px;
+}
+
+.image-table {
+  td:nth-child(1), th:nth-child(1) {
+    min-width: 100px;
+  }
+  td:nth-child(2), th:nth-child(2) {
+    min-width: 175px;
+  }
+  td:nth-child(3), th:nth-child(3) {
+    min-width: 60px;
+  }
+  td:nth-child(4), th:nth-child(4) {
+    min-width: 75px;
+  }
 }
 
 .image-details-image {
@@ -210,7 +260,7 @@ html, body {
 
 .row-image-details-image-adjust-box {
   margin: 0px;
-  height: calc(~'100% - 15px') !important;
+  height: ~"calc(100% - 15px)" !important;
 }
 
 .image-details-adjust-box-sliders {
@@ -227,14 +277,13 @@ html, body {
   height: 5px !important;
   @media (min-width: 768px) {
     width: 5px;
-    height: calc(~'50% - 25px') !important;
+    height: ~"calc(50% - 25px)" !important;
   }
 }
 
 .ui-slider .ui-slider-handle {
   width: 15px;
   height: 15px;
-  left: -.7;
 }
 
 .col-image-or-canvas {
@@ -291,7 +340,7 @@ html, body {
 }
 
 #pcr-details-graph {
-  height: calc(~'100% - 22px') !important;
+  height: ~"calc(100% - 22px)" !important;
   margin: 0px;
 }
 

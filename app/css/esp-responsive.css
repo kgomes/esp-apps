@@ -1,3 +1,10 @@
+.nav > li > a {
+  padding: 2px 15px;
+}
+.fa-download {
+  padding-bottom: 0px;
+  padding-top: 0px;
+}
 @media (min-width: 768px) {
   html,
   body {
@@ -140,6 +147,26 @@
 .tab-pane div {
   height: 100%;
 }
+.fixed-header {
+  height: 100%;
+  margin-bottom: 0px;
+  overflow-y: hidden;
+}
+.fixed-header thead {
+  background-color: #d7d7d7;
+  display: block;
+}
+.fixed-header thead tr {
+  display: block;
+}
+.fixed-header tbody {
+  height: calc(100% - 32px);
+  display: block;
+  overflow-y: scroll;
+}
+.fixed-header tbody tr {
+  display: block;
+}
 .protocol-details-table {
   overflow-y: scroll;
 }
@@ -168,8 +195,26 @@
   width: 100%;
 }
 .image-details-list {
-  overflow-y: scroll;
+  font-size: x-small;
+  overflow-x: hidden;
+  height: 100%;
   padding-right: 0px;
+}
+.image-table td:nth-child(1),
+.image-table th:nth-child(1) {
+  min-width: 100px;
+}
+.image-table td:nth-child(2),
+.image-table th:nth-child(2) {
+  min-width: 175px;
+}
+.image-table td:nth-child(3),
+.image-table th:nth-child(3) {
+  min-width: 60px;
+}
+.image-table td:nth-child(4),
+.image-table th:nth-child(4) {
+  min-width: 75px;
 }
 .image-details-image {
   padding: 0px;
@@ -215,7 +260,6 @@
 .ui-slider .ui-slider-handle {
   width: 15px;
   height: 15px;
-  left: -0.7;
 }
 .col-image-or-canvas {
   padding-left: 0px;
