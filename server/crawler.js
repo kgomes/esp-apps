@@ -10,7 +10,9 @@ var log4js = require('log4js');
 
 // Configure the logger to use a file appender
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/crawler.log'), 'crawler');
+
+// Set log directory
+log4js.addAppender(log4js.appenders.file(espCfg.logDir + '/crawler.log'), 'crawler');
 
 // Grab the logger
 var logger = log4js.getLogger('crawler');
@@ -22,16 +24,16 @@ if (espCfg.crawlerOptions.loggerLevel) {
 
 // Create the object that will be responsible for handling the
 // synchronization of files from FTP servers
-var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions, espCfg.dataDir);
+var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions, espCfg.dataDir, espCfg.logDir);
 
 // Create the object used to interface to the data stores
-var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions);
+var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions, espCfg.logDir);
 
 // Create a LogParser object
-var lp = require('./LogParser').createLogParser(da, espCfg.dataDir, espCfg.logParserOptions);
+var lp = require('./LogParser').createLogParser(da, espCfg.dataDir, espCfg.logParserOptions, espCfg.logDir);
 
 // Create an event handler
-require('./CrawlerEventHandler').createCrawlerEventHandler(dfs, lp, espCfg.dataDir, espCfg.eventHandlerOptions);
+require('./CrawlerEventHandler').createCrawlerEventHandler(dfs, lp, espCfg.dataDir, espCfg.eventHandlerOptions, espCfg.logDir);
 
 // Go ahead and call the first processing of deployments since we are in start
 try {

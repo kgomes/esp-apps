@@ -15,7 +15,6 @@ var eventEmitter = require('events').EventEmitter;
 // Configure logging for the DataStore
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/DataAccess.log'), 'DataAccess');
 
 // Grab the logger
 var logger = log4js.getLogger('DataAccess');
@@ -24,8 +23,11 @@ var logger = log4js.getLogger('DataAccess');
 util.inherits(DataAccess, eventEmitter);
 
 // The constructor function
-function DataAccess(opts) {
+function DataAccess(opts, logDir) {
     // TODO kgomes, verify all options are present in the incoming 'opts' object
+
+    // Set the log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/DataAccess.log'), 'DataAccess');
 
     // Set the logger level
     if (opts.loggerLevel) {
@@ -3265,6 +3267,6 @@ function DataAccess(opts) {
 }
 
 // Export the factory method
-exports.createDataAccess = function (opts) {
-    return new DataAccess(opts);
+exports.createDataAccess = function (opts, logDir) {
+    return new DataAccess(opts, logDir);
 }

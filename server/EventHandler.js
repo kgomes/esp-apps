@@ -4,19 +4,21 @@ var path = require('path');
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/EventHandler.log'), 'EventHandler');
 
 // Grab the logger
 var logger = log4js.getLogger('EventHandler');
 
 // The constructor
 //function EventHandler(io, deploymentFileSync, dataAccess, logParser, baseDir, opts) {
-function EventHandler(io, opts) {
+function EventHandler(io, opts, logDir) {
     logger.info("Creating EventHandler with logger level " + opts.loggerLevel);
     // Check for logging level
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
+
+    // And set the log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/EventHandler.log'), 'EventHandler');
 
     // Grab a handle to this object for scope management
     var me = this;
@@ -60,9 +62,9 @@ function EventHandler(io, opts) {
 }
 
 // Export the factory method
-exports.createEventHandler = function (io, opts) {
+exports.createEventHandler = function (io, opts, logDir) {
     // Create the new EventHandler
-    var newEventHandler = new EventHandler(io, opts);
+    var newEventHandler = new EventHandler(io, opts, logDir);
 
     // Now setup the event handlers for both
     newEventHandler.setupHandlers();

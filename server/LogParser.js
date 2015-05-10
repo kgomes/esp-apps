@@ -9,7 +9,6 @@ var eventEmitter = require('events').EventEmitter;
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/LogParser.log'), 'LogParser');
 
 // Grab the logger
 var logger = log4js.getLogger('LogParser');
@@ -18,13 +17,16 @@ var logger = log4js.getLogger('LogParser');
 util.inherits(LogParser, eventEmitter);
 
 // The constructor function
-function LogParser(dataAccess, dataDir, opts) {
+function LogParser(dataAccess, dataDir, opts, logDir) {
     // Set the log level if specified
     if (opts.loggerLevel) {
         this.logLevel = opts.loggerLevel;
         logger.setLevel(this.logLevel);
     }
     logger.info("Creating logParser with options: ", opts);
+
+    // And set the log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/LogParser.log'), 'LogParser');
 
     // Grab reference to instance
     var me = this;
@@ -1391,7 +1393,7 @@ function LogParser(dataAccess, dataDir, opts) {
 }
 
 // Export the factory method
-exports.createLogParser = function (dataAccess, dataDir, opts) {
+exports.createLogParser = function (dataAccess, dataDir, opts, logDir) {
     // Create the new LogParser
-    return new LogParser(dataAccess, dataDir, opts);
+    return new LogParser(dataAccess, dataDir, opts, logDir);
 }

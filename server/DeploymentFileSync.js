@@ -12,7 +12,6 @@ var JSFtp = require('jsftp');
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/DeploymentFileSync.log'), 'DeploymentFileSync');
 
 // Grab the logger
 var logger = log4js.getLogger('DeploymentFileSync');
@@ -21,7 +20,7 @@ var logger = log4js.getLogger('DeploymentFileSync');
 util.inherits(DeploymentFileSync, eventEmitter);
 
 // The constructor function
-function DeploymentFileSync(opts, basedir) {
+function DeploymentFileSync(opts, basedir, logDir) {
 
     // Grab a handle for scoping
     var me = this;
@@ -30,6 +29,9 @@ function DeploymentFileSync(opts, basedir) {
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
+
+    // Set the log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/DeploymentFileSync.log'), 'DeploymentFileSync');
 
     // A flag that indicates if a syncronization is underway
     var inProcess = false;
@@ -515,6 +517,6 @@ function DeploymentFileSync(opts, basedir) {
 }
 
 // Export the factory method
-exports.createDeploymentFileSync = function (opts, basedir) {
-    return new DeploymentFileSync(opts, basedir);
+exports.createDeploymentFileSync = function (opts, basedir, logDir) {
+    return new DeploymentFileSync(opts, basedir, logDir);
 }

@@ -1,18 +1,20 @@
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/UserRouter.log'), 'UserRouter');
 
 // Grab the logger
 var logger = log4js.getLogger('UserRouter');
 
 // The constructor function
-function UserRouter(dataAccess, opts) {
+function UserRouter(dataAccess, opts, logDir) {
     // If the options specify a logger level, set it
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
     logger.debug("Creating UserRouter");
+
+    // Set log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/UserRouter.log'), 'UserRouter');
 
     // Grab a handle to this instance for scoping
     var me = this;
@@ -76,7 +78,7 @@ function UserRouter(dataAccess, opts) {
 }
 
 // Export the factory method
-exports.createUserRouter = function (dataAccess, opts) {
+exports.createUserRouter = function (dataAccess, opts, logDir) {
     // Create the new UserRouter
-    return new UserRouter(dataAccess, opts);
+    return new UserRouter(dataAccess, opts, logDir);
 }

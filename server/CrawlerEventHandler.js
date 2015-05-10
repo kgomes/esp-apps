@@ -6,7 +6,6 @@ var Slack = require('node-slackr');
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/CrawlerEventHandler.log'), 'CrawlerEventHandler');
 
 // Grab the logger
 var logger = log4js.getLogger('CrawlerEventHandler');
@@ -18,7 +17,7 @@ var hostBaseUrl;
 var slack;
 
 // The constructor
-function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
+function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts, logDir) {
     logger.info("CrawlerEventHandler will use base directory located at " + baseDir);
     logger.info("Creating CrawlerEventHandler with logger level " + opts.loggerLevel);
 
@@ -26,6 +25,9 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
+
+    // And set the log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/CrawlerEventHandler.log'), 'CrawlerEventHandler');
 
     if (opts.hostBaseUrl) {
         this.hostBaseUrl = opts.hostBaseUrl;
@@ -276,9 +278,9 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts) {
 }
 
 // Export the factory method
-exports.createCrawlerEventHandler = function (ftpSync, dataAccess, logParser, baseDir, opts) {
+exports.createCrawlerEventHandler = function (ftpSync, dataAccess, logParser, baseDir, opts, logDir) {
     // Create the new EventHandler
-    var newEventHandler = new CrawlerEventHandler(ftpSync, dataAccess, logParser, baseDir, opts);
+    var newEventHandler = new CrawlerEventHandler(ftpSync, dataAccess, logParser, baseDir, opts, logDir);
 
     // Now setup the event handlers for both
     newEventHandler.setupHandlers();

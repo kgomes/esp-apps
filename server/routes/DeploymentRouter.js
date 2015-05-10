@@ -1,7 +1,6 @@
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/DeploymentRouter.log'), 'DeploymentRouter');
 
 // Grab the logger
 var logger = log4js.getLogger('DeploymentRouter');
@@ -10,12 +9,15 @@ var logger = log4js.getLogger('DeploymentRouter');
 var moment = require('moment');
 
 // The constructor function
-function DeploymentRouter(dataAccess, opts) {
+function DeploymentRouter(dataAccess, opts, logDir) {
     // If the options specify a logger level, set it
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
     logger.debug('Creating DeploymentRouter');
+
+    // Set log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/DeploymentRouter.log'), 'DeploymentRouter');
 
     // Grab a handle to this instance for scoping
     var me = this;
@@ -525,7 +527,7 @@ function DeploymentRouter(dataAccess, opts) {
 }
 
 // Export the factory method
-exports.createDeploymentRouter = function (dataAccess, opts) {
+exports.createDeploymentRouter = function (dataAccess, opts, logDir) {
     // Create the new DeploymentRouter
-    return new DeploymentRouter(dataAccess, opts);
+    return new DeploymentRouter(dataAccess, opts, logDir);
 }

@@ -9,17 +9,19 @@ var GoogleStrategy = require('passport-google').Strategy;
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/AppServer.log'), 'AppServer');
 
 // Grab the logger
 var logger = log4js.getLogger('AppServer');
 
 // The constructor function
-function AppServer(dataAccess, opts) {
+function AppServer(dataAccess, opts, logDir) {
     // Grab the logging level from the options
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
+
+    // And set log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/AppServer.log'), 'AppServer');
 
     // A reference to the instance for scoping
     var me = this;
@@ -34,18 +36,18 @@ function AppServer(dataAccess, opts) {
     this.dataAccess = dataAccess;
 
     // Create the UserRouter
-    this.userRouter = require('./routes/UserRouter').createUserRouter(dataAccess, opts.userRouterOptions);
+    this.userRouter = require('./routes/UserRouter').createUserRouter(dataAccess, opts.userRouterOptions, logDir);
 
     // Create the ESPRouter
-    this.espRouter = require('./routes/ESPRouter').createESPRouter(dataAccess, opts.espRouterOptions);
+    this.espRouter = require('./routes/ESPRouter').createESPRouter(dataAccess, opts.espRouterOptions, logDir);
 
     // Create the deployment router
     this.deploymentRouter =
-        require('./routes/DeploymentRouter').createDeploymentRouter(dataAccess, opts.deploymentRouterOptions);
+        require('./routes/DeploymentRouter').createDeploymentRouter(dataAccess, opts.deploymentRouterOptions, logDir);
 
     // Create the AncillaryData router
     this.ancillaryDataRouter =
-        require('./routes/AncillaryDataRouter').createAncillaryDataRouter(dataAccess, opts.ancillaryDataRouterOptions);
+        require('./routes/AncillaryDataRouter').createAncillaryDataRouter(dataAccess, opts.ancillaryDataRouterOptions, logDir);
 
     // Create the express server
     this.server = express.createServer();
@@ -261,7 +263,7 @@ function AppServer(dataAccess, opts) {
 }
 
 // The factory method for constructing the server
-exports.createAppServer = function (dataAccess, opts) {
+exports.createAppServer = function (dataAccess, opts, logDir) {
     // Create the new AppServer
-    return new AppServer(dataAccess, opts);
+    return new AppServer(dataAccess, opts, logDir);
 }

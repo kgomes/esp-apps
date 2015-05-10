@@ -7,6 +7,9 @@ module.exports = {
     // This is the location where the data for all the ESPs will be stored
     dataDir: 'Put the absolute path to where the files will be stored on local disk here',
 
+    // And logs
+    logDir: 'Put the base path where you want the log files to go (unix style, no ending slash)',
+
     // Options for the data crawling service
     crawlerOptions: {
         ftpSyncIntervalMillis: 60000,

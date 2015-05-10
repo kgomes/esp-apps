@@ -1,18 +1,20 @@
 // Configure logging
 var log4js = require('log4js');
 log4js.loadAppender('file');
-log4js.addAppender(log4js.appenders.file('./logs/ESPRouter.log'), 'ESPRouter');
 
 // Grab the logger
 var logger = log4js.getLogger('ESPRouter');
 
 // The constructor function
-function ESPRouter(dataAccess, opts) {
+function ESPRouter(dataAccess, opts, logDir) {
     // If the options specify a logger level, set it
     if (opts.loggerLevel) {
         logger.setLevel(opts.loggerLevel);
     }
     logger.debug("Creating ESPRouter");
+
+    // Set log directory
+    log4js.addAppender(log4js.appenders.file(logDir + '/ESPRouter.log'), 'ESPRouter');
 
     // Grab a handle to this instance for scoping
     var me = this;
@@ -46,7 +48,7 @@ function ESPRouter(dataAccess, opts) {
 }
 
 // Export the factory method
-exports.createESPRouter = function (dataAccess, opts) {
+exports.createESPRouter = function (dataAccess, opts, logDir) {
     // Create the new ESPRouter
-    return new ESPRouter(dataAccess, opts);
+    return new ESPRouter(dataAccess, opts, logDir);
 }
