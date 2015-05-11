@@ -6,30 +6,32 @@
  * This filter takes in an object that has sortable keys and then reverses the
  * order of those keys
  */
-espApp.filter('convertTSItemsToArray', function(){
-    return function(items, order){
-
-        // Grab the timestamps
-        var originalTimestamps = Object.keys(items);
-
-        // Check the order requested
-        if (order && order === 'desc'){
-            originalTimestamps.reverse();
-        }
+espApp.filter('convertTSItemsToArray', function () {
+    return function (items, order) {
 
         // Now create the array to return
         var arrayToReturn = [];
 
-        // Loop over timestamps and build the array of object to return
-        for (var i = 0; i < originalTimestamps.length; i++){
-            // Grab the item
-            var itemToPush = items[originalTimestamps[i]];
+        if (items) {
+            // Grab the timestamps
+            var originalTimestamps = Object.keys(items);
 
-            // Add the timestamp
-            itemToPush.timestamp = originalTimestamps[i];
+            // Check the order requested
+            if (order && order === 'desc') {
+                originalTimestamps.reverse();
+            }
 
-            // Add to the array
-            arrayToReturn.push(itemToPush);
+            // Loop over timestamps and build the array of object to return
+            for (var i = 0; i < originalTimestamps.length; i++) {
+                // Grab the item
+                var itemToPush = items[originalTimestamps[i]];
+
+                // Add the timestamp
+                itemToPush.timestamp = originalTimestamps[i];
+
+                // Add to the array
+                arrayToReturn.push(itemToPush);
+            }
         }
 
         // Return the array
@@ -46,7 +48,7 @@ espApp.filter('htmlIDConverter', function () {
     // The filter that will be returned
     var htmlIDConverter = function (input) {
         // Make sure there is an input
-        if (input){
+        if (input) {
             // Replace any characters not valid as part of an ID with underscore
             return input.replace(/[^A-Za-z-_0-9.]/g, "_")
         } else {

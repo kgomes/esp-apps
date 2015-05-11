@@ -160,7 +160,6 @@
   display: block;
 }
 .fixed-header tbody {
-  height: calc(100% - 32px);
   display: block;
   overflow-y: scroll;
 }
@@ -168,6 +167,7 @@
   display: block;
 }
 .protocol-details-table {
+  font-size: small;
   overflow-y: scroll;
 }
 @media (min-width: 768px) {
@@ -175,7 +175,27 @@
     padding-right: 2px;
   }
 }
+.protocol-table tbody {
+  height: calc(100% - 52px);
+}
+.protocol-table td:nth-child(1),
+.protocol-table th:nth-child(1) {
+  min-width: 200px;
+}
+.protocol-table td:nth-child(2),
+.protocol-table th:nth-child(2) {
+  min-width: 100px;
+}
+.protocol-table td:nth-child(3),
+.protocol-table th:nth-child(3) {
+  min-width: 75px;
+}
+.protocol-table td:nth-child(4),
+.protocol-table th:nth-child(4) {
+  min-width: 100px;
+}
 .sample-details-table {
+  font-size: small;
   overflow-y: scroll;
 }
 @media (min-width: 768px) {
@@ -183,7 +203,35 @@
     padding-right: 2px;
   }
 }
+.sample-table tbody {
+  height: calc(100% - 52px);
+}
+.sample-table td:nth-child(1),
+.sample-table th:nth-child(1) {
+  min-width: 200px;
+}
+.sample-table td:nth-child(2),
+.sample-table th:nth-child(2) {
+  min-width: 200px;
+}
+.sample-table td:nth-child(3),
+.sample-table th:nth-child(3) {
+  min-width: 100px;
+}
+.sample-table td:nth-child(4),
+.sample-table th:nth-child(4) {
+  min-width: 100px;
+}
+.sample-table td:nth-child(5),
+.sample-table th:nth-child(5) {
+  min-width: 100px;
+}
+.sample-table td:nth-child(6),
+.sample-table th:nth-child(6) {
+  min-width: 100px;
+}
 .error-details-table {
+  font-size: small;
   overflow-y: scroll;
 }
 @media (min-width: 768px) {
@@ -191,22 +239,48 @@
     padding-right: 2px;
   }
 }
+.error-table tbody {
+  height: calc(100% - 36px);
+}
+.error-table td:nth-child(1),
+.error-table th:nth-child(1) {
+  min-width: 100px;
+}
+.error-table td:nth-child(2),
+.error-table th:nth-child(2) {
+  min-width: 100px;
+}
+.error-table td:nth-child(3),
+.error-table th:nth-child(3) {
+  min-width: 75px;
+}
+.error-table td:nth-child(4),
+.error-table th:nth-child(4) {
+  min-width: 100px;
+}
+.error-table td:nth-child(5),
+.error-table th:nth-child(5) {
+  min-width: 200px;
+}
 .image-details-row {
   width: 100%;
 }
 .image-details-list {
-  font-size: x-small;
+  font-size: small;
   overflow-x: hidden;
   height: 100%;
   padding-right: 0px;
 }
+.image-table tbody {
+  height: calc(100% - 36px);
+}
 .image-table td:nth-child(1),
 .image-table th:nth-child(1) {
-  min-width: 100px;
+  min-width: 120px;
 }
 .image-table td:nth-child(2),
 .image-table th:nth-child(2) {
-  min-width: 175px;
+  min-width: 200px;
 }
 .image-table td:nth-child(3),
 .image-table th:nth-child(3) {

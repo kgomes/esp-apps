@@ -1,13 +1,13 @@
 <div class='error-details-table'>
-    <table class='table table-bordered'>
+    <table class='table table-bordered fixed-header error-table'>
         <thead>
         <tr>
             <th class="error-date-col">Date</th>
             <th class="error-time-col">Time</th>
             <th class="error-zone-col">Zone</th>
+            <th class="error-actor-col">Sent By</th>
             <th class="error-subject-col">Subject</th>
             <th class="error-message-col">Error Message</th>
-            <th class="error-actor-col">Sent By</th>
         </tr>
         </thead>
         <tbody>
@@ -15,9 +15,9 @@
             <td class="error-date-col">{{error.timestamp | date:'MM/dd/yyyy'}}</td>
             <td class="error-time-col">{{error.timestamp | date:'HH:mm:ss'}}</td>
             <td class="error-zone-col">{{error.timestamp | date:'Z'}}</td>
+            <td class="error-actor-col">{{error.actor}}</td>
             <td class="error-subject-col">{{error.subject}}</td>
             <td class="error-message-col">{{error.message}}</td>
-            <td class="error-actor-col">{{error.actor}}</td>
         </tr>
         </tbody>
     </table>
