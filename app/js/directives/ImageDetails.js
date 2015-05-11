@@ -120,10 +120,11 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
         }
     }
     // The function to handle the row selection
-    $scope.handleClick = function (timestamp) {
+    $scope.handleClick = function (image) {
 
         // Set the selected image to the one with that timestamp
-        $scope.selectedImage = $scope.images[timestamp];
+        //$scope.selectedImage = $scope.images[timestamp];
+        $scope.selectedImage = image;
 
         // Set the name of the image
         $scope.selectedImageName = $scope.selectedImage.imageFilename;

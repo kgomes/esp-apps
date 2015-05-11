@@ -3,6 +3,41 @@
  */
 
 /**
+ * This filter takes in an object that has sortable keys and then reverses the
+ * order of those keys
+ */
+espApp.filter('convertTSItemsToArray', function(){
+    return function(items, order){
+
+        // Grab the timestamps
+        var originalTimestamps = Object.keys(items);
+
+        // Check the order requested
+        if (order && order === 'desc'){
+            originalTimestamps.reverse();
+        }
+
+        // Now create the array to return
+        var arrayToReturn = [];
+
+        // Loop over timestamps and build the array of object to return
+        for (var i = 0; i < originalTimestamps.length; i++){
+            // Grab the item
+            var itemToPush = items[originalTimestamps[i]];
+
+            // Add the timestamp
+            itemToPush.timestamp = originalTimestamps[i];
+
+            // Add to the array
+            arrayToReturn.push(itemToPush);
+        }
+
+        // Return the array
+        return arrayToReturn;
+    }
+});
+
+/**
  * This filter removes any characters that cannot be used as an ID on an HTML element and replaces
  * it with an underscore
  */

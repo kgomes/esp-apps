@@ -10,8 +10,8 @@
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="(timestamp,image) in images" ng-click="handleClick(timestamp)">
-                <td>{{timestamp | date:'MM/dd/yyyy HH:mm'}}</td>
+            <tr ng-repeat="image in images | convertTSItemsToArray:'desc'" ng-click="handleClick(image)">
+                <td>{{image.timestamp | date:'MM/dd/yyyy HH:mm'}}</td>
                 <td>{{image.imageFilename}}</td>
                 <td>{{image.exposure}}</td>
                 <td>

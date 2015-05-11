@@ -11,10 +11,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="(timestamp,error) in errors">
-            <td class="error-date-col">{{timestamp | date:'MM/dd/yyyy'}}</td>
-            <td class="error-time-col">{{timestamp | date:'HH:mm:ss'}}</td>
-            <td class="error-zone-col">{{timestamp | date:'Z'}}</td>
+        <tr ng-repeat="error in errors|convertTSItemsToArray:'desc'">
+            <td class="error-date-col">{{error.timestamp | date:'MM/dd/yyyy'}}</td>
+            <td class="error-time-col">{{error.timestamp | date:'HH:mm:ss'}}</td>
+            <td class="error-zone-col">{{error.timestamp | date:'Z'}}</td>
             <td class="error-subject-col">{{error.subject}}</td>
             <td class="error-message-col">{{error.message}}</td>
             <td class="error-actor-col">{{error.actor}}</td>

@@ -9,8 +9,8 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="(timestamp,protocolRun) in protocolRuns">
-            <td class="protocol-run-date-col">{{timestamp | date:'MM/dd/yyyy HH:mm:ss Z'}}</td>
+        <tr ng-repeat="protocolRun in protocolRuns| convertTSItemsToArray:'desc'">
+            <td class="protocol-run-date-col">{{protocolRun.timestamp | date:'MM/dd/yyyy HH:mm:ss Z'}}</td>
             <td class="protocol-run-name-col">{{protocolRun.name}}</td>
             <td class="protocol-run-volume-col">{{protocolRun.targetVol}}</td>
             <td class="protocol-run-actor-col">{{protocolRun.actor}}</td>

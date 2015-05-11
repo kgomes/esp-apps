@@ -11,10 +11,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="(timestamp,sample) in samples">
-            <td class="sample-start-date-col">{{timestamp | date:'MM/dd/yyyy HH:mm:ss Z'}}</td>
+        <tr ng-repeat="sample in samples | convertTSItemsToArray:'desc'">
+            <td class="sample-start-date-col">{{sample.timestamp | date:'MM/dd/yyyy HH:mm:ss Z'}}</td>
             <td class="sample-end-date-col">{{sample.endts | date:'MM/dd/yyyy HH:mm:ss Z'}}</td>
-            <td class="sample-duration-col">{{((sample.endts - timestamp)/(1000*60)).toFixed(2)}}</td>
+            <td class="sample-duration-col">{{((sample.endts - sample.timestamp)/(1000*60)).toFixed(2)}}</td>
             <td class="sample-target-volume-col">{{sample.targetVolume}}</td>
             <td class="sample-actual-volume-col">{{sample.actualVolume}}</td>
             <td class="sample-volume-diff-col">{{(sample.targetVolume - sample.actualVolume).toFixed(2)}}</td>
