@@ -298,8 +298,8 @@ espApp.controller('GraphPanelController',
                                 x: new Date(parseInt(errorts)),
                                 title: "E",
                                 text: '<b>' +
-                                    errorObject[errorts].subject + '</b><br/ >' +
-                                    errorObject[errorts].message
+                                errorObject[errorts].subject + '</b><br/ >' +
+                                errorObject[errorts].message
                             });
                         }
                     );
@@ -347,11 +347,11 @@ espApp.controller('GraphPanelController',
                                     x: new Date(parseInt(imagets)),
                                     title: "I",
                                     text: "<b>" +
-                                        imagesObject[imagets].imageFilename +
-                                        "</b> (" +
-                                        imagesObject[imagets].xPixels + "x" +
-                                        imagesObject[imagets].yPixels + ", " +
-                                        imagesObject[imagets].exposure + "s)"
+                                    imagesObject[imagets].imageFilename +
+                                    "</b> (" +
+                                    imagesObject[imagets].xPixels + "x" +
+                                    imagesObject[imagets].yPixels + ", " +
+                                    imagesObject[imagets].exposure + "s)"
                                 });
                             }
                         );
@@ -467,7 +467,7 @@ espApp.controller('GraphPanelController',
                                         x: new Date(parseInt(sampleTS)),
                                         title: "S",
                                         text: "<b>" + deployment.esp.name + "-Start sample targeting " +
-                                            samplesObject[sampleTS].targetVolume + " ml</b>"
+                                        samplesObject[sampleTS].targetVolume + " ml</b>"
                                     });
 
                                     // Next, push a plot band if the sample has start and end times
@@ -535,8 +535,8 @@ espApp.controller('GraphPanelController',
                                 x: new Date(parseInt(pcrts)),
                                 title: "R",
                                 text: '<b>PCR: ' +
-                                    pcrsByTimeObject[pcrts].pcrType + '</b><br/ >' +
-                                    pcrsByTimeObject[pcrts].pcrRunName
+                                pcrsByTimeObject[pcrts].pcrType + '</b><br/ >' +
+                                pcrsByTimeObject[pcrts].pcrRunName
                             });
                         }
                     );
@@ -674,6 +674,16 @@ espApp.controller('GraphPanelController',
                             }
                         }
                     }
+
+                    // Now set the colors of the yAxis to match that of the series
+                    $scope.chart.series[$scope.chart.series.length - 1].yAxis.update({
+                        lineColor: $scope.chart.series[$scope.chart.series.length - 1].color,
+                        labels: {
+                            style: {
+                                color: $scope.chart.series[$scope.chart.series.length - 1].color
+                            }
+                        }
+                    });
 
                     // And now hide the loading banner
                     $scope.chart.hideLoading();

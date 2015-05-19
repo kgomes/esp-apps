@@ -28,7 +28,7 @@
     "html5shiv": "~3.7.2",
     "respond": "~1.4.2",
     "date.format": "~1.2.3",
-    "highstock-release": "1.3.10",
+    "highstock-release": "2.1.5",
     "angular-bootstrap": "0.6.0",
     "jquery-ui-touch-punch": "*"
   }
