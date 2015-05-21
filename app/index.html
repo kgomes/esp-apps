@@ -5,7 +5,7 @@
     <title>ESP Web Application</title>
 
     <!-- The favicon -->
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"/>
 
     <!-- Define the apple touch icon -->
     <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
@@ -110,7 +110,8 @@
                                                                                    href="/data/instances/{{deployment.esp.name}}/deployments/{{deployment.name}}/data/processed/{{key}}.csv"
                                                                                    class="btn btn-sm fa fa-download"></a>
                                         </div>
-                                        <div ng-repeat="(key2,value2) in deployment.ancillaryData[key]" class="checkbox">
+                                        <div ng-repeat="(key2,value2) in deployment.ancillaryData[key]"
+                                             class="checkbox">
                                             <label>
                                                 <input type="checkbox"
                                                        value="checkbox-{{deployment._id}}-ancdata-{{value2.sourceID}}"
@@ -137,6 +138,10 @@
                                     ng-click="changePlot('lines')"></button>
                             <button type="button" class="btn btn-default btn-xs fa fa-ellipsis-h"
                                     ng-click="changePlot('points')"></button>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default btn-xs fa fa-line-chart"
+                                    ng-click="alignYAxes()"></button>
                         </div>
                     </div>
                     <div id="graph"></div>

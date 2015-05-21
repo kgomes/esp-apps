@@ -15,6 +15,9 @@ espApp.controller('GraphPanelController',
             }
         });
 
+        // This is a flag to indicate if the user has chosen to align Y Axes scales
+        $scope.yAxisAlign = false;
+
         // This is a variable that specifies if new data series are to be lines or points
         $scope.lineWidth = 1;
 
@@ -259,7 +262,81 @@ espApp.controller('GraphPanelController',
                     }
                 }
             }
-        }
+        };
+
+        // The function to align y axis scales
+        $scope.alignYAxes = function () {
+            // First check to see if the Y Axes are already aligned
+            if ($scope.yAxisAlign) {
+                // Loop over the Y Axes and null out min and maxs to allow for auto scaling
+                if ($scope.chart.yAxis.length > 0) {
+                    for (var i = 0; i < $scope.chart.yAxis.length; i++) {
+                        if (i > 1) {
+                            $scope.chart.yAxis[i].setExtremes(null, null);
+                        }
+                    }
+                }
+
+                // Set the flag that the Y Axes are no longer aligned
+                $scope.yAxisAlign = false;
+            } else {
+
+                // Loop over all the Y Axes first
+                if ($scope.chart.yAxis.length > 0) {
+                    // Create variable to hold the min/max for normal axes
+                    var normalAxisMin;
+                    var normalAxisMax;
+
+                    // And for any reversed Axes
+                    var reversedAxisMin;
+                    var reversedAxisMax;
+
+                    // Loop over the Y Axes
+                    for (var i = 0; i < $scope.chart.yAxis.length; i++) {
+                        if (i > 1) {
+                            // Check to see if the axis is a inverted axis or not
+                            if ($scope.chart.yAxis[i].reversed) {
+                                // Now compare max values
+                                if (typeof(reversedAxisMax) === 'undefined' || reversedAxisMax < $scope.chart.yAxis[i].max) {
+                                    // Set the max
+                                    reversedAxisMax = $scope.chart.yAxis[i].max;
+                                }
+                                // And now min values
+                                if (typeof(reversedAxisMin) === 'undefined' || reversedAxisMin > $scope.chart.yAxis[i].min) {
+                                    // Set the min
+                                    reversedAxisMin = $scope.chart.yAxis[i].min;
+                                }
+                            } else {
+                                // Now compare max values
+                                if (typeof(normalAxisMax) === 'undefined' || $scope.chart.yAxis[i].max > normalAxisMax) {
+                                    // Set the max
+                                    normalAxisMax = $scope.chart.yAxis[i].max;
+                                }
+                                // And now min values
+                                if (typeof(normalAxisMin) === 'undefined' || $scope.chart.yAxis[i].min < normalAxisMin) {
+                                    // Set the min
+                                    normalAxisMin = $scope.chart.yAxis[i].min;
+                                }
+                            }
+                        }
+                    }
+
+                    // Now loop over and set all axes to the same min/max
+                    for (var i = 0; i < $scope.chart.yAxis.length; i++) {
+                        if (i > 1) {
+                            if ($scope.chart.yAxis[i].reversed){
+                                $scope.chart.yAxis[i].setExtremes(reversedAxisMin, reversedAxisMax);
+                            } else {
+                                $scope.chart.yAxis[i].setExtremes(normalAxisMin, normalAxisMax);
+                            }
+                        }
+                    }
+                }
+
+                // Set the flag that the axes are aligned
+                $scope.yAxisAlign = true;
+            }
+        };
 
         // -------------------------------------------------------------------------
         // Helper functions
