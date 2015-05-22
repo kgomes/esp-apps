@@ -16,10 +16,10 @@ espApp.controller("ErrorDetailsController", function ErrorDetailsController($sco
     // Grab the deployment ID from the parent Tab
     var deploymentID = $scope.$parent.tab.deploymentID;
 
-    $log.log("Going to create error table from deployment with ID " + deploymentID);
+    //$log.log("Going to create error table from deployment with ID " + deploymentID);
 
     deploymentData.getErrors(deploymentID, function (errors) {
-        $log.log("Errors returned:", errors);
+        //$log.log("Errors returned:", errors);
         if (errors) {
             $scope.errors = errors;
         }

@@ -87,7 +87,7 @@ espApp.controller('GraphPanelController',
                     events: {
                         click: function (e) {
                             // First thing is to make sure it is not a series with flags
-                            $log.log("target clicked", e);
+                            //$log.log("target clicked", e);
                             if (e.delegateTarget.options.type !== 'flags') {
                                 var invertY = false;
                                 if (e.delegateTarget.options.varLongName &&
@@ -109,7 +109,7 @@ espApp.controller('GraphPanelController',
 
         // A method to handle events where an object was selected by the user
         $scope.$on('objectSelected', function (event, messageObject) {
-                $log.log("Object was selected, graph should do something: ", messageObject);
+                //$log.log("Object was selected, graph should do something: ", messageObject);
 
                 // Grab the object key
                 var objkey = messageObject.objkey;
@@ -232,13 +232,13 @@ espApp.controller('GraphPanelController',
         $scope.$on('objectDeselected', function (event, messageObject) {
             // Grab the object key
             var objkey = messageObject.objkey;
-            $log.log("Graph panel got object with key " + objkey + " deselected");
+            //$log.log("Graph panel got object with key " + objkey + " deselected");
             removeSeriesByObjectKey(objkey);
         });
 
         // This is the function to change the style of the lines
         $scope.changePlot = function (style) {
-            $log.log("changePlot requested with " + style);
+            //$log.log("changePlot requested with " + style);
             // First thing is to change the default value so new charts are created with the
             // correct styling
             if (style === 'lines') {
@@ -443,8 +443,8 @@ espApp.controller('GraphPanelController',
                             width: 4,
                             events: {
                                 click: function (event) {
-                                    $log.log("Image flag clicked");
-                                    $log.log(event);
+                                    //$log.log("Image flag clicked");
+                                    //$log.log(event);
                                 }
                             }
                         };
@@ -502,8 +502,8 @@ espApp.controller('GraphPanelController',
                                 width: 4,
                                 events: {
                                     click: function (event) {
-                                        $log.log("ProtcolRun clicked");
-                                        $log.log(event);
+                                        //$log.log("ProtcolRun clicked");
+                                        //$log.log(event);
                                     }
                                 }
                             };
@@ -548,15 +548,15 @@ espApp.controller('GraphPanelController',
                                     });
 
                                     // Next, push a plot band if the sample has start and end times
-                                    $log.log(samplesObject[sampleTS]);
+                                    //$log.log(samplesObject[sampleTS]);
                                     if (samplesObject[sampleTS].endts) {
                                         var startDate = new Date(parseInt(sampleTS));
                                         var endDate = new Date(samplesObject[sampleTS].endts);
                                         var sampleID = objkey + '_' + sampleTS;
-                                        $log.log("Going to add plot band");
-                                        $log.log("from: ", startDate);
-                                        $log.log("to: ", endDate);
-                                        $log.log("SampleID: ", sampleID);
+                                        //$log.log("Going to add plot band");
+                                        //$log.log("from: ", startDate);
+                                        //$log.log("to: ", endDate);
+                                        //$log.log("SampleID: ", sampleID);
                                         $scope.chart.xAxis[0].addPlotBand({
                                             id: objkey,
                                             color: '#FCFFC5',
@@ -577,8 +577,8 @@ espApp.controller('GraphPanelController',
                                 width: 4,
                                 events: {
                                     click: function (event) {
-                                        $log.log("Sample clicked");
-                                        $log.log(event);
+                                        //$log.log("Sample clicked");
+                                        //$log.log(event);
                                     }
                                 }
                             };
@@ -777,7 +777,7 @@ espApp.controller('GraphPanelController',
 
                 // Find the series by ID
                 var seriesToRemove = $scope.chart.get(objkey);
-                $log.log("Series to remove: ", seriesToRemove);
+                //$log.log("Series to remove: ", seriesToRemove);
 
                 // Try to find the axis as well
                 var yAxisToRemove = null;
@@ -786,13 +786,13 @@ espApp.controller('GraphPanelController',
                         yAxisToRemove = $scope.chart.yAxis[i];
                     }
                 }
-                $log.log("yAxisToRemove: ", yAxisToRemove);
+                //$log.log("yAxisToRemove: ", yAxisToRemove);
 
                 // If the series was found, remove it
                 if (seriesToRemove) {
                     // Remove it
                     seriesToRemove.remove(true);
-                    $log.log("Series should be gone");
+                    //$log.log("Series should be gone");
 
                     // If this will be the last series to be removed, clear the
                     // navigator data
@@ -810,26 +810,26 @@ espApp.controller('GraphPanelController',
                         var navigatorSeries = $scope.chart.get('navigator');
                         if (navigatorSeries) {
                             navigatorSeries.setData($scope.chart.series[1].options.data);
-                            $log.log($scope.chart.series[1]);
+                            //$log.log($scope.chart.series[1]);
                             navigatorSeries.yAxis.setTitle({
                                 text: $scope.chart.series[1].options.varName
                             });
                         }
                     }
-                    $log.log("Navigator should be adjusted");
+                    //$log.log("Navigator should be adjusted");
                 }
 
                 // Now remove the axis if it was found
                 if (yAxisToRemove) {
                     yAxisToRemove.remove(true);
-                    $log.log("yAxis is gone");
+                    //$log.log("yAxis is gone");
                 }
 
                 // Also if the object key contains 'samples' remove the plot bands
                 if (objkey.indexOf('samples') >= 0) {
                     $scope.chart.xAxis[0].removePlotBand(objkey);
                 }
-                $log.log("Should be all done");
+                //$log.log("Should be all done");
 
                 // Turn off loading indicator
                 $scope.chart.hideLoading();

@@ -10,6 +10,8 @@ espApp.directive('imageDetails', function () {
 });
 
 espApp.controller("ImageDetailsController", function ImageDetailsController($scope, $log, deploymentData) {
+    //$log.log("DeploymentData: ", deploymentData);
+
     // Grab a reference to me
     var me = this;
 
@@ -28,99 +30,29 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
     // A flag to indicate if WebGL is supported or not (defaults to false)
     var webGLSupported = false;
 
-    // Grab the placeholder span
-    var placeholder = document.getElementById('selected-image-canvas');
-
     // Create the glfx canvas (WebGL)
     var imageCanvas = null;
 
     // The image element in case canvas is not supported
     var imageElement = null;
 
+    // The brightness slider
+    var brightnessSlider = null;
+
+    // The contrast slider
+    var contrastSlider = null;
+
     // This is the texture associated with the selected image (if WebGL available)
     var texture = null;
 
-    // Variables that will point to two sliders if they are available
-    var brightnessSlider = null;
-    var contrastSlider = null;
-
-    // Make sure we got the placeholder span tag first
-    if (placeholder) {
-        try {
-            imageCanvas = fx.canvas();
-            imageCanvas.style.width = '100%';
-            imageCanvas.replace(placeholder);
-            webGLSupported = true;
-
-            // Create sliders
-            brightnessSlider = angular.element('#selected-image-brightness-slider');
-            contrastSlider = angular.element('#selected-image-contrast-slider');
-
-        } catch (e) {
-            $log.log("Could not create HTML 5 canvas!!!");
-            // Hide the sliders
-            document.getElementById('image-details-adjust-box-sliders').style.display = 'none';
-            imageElement = document.createElement("img");
-            imageElement.setAttribute('id', '')
-            placeholder.appendChild(imageElement);
-        }
-    }
-
-    // The functions to handle brightness and contrast changes
-    var handleImageChanges = function (event, ui) {
-        if (imageCanvas && texture) {
-            imageCanvas.draw(texture)
-                .brightnessContrast(brightnessSlider.slider("value"),
-                contrastSlider.slider("value")).update();
-        }
-    };
-
-    // Create sliders out of the two divs for brightness and contrast
-    if (webGLSupported) {
-
-        // Make the sliders draggable on the iPad
-        brightnessSlider.slider().draggable();
-        contrastSlider.slider().draggable();
-
-        if ($(window).width() < 768) {
-            brightnessSlider.slider({
-                orientation: 'horizontal',
-                max: 1,
-                min: -1,
-                step: 0.01,
-                change: handleImageChanges,
-                slide: handleImageChanges
-            });
-            contrastSlider.slider({
-                orientation: 'horizontal',
-                max: 1,
-                min: -1,
-                step: 0.01,
-                change: handleImageChanges,
-                slide: handleImageChanges
-            });
-
-        } else {
-            brightnessSlider.slider({
-                orientation: 'vertical',
-                max: 1,
-                min: -1,
-                step: 0.01,
-                change: handleImageChanges,
-                slide: handleImageChanges
-            });
-            contrastSlider.slider({
-                orientation: 'vertical',
-                max: 1,
-                min: -1,
-                step: 0.01,
-                change: handleImageChanges,
-                slide: handleImageChanges
-            });
-        }
-    }
     // The function to handle the row selection
     $scope.handleClick = function (image) {
+
+        // First make sure we have the canvas or image elements configured
+        if (!imageCanvas && !imageElement){
+            // Call the method to configure the canvas
+            configureCanvas();
+        }
 
         // Set the selected image to the one with that timestamp
         //$scope.selectedImage = $scope.images[timestamp];
@@ -144,6 +76,88 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
             $scope.images = images;
         }
     });
+
+    // This function attempts to set up the Canvas if it has not already been configured
+    var configureCanvas = function () {
+        // Grab the placeholder span
+        var placeholder = document.getElementById($scope.deploymentID + '-selected-image-canvas');
+
+        // Make sure we got the placeholder span tag first
+        if (placeholder) {
+            try {
+                imageCanvas = fx.canvas();
+                imageCanvas.style.width = '100%';
+                imageCanvas.replace(placeholder);
+                webGLSupported = true;
+
+                // Create sliders
+                brightnessSlider = angular.element('#' + $scope.deploymentID + '-selected-image-brightness-slider');
+                contrastSlider = angular.element('#' + $scope.deploymentID + '-selected-image-contrast-slider');
+
+            } catch (e) {
+                //$log.log("Could not create HTML 5 canvas!!!", e);
+                // Hide the sliders
+                document.getElementById($scope.deploymentID + '-image-details-adjust-box-sliders').style.display = 'none';
+                imageElement = document.createElement("img");
+                imageElement.setAttribute('id', '')
+                placeholder.appendChild(imageElement);
+            }
+        }
+
+        // The functions to handle brightness and contrast changes
+        var handleImageChanges = function (event, ui) {
+            if (imageCanvas && texture) {
+                imageCanvas.draw(texture)
+                    .brightnessContrast(brightnessSlider.slider("value"),
+                    contrastSlider.slider("value")).update();
+            }
+        };
+
+        // Create sliders out of the two divs for brightness and contrast
+        if (webGLSupported) {
+
+            // Make the sliders draggable on the iPad
+            brightnessSlider.slider().draggable();
+            contrastSlider.slider().draggable();
+
+            if ($(window).width() < 768) {
+                brightnessSlider.slider({
+                    orientation: 'horizontal',
+                    max: 1,
+                    min: -1,
+                    step: 0.01,
+                    change: handleImageChanges,
+                    slide: handleImageChanges
+                });
+                contrastSlider.slider({
+                    orientation: 'horizontal',
+                    max: 1,
+                    min: -1,
+                    step: 0.01,
+                    change: handleImageChanges,
+                    slide: handleImageChanges
+                });
+
+            } else {
+                brightnessSlider.slider({
+                    orientation: 'vertical',
+                    max: 1,
+                    min: -1,
+                    step: 0.01,
+                    change: handleImageChanges,
+                    slide: handleImageChanges
+                });
+                contrastSlider.slider({
+                    orientation: 'vertical',
+                    max: 1,
+                    min: -1,
+                    step: 0.01,
+                    change: handleImageChanges,
+                    slide: handleImageChanges
+                });
+            }
+        }
+    };
 
     // This function configures the canvas using the image at the given URL
     var setImageByUrl = function (url) {

@@ -65,7 +65,7 @@ espApp.controller('SelectionController',
                 espAppCoordinator.broadcastMessage('objectSelected', messageObject);
             } else {
                 // Broadcast a de-selection
-                $log.log("Broadcasting de-selection");
+                //$log.log("Broadcasting de-selection");
                 espAppCoordinator.broadcastMessage('objectDeselected', messageObject);
             }
         }

@@ -33,7 +33,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getDeploymentErrors: function (deploymentID, successcb) {
             // Construct the URL to grab the errors
             var errorsUrl = "/deployments/" + deploymentID + "/errors";
-            $log.log("errorUrl: " + errorsUrl);
+            //$log.log("errorUrl: " + errorsUrl);
 
             // Make the call
             $http({method: 'GET', url: errorsUrl}).
@@ -49,7 +49,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getDeploymentImages: function (deploymentID, successcb) {
             // Construct the URL to grab the images
             var imagesUrl = "/deployments/" + deploymentID + "/images";
-            $log.log("imageUrl: " + imagesUrl);
+            //$log.log("imageUrl: " + imagesUrl);
 
             // Make the call
             $http({method: 'GET', url: imagesUrl}).
@@ -65,7 +65,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getProtocolRuns: function (deploymentID, successcb) {
             // Construct the URL to grab the protocolRuns
             var protocolRunsUrl = "/deployments/" + deploymentID + "/protocolRuns";
-            $log.log("protocolRunUrl: " + protocolRunsUrl);
+            //$log.log("protocolRunUrl: " + protocolRunsUrl);
 
             // Make the call
             $http({method: 'GET', url: protocolRunsUrl}).
@@ -81,7 +81,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getSamples: function (deploymentID, successcb) {
             // Construct the URL to grab the samples
             var samplesUrl = "/deployments/" + deploymentID + "/samples";
-            $log.log("samplesUrl: " + samplesUrl);
+            //$log.log("samplesUrl: " + samplesUrl);
 
             // Make the call
             $http({method: 'GET', url: samplesUrl}).
@@ -97,7 +97,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getErrors: function (deploymentID, successcb) {
             // Construct the URL to grab the samples
             var errorsUrl = "/deployments/" + deploymentID + "/errors";
-            $log.log("errorsUrl: " + errorsUrl);
+            //$log.log("errorsUrl: " + errorsUrl);
 
             // Make the call
             $http({method: 'GET', url: errorsUrl}).
@@ -113,7 +113,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getPCRsByTime: function (deploymentID, successcb) {
             // Construct the URL to grab the pcrs sorted by their timestamps
             var pcrsByTimeUrl = "/deployments/" + deploymentID + "/pcrs?byTime=true";
-            $log.log("pcrsByTimeUrl: " + pcrsByTimeUrl);
+            //$log.log("pcrsByTimeUrl: " + pcrsByTimeUrl);
 
             // Make the call
             $http({method: 'GET', url: pcrsByTimeUrl}).
@@ -130,7 +130,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getPCRFullTree: function (deploymentID, successcb) {
             // Construct the URL to grab the full tree PCR listing
             var pcrsFullTreeUrl = "/deployments/" + deploymentID + "/pcrs?fullTree=true";
-            $log.log("pcrsFullTreeUrl: " + pcrsFullTreeUrl);
+            //$log.log("pcrsFullTreeUrl: " + pcrsFullTreeUrl);
 
             // Make the call
             $http({method: 'GET', url: pcrsFullTreeUrl}).
@@ -147,7 +147,7 @@ espApp.factory('deploymentData', function ($http, $log) {
             // Construct the URL to grab the PCR data
             var pcrDataUrl = "/deployments/" + deploymentID + "/pcrs/" + encodeURIComponent(pcrType) + "/" +
                 encodeURIComponent(varName) + "/" + epochMillis + "/";
-            $log.log("pcrDataUrl: " + pcrDataUrl);
+            //$log.log("pcrDataUrl: " + pcrDataUrl);
 
             // Make the call
             $http({method: 'GET', url: pcrDataUrl}).
@@ -172,7 +172,7 @@ espApp.factory('deploymentData', function ($http, $log) {
             } else if (endDate) {
                 dataUrl += '?endDate=' + endDate;
             }
-            $log.log("dataUrl: " + dataUrl);
+            //$log.log("dataUrl: " + dataUrl);
 
             $http({method: 'GET', url: dataUrl}).
                 success(function (data, status, headers, config) {

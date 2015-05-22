@@ -23,7 +23,7 @@ espApp.controller('DetailPanelController',
 
         // The method to handle the selection of a details tab
         $scope.selectDetailsTab = function (index) {
-            console.log("Tab " + index + " selected");
+            //$log.log("Tab " + index + " selected");
             // Need to make the correct tab active
             for (var i = 0; i < $scope.detailTables.length; i++) {
                 if (i === index) {
@@ -58,7 +58,7 @@ espApp.controller('DetailPanelController',
 
 
                 // Grab the data from the server
-                console.log($scope.detailTables[parentIndex].rows[index][2].fileUrl);
+                //$log.log($scope.detailTables[parentIndex].rows[index][2].fileUrl);
                 $http.get($scope.detailTables[parentIndex].rows[index][2].fileUrl).success(function (data, status, headers, config) {
                     // OK, I have received the data, let's build the series
                     var dataRows = data.split('\n');
@@ -68,7 +68,7 @@ espApp.controller('DetailPanelController',
 
                     // Loop over the data rows to extract data into series
                     for (var i = 0; i < dataRows.length; i++) {
-                        console.log("Parsing Line: " + dataRows[i]);
+                        //$log.log("Parsing Line: " + dataRows[i]);
                         var startLineMatches = dataRows[i].match(startLinePattern);
                     }
 
@@ -111,7 +111,7 @@ espApp.controller('DetailPanelController',
             var inputType = objkeyParts[0];
             var deploymentID = objkeyParts[1];
             var property = objkeyParts[2];
-            $log.log("inputType,deploymentID,property:", inputType, deploymentID, property);
+            //$log.log("inputType,deploymentID,property:", inputType, deploymentID, property);
 
             // Depending on what was selected, add the proper component to the tabbed panel
             if (property === 'protocolRuns') {
@@ -159,7 +159,7 @@ espApp.controller('DetailPanelController',
 
         // This is the method that handles the event when the user de-selected something
         $scope.$on('objectDeselected', function (event, messageObject) {
-            $log.log("Event: ", event);
+            //$log.log("Event: ", event);
             // Grab the object key
             var objkey = messageObject.objkey;
 
@@ -182,7 +182,7 @@ espApp.controller('DetailPanelController',
 
         // This is a method that removes the de-selected object from the details panel
         var removeObject = function (objkey) {
-            $log.log("Going to remove tab with objkey " + objkey);
+            //$log.log("Going to remove tab with objkey " + objkey);
             // Loop over tabs and remove the one matching the object key
             var indexToRemove = -1;
             for (var i = 0; i < $scope.tabs.length; i++) {
