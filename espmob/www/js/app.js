@@ -1,7 +1,7 @@
 /*
  This is the app.js file for the ESP mobile application
  */
-angular.module('espmob', ['ionic'])
+angular.module('espmob', ['ionic','utils'])
     .config(function ($stateProvider, $urlRouterProvider) {
         $stateProvider.state('home', {
             url: '/home',
