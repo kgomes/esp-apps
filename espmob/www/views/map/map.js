@@ -1,5 +1,5 @@
 angular.module('espmob')
-    .controller('HomeController', function ($scope, $http, $ionicLoading, $localstorage) {
+    .controller('MapController', function ($scope, $http, $ionicLoading, $localstorage) {
 
         // Grab the users last center (in 3857 projection) and zoom
         var lastViewCenterX = $localstorage.get('last-view-center-x');
@@ -48,19 +48,6 @@ angular.module('espmob')
             map: map,
             features: []
         });
-
-        // Put up the loading sheet
-        $ionicLoading.show();
-
-        // Grab the list of deployments
-        $http.get('http://services.mbari.org/espweb/deployments?namesOnly=true')
-            .success(function (deploymentNames) {
-                $scope.deploymentNames = deploymentNames
-                $ionicLoading.hide();
-            }).error(function (error) {
-                console.log("Error", error);
-                $ionicLoading.hide();
-            });
 
         // Now grab the current deployments
         $http.get('http://services.mbari.org/espweb/deployments?openOnly=true').success(function (openDeployments) {

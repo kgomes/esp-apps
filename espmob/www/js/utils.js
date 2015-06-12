@@ -1,7 +1,6 @@
 /*
 This file contains some angular utilities that make things easier in the ESP mobile application
  */
-
 angular.module('utils', [])
 
     .factory('$localstorage', ['$window', function ($window) {
