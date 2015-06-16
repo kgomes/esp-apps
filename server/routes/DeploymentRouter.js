@@ -231,9 +231,15 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                         // second set of columns
                                         newline[11] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
                                         newline[12] = sampJulianStartDate;
-                                        newline[13] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                        newline[14] = sampJulianEndDate;
-                                        newline[15] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        if (sampEndDate) {
+                                            newline[13] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                            newline[14] = sampJulianEndDate;
+                                            newline[15] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        } else {
+                                            newline[13] = '';
+                                            newline[14] = '';
+                                            newline[15] = '';
+                                        }
                                         if (sample.targetVolume) {
                                             newline[16] = sample.targetVolume;
                                         } else {
@@ -253,13 +259,14 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                         // This means it is not a linked archive and should go in the first column
                                         newline[3] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
                                         newline[4] = sampJulianStartDate;
-                                        newline[5] = '';
-                                        newline[6] = '';
-                                        newline[7] = '';
                                         if (sampEndDate) {
                                             newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z')
                                             newline[6] = sampJulianEndDate;
                                             newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        } else {
+                                            newline[5] = '';
+                                            newline[6] = '';
+                                            newline[7] = '';
                                         }
                                         if (sample.targetVolume) {
                                             newline[8] = sample.targetVolume;
