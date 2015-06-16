@@ -253,9 +253,14 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                         // This means it is not a linked archive and should go in the first column
                                         newline[3] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
                                         newline[4] = sampJulianStartDate;
-                                        newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                        newline[6] = sampJulianEndDate;
-                                        newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        newline[5] = '';
+                                        newline[6] = '';
+                                        newline[7] = '';
+                                        if (sampEndDate) {
+                                            newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z')
+                                            newline[6] = sampJulianEndDate;
+                                            newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        }
                                         if (sample.targetVolume) {
                                             newline[8] = sample.targetVolume;
                                         } else {
