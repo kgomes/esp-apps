@@ -108,197 +108,201 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                     if (returnSummary) {
                         logger.debug("Will provide summary for deployment with ID " + req.params.id);
 
-                        // Construct the array to be returned
-                        var arrayToReturn = [
-                            ["Protocol", "Start Date", "Start Date (Julian)",
-                                "Sample Start Date", "Sample Start Date (Julian)",
-                                "Sample End Date", "Sample End Date (Julian)", "Time To Sample (hh:mm:ss)",
-                                "Target Volume (ml)", "Actual Volume (ml)", "Difference (ml)",
-                                "WCR Sample Start Date", "WCR Sample Start Date (Julian)",
-                                "WCR Sample End Date", "WCR Sample End Date (Julian)",
-                                "WCR Time To Sample (hh:mm:ss)", "WCR Target Volume (ml)",
-                                "WCR Actual Volume (ml)", "WCR Difference (ml)"
-                            ]
-                        ];
-                        // First thing to do is combine all the timestamps for the protocols, samples and images
-                        var timestamps = Object.keys(response.samples);
-                        timestamps = timestamps.concat(Object.keys(response.protocolRuns), Object.keys(response.images));
+                        try {
+                            // Construct the array to be returned
+                            var arrayToReturn = [
+                                ["Protocol", "Start Date", "Start Date (Julian)",
+                                    "Sample Start Date", "Sample Start Date (Julian)",
+                                    "Sample End Date", "Sample End Date (Julian)", "Time To Sample (hh:mm:ss)",
+                                    "Target Volume (ml)", "Actual Volume (ml)", "Difference (ml)",
+                                    "WCR Sample Start Date", "WCR Sample Start Date (Julian)",
+                                    "WCR Sample End Date", "WCR Sample End Date (Julian)",
+                                    "WCR Time To Sample (hh:mm:ss)", "WCR Target Volume (ml)",
+                                    "WCR Actual Volume (ml)", "WCR Difference (ml)"
+                                ]
+                            ];
+                            // First thing to do is combine all the timestamps for the protocols, samples and images
+                            var timestamps = Object.keys(response.samples);
+                            timestamps = timestamps.concat(Object.keys(response.protocolRuns), Object.keys(response.images));
 
-                        // Now sort them
-                        timestamps.sort();
+                            // Now sort them
+                            timestamps.sort();
 
-                        // Create a line that will be filled in with info from the response
-                        var newline = [];
+                            // Create a line that will be filled in with info from the response
+                            var newline = [];
 
-                        // A counter to keep track of the number of images
-                        var numImages = 0;
+                            // A counter to keep track of the number of images
+                            var numImages = 0;
 
-                        // A placeholder to hang on to the most recent
-                        var mostRecentProtocolRun = null;
+                            // A placeholder to hang on to the most recent
+                            var mostRecentProtocolRun = null;
 
-                        // Now loop over those timestamps
-                        logger.debug("Will loop over timestamps ...");
-                        for (var i = 0; i < timestamps.length; i++) {
-                            var currentTimestamp = timestamps[i];
-                            // Try to grab any protocol run, sample or image at that timestamp
-                            var protocolRun = response.protocolRuns[currentTimestamp];
-                            var sample = response.samples[currentTimestamp];
-                            var image = response.images[currentTimestamp];
+                            // Now loop over those timestamps
+                            logger.debug("Will loop over timestamps ...");
+                            for (var i = 0; i < timestamps.length; i++) {
+                                var currentTimestamp = timestamps[i];
+                                // Try to grab any protocol run, sample or image at that timestamp
+                                var protocolRun = response.protocolRuns[currentTimestamp];
+                                var sample = response.samples[currentTimestamp];
+                                var image = response.images[currentTimestamp];
 
-                            // Check to see if there is a protocol run
-                            if (protocolRun) {
-                                logger.debug("Entry at timestamp " + currentTimestamp + " is a protocolRun");
-                                // Set it as the most recent protocol run
-                                mostRecentProtocolRun = protocolRun;
+                                // Check to see if there is a protocol run
+                                if (protocolRun) {
+                                    logger.debug("Entry at timestamp " + currentTimestamp + " is a protocolRun");
+                                    // Set it as the most recent protocol run
+                                    mostRecentProtocolRun = protocolRun;
 
-                                // If there is data from the previous protocol run, push that onto the response array
-                                if (newline.length > 0) {
-                                    arrayToReturn.push(newline);
-                                }
-
-                                // Create a date from the unix seconds
-                                var prStartDate = moment.unix(currentTimestamp / 1000);
-
-                                // Calculate Julian date
-                                var prJulianDate = (parseInt(prStartDate.format('DDD')) + (((prStartDate.hours() * 60 * 60) +
-                                    (prStartDate.minutes() * 60) + (prStartDate.seconds())) / 86400)).toFixed(2);
-
-                                // Now start a new line with the protocol name and start time and date
-                                newline = [protocolRun.name, prStartDate.format('YYYY-MM-DD HH:mm:ss Z'),
-                                    prJulianDate];
-
-                                // Clear the image counter
-                                numImages = 0;
-                            }
-
-                            // If it's a sample
-                            if (sample) {
-                                logger.debug("Entry at timestamp " + currentTimestamp + " is a sample");
-                                // Create a sample start date from the unix seconds
-                                var sampStartDate = moment.unix(currentTimestamp / 1000);
-
-                                // Calculate Julian date
-                                var sampJulianStartDate = (parseInt(sampStartDate.format('DDD')) + (((sampStartDate.hours() * 60 * 60) +
-                                    (sampStartDate.minutes() * 60) + (sampStartDate.seconds())) / 86400)).toFixed(2);
-
-                                // Calculate end date if there is one and the sample duration
-                                var sampEndDate = null;
-                                var sampJulianEndDate = null;
-                                var sampDuration = null;
-                                if (sample.endts) {
-                                    sampEndDate = moment.unix(sample.endts / 1000);
-
-                                    // Calculate Julian date
-                                    sampJulianEndDate = (parseInt(sampEndDate.format('DDD')) + (((sampEndDate.hours() * 60 * 60) +
-                                        (sampEndDate.minutes() * 60) + (sampEndDate.seconds())) / 86400)).toFixed(2);
-                                    sampDuration = moment.duration(sample.endts - currentTimestamp);
-                                }
-
-                                // Now, we need to check and see if it is a DWSM sample
-                                if (sample.dwsm) {
-                                    // We should clear the most recent protocol run so that the next set of
-                                    // samples does not get tacked on to any particular protocol run
-                                    mostRecentProtocolRun = null;
-                                }
-
-                                // Now check to see if there is a most recent protocol run.  If there is not, we
-                                // should start a new row to indicate this is a sample outside of any particular
-                                // protocol run.
-                                if (mostRecentProtocolRun === null) {
-                                    // If there is data from the previous line, push that onto the response array
+                                    // If there is data from the previous protocol run, push that onto the response array
                                     if (newline.length > 0) {
                                         arrayToReturn.push(newline);
                                     }
 
-                                    // If this is a DWSM, write that as the protocol, otherwise, just put
-                                    // other sample
+                                    // Create a date from the unix seconds
+                                    var prStartDate = moment.unix(currentTimestamp / 1000);
+
+                                    // Calculate Julian date
+                                    var prJulianDate = (parseInt(prStartDate.format('DDD')) + (((prStartDate.hours() * 60 * 60) +
+                                    (prStartDate.minutes() * 60) + (prStartDate.seconds())) / 86400)).toFixed(2);
+
+                                    // Now start a new line with the protocol name and start time and date
+                                    newline = [protocolRun.name, prStartDate.format('YYYY-MM-DD HH:mm:ss Z'),
+                                        prJulianDate];
+
+                                    // Clear the image counter
+                                    numImages = 0;
+                                }
+
+                                // If it's a sample
+                                if (sample) {
+                                    logger.debug("Entry at timestamp " + currentTimestamp + " is a sample");
+                                    // Create a sample start date from the unix seconds
+                                    var sampStartDate = moment.unix(currentTimestamp / 1000);
+
+                                    // Calculate Julian date
+                                    var sampJulianStartDate = (parseInt(sampStartDate.format('DDD')) + (((sampStartDate.hours() * 60 * 60) +
+                                    (sampStartDate.minutes() * 60) + (sampStartDate.seconds())) / 86400)).toFixed(2);
+
+                                    // Calculate end date if there is one and the sample duration
+                                    var sampEndDate = null;
+                                    var sampJulianEndDate = null;
+                                    var sampDuration = null;
+                                    if (sample.endts) {
+                                        sampEndDate = moment.unix(sample.endts / 1000);
+
+                                        // Calculate Julian date
+                                        sampJulianEndDate = (parseInt(sampEndDate.format('DDD')) + (((sampEndDate.hours() * 60 * 60) +
+                                        (sampEndDate.minutes() * 60) + (sampEndDate.seconds())) / 86400)).toFixed(2);
+                                        sampDuration = moment.duration(sample.endts - currentTimestamp);
+                                    }
+
+                                    // Now, we need to check and see if it is a DWSM sample
                                     if (sample.dwsm) {
-                                        newline = ['Sample-DWSM', '', ''];
-                                        // Clear the image counter
-                                        numImages = 0;
+                                        // We should clear the most recent protocol run so that the next set of
+                                        // samples does not get tacked on to any particular protocol run
+                                        mostRecentProtocolRun = null;
+                                    }
+
+                                    // Now check to see if there is a most recent protocol run.  If there is not, we
+                                    // should start a new row to indicate this is a sample outside of any particular
+                                    // protocol run.
+                                    if (mostRecentProtocolRun === null) {
+                                        // If there is data from the previous line, push that onto the response array
+                                        if (newline.length > 0) {
+                                            arrayToReturn.push(newline);
+                                        }
+
+                                        // If this is a DWSM, write that as the protocol, otherwise, just put
+                                        // other sample
+                                        if (sample.dwsm) {
+                                            newline = ['Sample-DWSM', '', ''];
+                                            // Clear the image counter
+                                            numImages = 0;
+                                        } else {
+                                            newline = ['Sample-Other', '', ''];
+                                            // Clear the image counter
+                                            numImages = 0;
+                                        }
+                                    }
+
+                                    // Now we just need to figure out if this is the first sample, or a linked archive
+                                    // sample
+                                    if (mostRecentProtocolRun && mostRecentProtocolRun.archive && sample.actor === 'WCR') {
+                                        // This is the combination that means it is a linked archive and should to in the
+                                        // second set of columns
+                                        newline[11] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                        newline[12] = sampJulianStartDate;
+                                        newline[13] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                        newline[14] = sampJulianEndDate;
+                                        newline[15] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        if (sample.targetVolume) {
+                                            newline[16] = sample.targetVolume;
+                                        } else {
+                                            newline[16] = '';
+                                        }
+                                        if (sample.actualVolume) {
+                                            newline[17] = sample.actualVolume;
+                                        } else {
+                                            newline[17] = '';
+                                        }
+                                        if (sample.targetVolume && sample.actualVolume) {
+                                            newline[18] = sample.targetVolume - sample.actualVolume;
+                                        } else {
+                                            newline[18] = '';
+                                        }
                                     } else {
-                                        newline = ['Sample-Other', '', ''];
-                                        // Clear the image counter
-                                        numImages = 0;
+                                        // This means it is not a linked archive and should go in the first column
+                                        newline[3] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                        newline[4] = sampJulianStartDate;
+                                        newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
+                                        newline[6] = sampJulianEndDate;
+                                        newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
+                                        if (sample.targetVolume) {
+                                            newline[8] = sample.targetVolume;
+                                        } else {
+                                            newline[8] = '';
+                                        }
+                                        if (sample.actualVolume) {
+                                            newline[9] = sample.actualVolume;
+                                        } else {
+                                            newline[9] = '';
+                                        }
+                                        if (sample.targetVolume && sample.actualVolume) {
+                                            newline[10] = sample.targetVolume - sample.actualVolume;
+                                        } else {
+                                            newline[10] = '';
+                                        }
                                     }
                                 }
+                                // Now check for an image
+                                if (image) {
+                                    logger.debug("Entry at timestamp " + currentTimestamp + " is an image");
+                                    // Bump the image counter
+                                    numImages++;
 
-                                // Now we just need to figure out if this is the first sample, or a linked archive
-                                // sample
-                                if (mostRecentProtocolRun && mostRecentProtocolRun.archive && sample.actor === 'WCR') {
-                                    // This is the combination that means it is a linked archive and should to in the
-                                    // second set of columns
-                                    newline[11] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                    newline[12] = sampJulianStartDate;
-                                    newline[13] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                    newline[14] = sampJulianEndDate;
-                                    newline[15] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
-                                    if (sample.targetVolume) {
-                                        newline[16] = sample.targetVolume;
-                                    } else {
-                                        newline[16] = '';
-                                    }
-                                    if (sample.actualVolume) {
-                                        newline[17] = sample.actualVolume;
-                                    } else {
-                                        newline[17] = '';
-                                    }
-                                    if (sample.targetVolume && sample.actualVolume) {
-                                        newline[18] = sample.targetVolume - sample.actualVolume;
-                                    } else {
-                                        newline[18] = '';
-                                    }
-                                } else {
-                                    // This means it is not a linked archive and should go in the first column
-                                    newline[3] = sampStartDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                    newline[4] = sampJulianStartDate;
-                                    newline[5] = sampEndDate.format('YYYY-MM-DD HH:mm:ss Z');
-                                    newline[6] = sampJulianEndDate;
-                                    newline[7] = sampDuration.hours() + ":" + sampDuration.minutes() + ":" + sampDuration.seconds();
-                                    if (sample.targetVolume) {
-                                        newline[8] = sample.targetVolume;
-                                    } else {
-                                        newline[8] = '';
-                                    }
-                                    if (sample.actualVolume) {
-                                        newline[9] = sample.actualVolume;
-                                    } else {
-                                        newline[9] = '';
-                                    }
-                                    if (sample.targetVolume && sample.actualVolume) {
-                                        newline[10] = sample.targetVolume - sample.actualVolume;
-                                    } else {
-                                        newline[10] = '';
-                                    }
+                                    // Make sure the image header is there
+                                    arrayToReturn[0][18 + numImages + numImages - 1] = "Image " + numImages + " Filename";
+                                    arrayToReturn[0][19 + numImages + numImages - 1] = "Image " + numImages + " Exposure";
+
+                                    // Add the image file name and exposure
+                                    newline[18 + numImages + numImages - 1] = image.fullImagePath;
+                                    newline[19 + numImages + numImages - 1] = image.exposure;
                                 }
                             }
-                            // Now check for an image
-                            if (image) {
-                                logger.debug("Entry at timestamp " + currentTimestamp + " is an image");
-                                // Bump the image counter
-                                numImages++;
 
-                                // Make sure the image header is there
-                                arrayToReturn[0][18 + numImages + numImages - 1] = "Image " + numImages + " Filename";
-                                arrayToReturn[0][19 + numImages + numImages - 1] = "Image " + numImages + " Exposure";
+                            logger.debug("Done with protocol runs ...");
 
-                                // Add the image file name and exposure
-                                newline[18 + numImages + numImages - 1] = image.fullImagePath;
-                                newline[19 + numImages + numImages - 1] = image.exposure;
-                            }
+                            // Push the last record on to the results as the loop won't do it.
+                            if (newline.length > 0) arrayToReturn.push(newline);
+
+                            // Set the name of the file to download
+                            res.setHeader('Content-disposition', 'inline; filename=' +
+                                response.esp.name.replace(/\s+/g, '_') + '_' + response.name.replace(/\s+/g, '_') + '.csv');
+
+                            // Now send the CSV data
+                            res.csv(arrayToReturn);
+                        } catch (ex) {
+                            res.csv([]);
                         }
-
-                        logger.debug("Done with protocol runs ...");
-
-                        // Push the last record on to the results as the loop won't do it.
-                        if (newline.length > 0) arrayToReturn.push(newline);
-
-                        // Set the name of the file to download
-                        res.setHeader('Content-disposition', 'inline; filename=' +
-                            response.esp.name.replace(/\s+/g,'_') + '_' + response.name.replace(/\s+/g,'_') + '.csv');
-
-                        // Now send the CSV data
-                        res.csv(arrayToReturn);
                     } else {
                         // Set the content type to JSON
                         res.contentType('application/json');
