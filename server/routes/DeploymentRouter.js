@@ -175,17 +175,20 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                 // If it's a sample
                                 if (sample) {
                                     logger.debug("Entry at timestamp " + currentTimestamp + " is a sample");
+                                    logger.debug(sample);
                                     // Create a sample start date from the unix seconds
                                     var sampStartDate = moment.unix(currentTimestamp / 1000);
+                                    logger.debug("sampStartDate = " + sampStartDate);
 
                                     // Calculate Julian date
                                     var sampJulianStartDate = (parseInt(sampStartDate.format('DDD')) + (((sampStartDate.hours() * 60 * 60) +
                                     (sampStartDate.minutes() * 60) + (sampStartDate.seconds())) / 86400)).toFixed(2);
+                                    logger.debug("sampJulianStartDate = " + sampJulianStartDate);
 
                                     // Calculate end date if there is one and the sample duration
-                                    var sampEndDate = null;
-                                    var sampJulianEndDate = null;
-                                    var sampDuration = null;
+                                    var sampEndDate;
+                                    var sampJulianEndDate;
+                                    var sampDuration;
                                     if (sample.endts) {
                                         sampEndDate = moment.unix(sample.endts / 1000);
 
@@ -194,6 +197,9 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                         (sampEndDate.minutes() * 60) + (sampEndDate.seconds())) / 86400)).toFixed(2);
                                         sampDuration = moment.duration(sample.endts - currentTimestamp);
                                     }
+                                    logger.debug("sampEndDate = " + sampEndDate);
+                                    logger.debug("sampJulianEndDate = " + sampJulianEndDate);
+                                    logger.debug("sampDuration = " + sampDuration);
 
                                     // Now, we need to check and see if it is a DWSM sample
                                     if (sample.dwsm) {
@@ -284,6 +290,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                             newline[10] = '';
                                         }
                                     }
+                                    logger.debug("New line:",newline);
                                 }
                                 // Now check for an image
                                 if (image) {
