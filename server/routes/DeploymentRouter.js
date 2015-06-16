@@ -102,9 +102,12 @@ function DeploymentRouter(dataAccess, opts, logDir) {
             me.dataAccess.getDeploymentByID(req.params.id, returnFull, function (err, response) {
                 if (err) {
                     // TODO kgomes: handle this error
+                    logger.error("Error trying to look up deployment with ID " + req.params.id);
                 } else {
                     // See if the summary is to be returned
                     if (returnSummary) {
+                        logger.debug("Will provide summary for deployment with ID " + req.params.id);
+
                         // Construct the array to be returned
                         var arrayToReturn = [
                             ["Protocol", "Start Date", "Start Date (Julian)",
@@ -134,6 +137,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                         var mostRecentProtocolRun = null;
 
                         // Now loop over those timestamps
+                        logger.debug("Will loop over timestamps ...");
                         for (var i = 0; i < timestamps.length; i++) {
                             var currentTimestamp = timestamps[i];
                             // Try to grab any protocol run, sample or image at that timestamp
@@ -143,6 +147,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
 
                             // Check to see if there is a protocol run
                             if (protocolRun) {
+                                logger.debug("Entry at timestamp " + currentTimestamp + " is a protocolRun");
                                 // Set it as the most recent protocol run
                                 mostRecentProtocolRun = protocolRun;
 
@@ -168,6 +173,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
 
                             // If it's a sample
                             if (sample) {
+                                logger.debug("Entry at timestamp " + currentTimestamp + " is a sample");
                                 // Create a sample start date from the unix seconds
                                 var sampStartDate = moment.unix(currentTimestamp / 1000);
 
@@ -268,6 +274,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                             }
                             // Now check for an image
                             if (image) {
+                                logger.debug("Entry at timestamp " + currentTimestamp + " is an image");
                                 // Bump the image counter
                                 numImages++;
 
@@ -280,6 +287,8 @@ function DeploymentRouter(dataAccess, opts, logDir) {
                                 newline[19 + numImages + numImages - 1] = image.exposure;
                             }
                         }
+
+                        logger.debug("Done with protocol runs ...");
 
                         // Push the last record on to the results as the loop won't do it.
                         if (newline.length > 0) arrayToReturn.push(newline);
