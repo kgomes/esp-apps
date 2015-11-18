@@ -5,3 +5,4 @@ app/lib
 espmob/www/lib
 .DS_Store
 server/config.js
+.idea/workspace.xml
