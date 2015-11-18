@@ -3,3 +3,5 @@ esp_cfg.json
 data
 app/lib
 espmob/www/lib
+.DS_Store
+server/config.js
