@@ -465,7 +465,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
                                 timezoneOffset = tempTimezoneOffset;
                             }
                             var tempTimezoneOffsetHours = searchForTimezoneOffsetHours(completeLineBuffer);
-                            if (tempTimezoneOffsetHours) {
+                            if (tempTimezoneOffsetHours !== null) {
                                 timezoneOffsetHours = tempTimezoneOffsetHours;
                             }
 
@@ -475,6 +475,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
                             // If a timestamp was returned, update the last known timestamp
                             if (tempTimestampUTC) {
 
+                                logger.trace("Line " + lineNumber + "->" + line.toString());
                                 logger.trace("Line " + lineNumber + " TS->" + tempTimestampUTC.format());
                                 // Set the timestamp to the one that was parsed
                                 timestampUTC = tempTimestampUTC;
@@ -640,12 +641,6 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
                 newTimestampUTC = moment.unix(ts1Matches[2]);
                 logger.trace("Log timestamp in server zone: " + newTimestampUTC.format());
 
-                // Convert that time to UTC
-                if (timezoneOffset) {
-                    // First step is to convert to UTC
-                    newTimestampUTC = moment.utc(newTimestampUTC.format("YYYY-MM-DD HH:mm:ss") + timezoneOffset);
-                    logger.trace("After UTC Convert: " + newTimestampUTC.format());
-                }
             } else {
                 // Try the second timestamp pattern
                 var ts2Matches = completeLineBuffer.toString().match(me.timestampPattern2);
@@ -656,12 +651,6 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
                     newTimestampUTC = moment.unix(ts2Matches[1]);
                     logger.trace("Log timestamp in server zone: " + newTimestampUTC.format());
 
-                    // Convert to UTC
-                    if (timezoneOffset) {
-                        // First step is to convert to UTC
-                        newTimestampUTC = moment.utc(newTimestampUTC.format("YYYY-MM-DD HH:mm:ss") + timezoneOffset);
-                        logger.trace("After UTC Convert: " + newTimestampUTC.format());
-                    }
                 }
             }
         } else if (completeLineBuffer[0] === 43) {
