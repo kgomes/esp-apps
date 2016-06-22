@@ -1,8 +1,9 @@
 node_modules
 esp_cfg.json
-data
-app/lib
-espmob/www/lib
+/data
+/app/lib
+/app/data
+/espmob/www/lib
 .DS_Store
-server/config.js
+/server/config.js
 .idea/workspace.xml
