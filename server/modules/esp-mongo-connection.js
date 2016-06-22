@@ -58,7 +58,34 @@ function MongoConnection(opts, logDir) {
 
     // Connect using the string given
     mongoose.connect(connectionUrl, {server: {auto_reconnect: true}});
-    
+
+    // Define a function to close mongodb gracefully when we get a shutdown
+    var gracefulShutdown = function (msg, callback) {
+        mongoose.connection.close(function () {
+            logger.info("Mongoose connection closed through " + msg);
+            callback();
+        });
+    };
+
+    // And now listen for shutdown
+    process.once('SIGUSR2', function () {
+        gracefulShutdown('nodemon restart', function () {
+            process.kill(process.pid, 'SIGUSR2');
+        });
+    });
+
+    process.on('SIGINT', function () {
+        gracefulShutdown('app termination', function () {
+            process.exit(0);
+        });
+    });
+
+    process.on('SIGTERM', function () {
+        gracefulShutdown('Heroku app shutdown', function () {
+            process.exit(0);
+        });
+    });
+
     // Now let's create our models
     var source = require('./models/source').createSourceModel(mongoose, opts.sourceOpts, logDir);
     var dataContainer = require('./models/data-container').createDataContainerModel(mongoose, opts.dataContainerOpts, logDir);
