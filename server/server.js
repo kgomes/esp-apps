@@ -3,11 +3,11 @@ var espCfg = require('./config.js');
 
 // Import 3rd party library dependencies
 var log4js = require('log4js');
-var connect = require('connect');
-var express = require('express');
-var io = require('socket.io');
-var url = require('url');
-var port = (espCfg.serverOptions.port || process.env.PORT || 8081);
+// var connect = require('connect');
+// var express = require('express');
+// var io = require('socket.io');
+// var url = require('url');
+// var port = (espCfg.serverOptions.port || process.env.PORT || 8081);
 
 // Configure the logger to use a file appender
 log4js.loadAppender('file');
@@ -31,7 +31,7 @@ var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions, espCf
 var appServer = require('./AppServer').createAppServer(da, espCfg.appServerOptions, espCfg.logDir);
 
 // Setup Socket.IO on the express server
-var io = io.listen(appServer.getServer());
+//var io = io.listen(appServer.getServer());
 
 // Create an event handler
-require('./EventHandler').createEventHandler(io, espCfg.eventHandlerOptions, espCfg.logDir);
+//require('./EventHandler').createEventHandler(io, espCfg.eventHandlerOptions, espCfg.logDir);

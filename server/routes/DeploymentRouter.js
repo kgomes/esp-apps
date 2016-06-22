@@ -28,6 +28,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
     // This is the handler for the route which requests all deployments with various filters
     this.getDeployments = function (req, res) {
         logger.debug('getDeployments called');
+        logger.debug("User:",req.user);
 
         // Set the content type to JSON
         res.contentType('application/json');
