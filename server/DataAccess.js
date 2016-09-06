@@ -191,7 +191,7 @@ function DataAccess(opts, logDir) {
                     logger.error(err);
                 } else {
                     logger.debug('Got deployments from couch');
-                    //logger.debug(res);
+                    logger.debug(res);
                     // Create an array to process
                     var deploymentArray = [];
 

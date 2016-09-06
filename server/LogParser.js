@@ -71,7 +71,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
     this.dwsmSampleEndPattern = new RegExp(/^Waiting up to (\d+)s for Sample Bag to stabilize.*$/);
     this.sampleStartPattern = new RegExp(/^Sampling\s+(\d+\.*\d*)ml.*$/);
     this.sampleStopPattern = new RegExp(/^Sampled\s+(\d+\.*\d*)ml.*$/);
-    this.imagePattern = new RegExp(/Exposing\s+(\d+)x(\d+)\s+pixel\s+(\d+)-bit\s+image\s+for\s+(\d+\.*\d+)\s+seconds\\(.*\/)([a-zA-Z0-9]+\.tif)/);
+    this.imagePattern = new RegExp(/Exposing\s+(\d+)x(\d+)\s+pixel\s+(\d+)-bit\s+image\s+for\s+(\d+\.*\d+)\s+seconds\\(.*\/)([a-zA-Z0-9#]+\.tif)/);
     this.pcrStopPattern = new RegExp(/PCR for (\S+) completed -- closed (\S+\.pcr)/);
 
 
