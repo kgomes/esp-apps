@@ -828,6 +828,12 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
         var imageMatches = bodyBuffer.toString().match(me.imagePattern);
         var pcrStopMatches = bodyBuffer.toString().match(me.pcrStopPattern);
 
+        // See if the deployment specified which slack channel to publish events to
+        var slackChannel = "#esp-" + deployment.esp.name.toLowerCase();
+        if (deployment.esp.slackChannel) {
+            slackChannel = deployment.esp.slackChannel;
+        }
+
         // Now handle the various entry types, starting with errors
         if (errorMatches && errorMatches.length > 0) {
 
@@ -843,6 +849,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
             me.emit('parseEvent', {
                 source: deployment.esp.name,
                 notifySlack: deployment.notifySlack,
+                slackChannel: slackChannel,
                 type: 'error',
                 timestampUTC: lastTimestampUTC.valueOf(),
                 error: newError
@@ -917,6 +924,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
             me.emit('parseEvent', {
                 source: deployment.esp.name,
                 notifySlack: deployment.notifySlack,
+                slackChannel: slackChannel,
                 type: 'imageProcessed',
                 timestampUTC: lastTimestampUTC.valueOf(),
                 image: image
@@ -959,6 +967,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
             me.emit('parseEvent', {
                 source: deployment.esp.name,
                 notifySlack: deployment.notifySlack,
+                slackChannel: slackChannel,
                 type: 'protocolRunStarted',
                 timestampUTC: lastTimestampUTC.valueOf(),
                 protocolRun: protocolRun
@@ -1010,6 +1019,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
             me.emit('parseEvent', {
                 source: deployment.esp.name,
                 notifySlack: deployment.notifySlack,
+                slackChannel: slackChannel,
                 type: 'sampleStarted',
                 timestampUTC: lastTimestampUTC.valueOf(),
                 sample: newSample
@@ -1046,6 +1056,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
             me.emit('parseEvent', {
                 source: deployment.esp.name,
                 notifySlack: deployment.notifySlack,
+                slackChannel: slackChannel,
                 type: 'sampleCompleted',
                 timestampUTC: lastTimestampUTC.valueOf(),
                 sample: samplesBeingParsed[latestOpenSampleTS]

@@ -116,8 +116,8 @@ function CrawlerEventHandler(deploymentFileSync, logParser, baseDir, opts, logDi
         if (message) {
             // Now check to see if the message is even supposed to be published to Slack
             if (message.notifySlack) {
-                // Create the channel name to push to based on the source of the message
-                var channel = "#esp-" + message.source.toLowerCase();
+                // Grab the channel from themessage
+                var channel = message.slackChannel;
                 logger.debug("Will publish to slack channel " + channel);
 
                 // Format the timestamp
