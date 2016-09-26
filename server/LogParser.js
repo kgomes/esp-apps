@@ -830,8 +830,8 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
 
         // See if the deployment specified which slack channel to publish events to
         var slackChannel = "#esp-" + deployment.esp.name.toLowerCase();
-        if (deployment.esp.slackChannel) {
-            slackChannel = deployment.esp.slackChannel;
+        if (deployment.slackChannel) {
+            slackChannel = deployment.slackChannel;
         }
 
         // Now handle the various entry types, starting with errors
