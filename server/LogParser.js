@@ -63,7 +63,7 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
     this.timestampPattern1 = new RegExp(/^@(\D+)(\d+\.\d+)/);
     this.timestampPattern2 = new RegExp(/^@(\d+\.\d+)(\D+)/);
     this.errorPattern = new RegExp(/BadNews.\S+\s+(.*)/);
-    this.ancillaryPattern = new RegExp(/^Can@.*/);
+    this.ancillaryPattern = new RegExp(/^Can@.*|^CTD@.*/);
     this.ancillarySplitPattern = new RegExp(/^(\S+)@(\d{2}):(\d{2}):(\d{2}),(.*)$/);
     this.ancillaryDataPattern = new RegExp(/^(-*\d+\.*\d*)(.*)$/);
     this.protocolRunStartPattern = new RegExp(/^([^"]+) sampling at most (\d+\.*\d*)ml(.*)/);
