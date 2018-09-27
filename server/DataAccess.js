@@ -3,14 +3,16 @@ var util = require('util');
 var fs = require('fs');
 var cradle = require('cradle');
 var os = require('os');
-var cluster = require('cluster');
-var pg = require('pg');
+var {Pool} = require('pg');
 var path = require('path');
 var fs = require('fs');
 var readline = require('readline');
 var stream = require('stream');
 var moment = require('moment');
 var eventEmitter = require('events').EventEmitter;
+
+// Grab the object that can be used to initialize the views in CouchDB if the database does not exist
+var couchViews = require('./couch-views');
 
 // Configure logging for the DataStore
 var log4js = require('log4js');
@@ -54,9 +56,16 @@ function DataAccess(opts, logDir) {
         database: opts.couchDatabase
     };
 
-    // Grab a connection to the ESP CouchDB
-    this.couchDBConn = new (cradle.Connection)(this.couchConfiguration.host,
-        this.couchConfiguration.port).database(this.couchConfiguration.database);
+    // Grab a connection to the CouchDB server
+    this.couchDBConn = new (cradle.Connection)(
+        this.couchConfiguration.host,
+        this.couchConfiguration.port,
+        {
+            auth: {
+                username: this.couchConfiguration.username,
+                password: this.couchConfiguration.password
+            }
+        }).database(this.couchConfiguration.database);
     logger.debug('CouchDB Connection');
     logger.debug('Host: ' + this.couchConfiguration.host);
     logger.debug('Port: ' + this.couchConfiguration.port);
@@ -73,7 +82,20 @@ function DataAccess(opts, logDir) {
         } else if (exists) {
             logger.info('The ESP Couch database exists');
         } else {
-            logger.warn('The ESP Couch database does NOT exist yet');
+            logger.warn('The ESP Couch database does NOT exist yet, will try to create');
+            // Try to create it
+            me.couchDBConn.create(function (err) {
+                if (err) {
+                    logger.fatal("Could not create database");
+                    logger.fatal(err);
+                } else {
+                    logger.info("Was able to create ESP CouchDB successfully");
+                    // Now create all the views needed
+                    me.couchDBConn.save('_design/deployments', couchViews.deployments);
+                    me.couchDBConn.save('_design/esps', couchViews.esps);
+                    me.couchDBConn.save('_design/users', couchViews.users);
+                }
+            });
         }
     });
 
@@ -97,6 +119,15 @@ function DataAccess(opts, logDir) {
     logger.debug('Port: ' + this.pgConfiguration.port);
     logger.debug('Username: ' + this.pgConfiguration.username);
     logger.debug('Database: ' + this.pgConfiguration.database);
+
+    // Create a connection pool for the PostgreSQL database
+    this.pgPool = new Pool({
+        host: opts.pgHost,
+        port: opts.pgPort,
+        database: opts.pgDatabase,
+        user: opts.pgUsername,
+        password: opts.pgPassword
+    });
 
     // This is an array of ancillary data files that are currently in the process of being sync'd
     this.ancillaryFilesBeingSyncd = [];
@@ -2125,45 +2156,33 @@ function DataAccess(opts, logDir) {
         queryString += ' order by timestamp_utc';
         logger.debug("Query string is " + queryString);
 
-        // Now connect and query
-        pg.connect(self.pgConnectionString, function (err, client, done) {
-            // Check for an error on connection first
+        // Run the query against the connection pool
+        me.pgPool.query(queryString, function (err, result) {
+            // Check for error first
             if (err) {
-                logger.error('Error caught trying to connect to DB');
+                logger.error('Error running query');
                 logger.error(err);
                 if (callback)
                     callback(err);
             } else {
-                // OK connected OK, create an array that will be used to return the data
+                logger.debug('Query came back with ' + result.rows.length + ' points');
+
+                // Create the array to hold the reponse values
                 var response = [];
 
-                // Run the query and process results
-                client.query(queryString, function (err, result) {
-
-                    // Check for error first
-                    if (err) {
-                        logger.error('Error running query');
-                        logger.error(err);
-                        if (callback)
-                            callback(err);
-                    } else {
-                        logger.debug('Query came back with ' + result.rows.length + ' points');
-                        // Process rows
-                        if (result && result.rows && result.rows.length > 0) {
-                            for (var i = 0; i < result.rows.length; i++) {
-                                response.push([Date.parse(result.rows[i].timestamp_utc), parseFloat(result.rows[i].value)]);
-                            }
-                        }
-
-                        // Call done and the callback to return the response
-                        done();
-                        if (callback)
-                            callback(null, response);
+                // Process rows
+                if (result && result.rows && result.rows.length > 0) {
+                    for (var i = 0; i < result.rows.length; i++) {
+                        response.push([Date.parse(result.rows[i].timestamp_utc), parseFloat(result.rows[i].value)]);
                     }
-                });
+                }
+
+                // Call the callback to return the response
+                if (callback)
+                    callback(null, response);
             }
         });
-    }
+    };
 
     /**
      * This method takes in a deployment ID and an ancillaryData record ([sourceName,
@@ -2176,9 +2195,6 @@ function DataAccess(opts, logDir) {
      * @param callback
      */
     this.getAncillaryDataSourceID = function (deploymentID, espName, sourceName, varName, varLongName, varUnits, logUnits, timestamp, data, callback) {
-        // Grab a reference to self
-        var self = this;
-
         // First thing to do is make sure we have a deployment ID and a ancillary data record
         if (deploymentID && espName) {
             // Now check other parameters
@@ -2195,33 +2211,39 @@ function DataAccess(opts, logDir) {
                     espName + "\nsourceName = " + sourceName + "\nlogUnits = " + logUnits);
 
                 // The first thing to do is try to look up the sourceID in the local cache
-                me.getAncillaryDataSourceIDFromCache(deploymentID, espName, sourceName, logUnits,
-                    function (err, sourceID) {
+                me.getAncillaryDataSourceIDFromCache(deploymentID, espName, sourceName, logUnits, function (err, sourceID) {
+
                         // If there is an error send it back
                         if (err) {
                             if (callback)
                                 callback(err);
                         } else {
-                            // OK, was there a sourceID in the cache
+                            // OK, check if there was there a sourceID in the cache
                             if (sourceID) {
                                 logger.trace("Found ID " + sourceID + " in the local cache");
                                 // Send it to the callback
                                 if (callback)
                                     callback(null, sourceID);
                             } else {
+                                // So there was nothing in the local cache, we need to look it up from the DB, but
                                 // I need to first see if another request has already been queued for this same
                                 // information
+
+                                // A boolean to track if the request exists already
                                 var requestExists = false;
+
+                                // Check the local queue
                                 if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] &&
                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName] &&
                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName] &&
                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] &&
                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length > 0) {
+                                    // Set the flag to true
                                     requestExists = true;
                                 }
 
-                                // OK, we checked and have our answer, the next thing to do is our this present callback
-                                // to the queue for processing (while making sure the object tree exists)
+                                // OK, we checked and have our answer, the next thing to do is put the incoming callback
+                                // into the queue for processing (while making sure the object tree exists)
                                 if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID])
                                     me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] = {};
                                 if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName])
@@ -2235,124 +2257,106 @@ function DataAccess(opts, logDir) {
                                 // Nothing was found in the cache and there is no pending callback, we will need to
                                 // search the database to see if one was already created but is not in the cache.
                                 if (!requestExists) {
-                                    pg.connect(me.pgConnectionString, function (err, client, done) {
-                                            // Make sure the connection was made to the database
-                                            if (err) {
-                                                // Log the error
-                                                logger.error('Error connecting to Postgres in getAncillarySourceID');
-                                                logger.error(err);
 
-                                                // Send to callback
-                                                if (callback)
-                                                    callback(err);
+                                    // Build the query string
+                                    const queryString = 'SELECT id from ancillary_sources where ' +
+                                        'deployment_id_fk = $1 and esp_name = $2 and instrument_type = $3 ' +
+                                        'and log_units = $4';
+
+                                    // Build the values to insert into the query
+                                    const queryValues = [deploymentID, espName, sourceName, logUnits];
+
+                                    // Run the query against the connection pool
+                                    me.pgPool.query(queryString, queryValues, function (err, result) {
+                                        // Check for an error
+                                        if (err) {
+                                            // Log the error
+                                            logger.error('Error connecting to Postgres in getAncillaryDataSourceID');
+                                            logger.error(err);
+
+                                            // Send the error to callback
+                                            if (callback)
+                                                callback(err);
+                                        } else {
+                                            // The query for the ancillary source executed OK, we now need to check to
+                                            // see if the ancillary source query returned anything
+                                            if (result && result.rows && result.rows.length > 0) {
+                                                // It appears a sourceID already exists, so stuff it in the local cache
+                                                me.putAncillaryDataSourceIDInCache(deploymentID, espName, sourceName,
+                                                    logUnits, result.rows[0].id, function (err) {
+                                                        logger.error("Error while pushing source ID " +
+                                                            result.rows[0].id + " into the local cache");
+                                                    });
+
+                                                // Loop over the callback cache and return the results
+                                                for (var i = 0;
+                                                     i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
+                                                    // Return the ID to the caller
+                                                    if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
+                                                        me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
+                                                        (null, result.rows[0].id, deploymentID, espName,
+                                                            sourceName, varName, varLongName, varUnits,
+                                                            logUnits, timestamp, data);
+                                                }
+
+                                                // Now clear the cached callbacks
+                                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
                                             } else {
-                                                // Connection successful, try to query for ID
-                                                client.query('SELECT id from ancillary_sources where ' +
-                                                        'deployment_id_fk = $1 ' +
-                                                        'and esp_name = $2 and instrument_type = $3 ' +
-                                                        'and log_units = $4',
-                                                    [deploymentID, espName, sourceName, logUnits],
-                                                    function (err, result) {
-                                                        // Check for any errors first
-                                                        if (err) {
-                                                            // Log the error
-                                                            logger.error('DB error searching for ancillary source ID');
-                                                            logger.error(err);
+                                                // Nothing is in the database yet, we need to insert one
 
-                                                            // Send the error to the caller
-                                                            if (callback)
-                                                                callback(err);
-                                                        } else {
-                                                            // The query for the ancillary source executed OK, we now need
-                                                            // to check to see if the ancillary source query returned anything
-                                                            if (result && result.rows && result.rows.length > 0) {
+                                                // Build the query string
+                                                const queryString = 'INSERT INTO ancillary_sources(' +
+                                                    'deployment_id_fk, esp_name, instrument_type, ' +
+                                                    'var_name, var_long_name, log_units, units) values ' +
+                                                    '($1,$2,$3,$4,$5,$6,$7) RETURNING id';
 
-                                                                // It appears a sourceID already exists stuff it in the
-                                                                // local cache
-                                                                me.putAncillaryDataSourceIDInCache(deploymentID, espName,
-                                                                    sourceName, logUnits, result.rows[0].id,
-                                                                    function (err) {
-                                                                        logger.error("Error while pushing source ID " +
-                                                                            result.rows[0].id + " into the cache");
-                                                                    });
+                                                // And the query values array
+                                                const queryValues = [deploymentID, espName, sourceName, varName,
+                                                    varLongName, logUnits, varUnits];
 
-                                                                // Close the database connection
-                                                                done();
+                                                // Run the query against the connection pool
+                                                me.pgPool.query(queryString, queryValues, function (err, result) {
+                                                    // Check for errors
+                                                    if (err) {
+                                                        // Log the error
+                                                        logger.warn('Error trying to insert a new ancillary data source');
+                                                        logger.warn(err);
 
-                                                                // Loop over the callback cache and return the results
-                                                                for (var i = 0;
-                                                                     i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
-                                                                    // Return the ID to the caller
-                                                                    if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                                        me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                                        (null, result.rows[0].id, deploymentID, espName,
-                                                                            sourceName, varName, varLongName, varUnits,
-                                                                            logUnits, timestamp, data);
-                                                                }
+                                                        // Send the error it back to the caller
+                                                        if (callback)
+                                                            callback(err);
+                                                    } else {
+                                                        // It appears a sourceID already exists stuff it in the local cache
+                                                        me.putAncillaryDataSourceIDInCache(deploymentID, espName,
+                                                            sourceName, logUnits, result.rows[0].id,
+                                                            function (err) {
+                                                                logger.error("Error while pushing source ID " +
+                                                                    result.rows[0].id + " into the cache");
+                                                            });
 
-                                                                // Now clear the cached callbacks
-                                                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
-                                                            } else {
-                                                                // Nothing is in the database yet, we need to insert one
-                                                                client.query('INSERT INTO ancillary_sources(' +
-                                                                        'deployment_id_fk, esp_name, instrument_type, ' +
-                                                                        'var_name, var_long_name, log_units, units) values ' +
-                                                                        '($1,$2,$3,$4,$5,$6,$7) RETURNING id',
-                                                                    [deploymentID, espName, sourceName, varName,
-                                                                        varLongName, logUnits, varUnits],
-                                                                    function (err, result) {
-                                                                        // Check for errors
-                                                                        if (err) {
-                                                                            // Log the error
-                                                                            logger.warn('Error trying to insert a new ancillary data source for');
-                                                                            logger.warn(err);
-
-                                                                            // Send it back to the caller
-                                                                            if (callback)
-                                                                                callback(err);
-                                                                        } else {
-                                                                            // It appears a sourceID already exists stuff it in the
-                                                                            // local cache
-                                                                            me.putAncillaryDataSourceIDInCache(deploymentID, espName,
-                                                                                sourceName, logUnits, result.rows[0].id,
-                                                                                function (err) {
-                                                                                    logger.error("Error while pushing source ID " +
-                                                                                        result.rows[0].id + " into the cache");
-                                                                                });
-
-                                                                            // Close the database connection
-                                                                            done();
-
-                                                                            // Loop over the callback cache and return the results
-                                                                            for (var i = 0;
-                                                                                 i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
-                                                                                // Return the ID to the caller
-                                                                                if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                                                    (null, result.rows[0].id, deploymentID, espName,
-                                                                                        sourceName, varName, varLongName, varUnits,
-                                                                                        logUnits, timestamp, data);
-                                                                            }
-
-                                                                            // Now clear the cached callbacks
-                                                                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
-                                                                        }
-                                                                    }
-                                                                );
-                                                            }
+                                                        // Loop over the callback cache and return the results
+                                                        for (var i = 0;
+                                                             i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
+                                                            // Return the ID to the caller
+                                                            if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
+                                                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
+                                                                (null, result.rows[0].id, deploymentID, espName,
+                                                                    sourceName, varName, varLongName, varUnits,
+                                                                    logUnits, timestamp, data);
                                                         }
-                                                    } // End callback function to handle results of search for existing source ID
-                                                ); // End of query to search for existing ID
+
+                                                        // Now clear the cached callbacks
+                                                        me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
+                                                    }
+                                                });
                                             }
                                         }
-                                    )
-                                    ;
+                                    });
                                 }
                             }
                         }
                     }
-                )
-                ;
+                );
             }
         }
         else {
@@ -2519,42 +2523,32 @@ function DataAccess(opts, logDir) {
      * @param callback
      */
     this.cleanOutDuplicateAncillaryData = function (callback) {
-        // Connect to the database
-        pg.connect(me.pgConnectionString, function (err, client, done) {
-            // If there was an error, send it to the caller
+
+        // Create the query string
+        const queryString = 'DELETE FROM ancillary_data WHERE id IN (SELECT id FROM (SELECT id, row_number() over ' +
+            '(partition BY timestamp_utc, ancillary_source_id_fk, value ORDER BY id) AS ' +
+            'rnum FROM ancillary_data) t WHERE t.rnum > 1);';
+
+        // Run the query against the connection pool
+        me.pgPool.query(queryString, function (err, result) {
+            // Check to see if the delete query failed with an error
             if (err) {
-                logger.error('Error getting pooled connection');
+                logger.error('Error cleaning duplicates');
                 logger.error(err);
+
+                // Send error to callback
                 if (callback)
                     callback(err);
             } else {
-                logger.info("Going to clean out any duplicate ancillary data records");
-                // Create the cleaning query and run it
-                client.query('DELETE FROM ancillary_data WHERE id IN (SELECT id FROM (SELECT id, row_number() over ' +
-                    '(partition BY timestamp_utc, ancillary_source_id_fk, value ORDER BY id) AS ' +
-                    'rnum FROM ancillary_data) t WHERE t.rnum > 1);', function (err, result) {
+                logger.info("Duplicates cleaned: ", result);
 
-                    // Check for errors
-                    if (err) {
-                        logger.error('Error cleaning duplicates');
-                        logger.error(err);
-
-                        // Send error to callback
-                        if (callback)
-                            callback(err);
-                    } else {
-                        logger.info("Duplicates cleaned: ", result);
-                        // Close the DB connection
-                        done();
-
-                        // Send the result
-                        if (callback)
-                            callback(null);
-                    }
-                });
+                // Call the callback to return
+                if (callback)
+                    callback(null);
             }
         });
-    }
+    };
+
     /**
      *
      * @param deploymentID
@@ -2605,7 +2599,7 @@ function DataAccess(opts, logDir) {
                                 callback(err);
                         } else {
 
-                            // Make sure we have an ID
+                            // Make sure we have a response from the text building method
                             if (insertText) {
                                 // Check to see if a comma is necessary
                                 if (valueText !== null) {
@@ -2632,43 +2626,30 @@ function DataAccess(opts, logDir) {
                         // all the records, do a bulk insert
                         if (numberOfRecordsProcessed === originalNumberOfRecords) {
                             logger.trace("Going to insert using statement:\n" + valueText);
-                            // Grab a connection from the pool
-                            pg.connect(me.pgConnectionString, function (err, client, done) {
-                                // If there was an error, send it to the caller
+                            me.pgPool.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
+                                'timestamp_utc, value) values ' + valueText, function (err, result) {
+
+                                // If the insert failed
                                 if (err) {
-                                    logger.error('Error getting pooled connection');
+                                    logger.error('Error inserting bulk rows');
                                     logger.error(err);
+
+                                    // Send the error to the callback
                                     if (callback)
                                         callback(err);
                                 } else {
-                                    // Create the query and run it
-                                    client.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
-                                        'timestamp_utc, value) values ' + valueText, function (err, result) {
+                                    logger.trace("Bulk insert complete. Result: ", result);
 
-                                        // Check for errors
-                                        if (err) {
-                                            logger.error('Error inserting bulk rows');
-                                            logger.error(err);
-
-                                            // Send error to callback
-                                            if (callback)
-                                                callback(err);
-                                        } else {
-                                            logger.trace("Bulk insert complete. Result: ", result);
-                                            // Check to see if we are done and close the DB if that is the case
-                                            done();
-                                            // Send the result
-                                            if (callback)
-                                                callback(null, numberOfRecordsProcessed);
-                                        }
-                                    });
+                                    // Looks like it worked, call the callback with the number of records inserted
+                                    if (callback)
+                                        callback(null, numberOfRecordsProcessed);
                                 }
                             });
-
                         }
                     });
             }
         } else {
+            // Not enough parameters, so send an error to the callback
             if (callback)
                 callback(new Error("Not enough parameters, should have (deploymentID, espName, ancillaryDataArray, " +
                     "callback"));
@@ -2756,69 +2737,56 @@ function DataAccess(opts, logDir) {
                 deployment._id + '\'';
             logger.debug("Going to query for ancillary source information using: " + querySourceInformation);
 
-            // OK, let's connect up to the database
-            pg.connect(me.pgConnectionString, function (err, client, done) {
-                // If there is an error, send it back to the caller
+            // Run the query against the connection pool
+            me.pgPool.query(querySourceInformation, function (err, result) {
+                // Check for an error first
                 if (err) {
-                    logger.error("Error on trying to get database client: ", err);
+                    logger.error('Error running query ' + querySourceInformation);
+                    logger.error(err);
+
+                    // Send the error to the callback method
                     if (callback)
                         callback(err);
                 } else {
-                    // OK, we have a good connection (client), let's run the query
-                    client.query(querySourceInformation, function (err, result) {
+                    logger.debug('Query came back with ' + result.rows.length + ' source rows');
 
-                        // Check for error first
-                        if (err) {
-                            logger.error('Error running query ' + querySourceInformation);
-                            logger.error(err);
-                            if (callback)
-                                callback(err);
-                        } else {
-                            logger.debug('Query came back with ' + result.rows.length + ' source rows');
+                    // Create an object that we can hang the ancillary data source information on
+                    var ancillaryDataSources = {};
 
-                            // Create an object that we can hang the ancillary data source information on
-                            var ancillaryDataSources = {};
+                    // Process rows
+                    if (result && result.rows && result.rows.length > 0) {
+                        for (var i = 0; i < result.rows.length; i++) {
+                            // Grab the information from the row
+                            var sourceID = result.rows[i].id;
+                            var instrumentType = result.rows[i].instrument_type;
+                            var varName = result.rows[i].var_name;
+                            var varLongName = result.rows[i].var_long_name;
+                            var varUnits = result.rows[i].units;
+                            var logUnits = result.rows[i].log_units;
 
-                            // Process rows
-                            if (result && result.rows && result.rows.length > 0) {
-                                for (var i = 0; i < result.rows.length; i++) {
-                                    // Grab the information from the row
-                                    var sourceID = result.rows[i].id;
-                                    var instrumentType = result.rows[i].instrument_type;
-                                    var varName = result.rows[i].var_name;
-                                    var varLongName = result.rows[i].var_long_name;
-                                    var varUnits = result.rows[i].units;
-                                    var logUnits = result.rows[i].log_units;
+                            // First make sure the object has the instrument type attached
+                            if (!ancillaryDataSources[instrumentType])
+                                ancillaryDataSources[instrumentType] = {};
 
-                                    // First make sure the object has the instrument type attached
-                                    if (!ancillaryDataSources[instrumentType])
-                                        ancillaryDataSources[instrumentType] = {};
+                            // Then make sure we have log units
+                            if (!ancillaryDataSources[instrumentType][logUnits])
+                                ancillaryDataSources[instrumentType][logUnits] = {};
 
-                                    // Then make sure we have log units
-                                    if (!ancillaryDataSources[instrumentType][logUnits])
-                                        ancillaryDataSources[instrumentType][logUnits] = {};
-
-                                    // Now attach the other information to that object
-                                    ancillaryDataSources[instrumentType][logUnits]['varName'] = varName;
-                                    ancillaryDataSources[instrumentType][logUnits]['varLongName'] = varLongName;
-                                    ancillaryDataSources[instrumentType][logUnits]['units'] = varUnits;
-                                    ancillaryDataSources[instrumentType][logUnits]['sourceID'] = parseInt(sourceID);
-                                }
-                            }
-                            logger.debug("Ancillary sources after sync: ", ancillaryDataSources);
-
-                            // Close up the database connection
-                            done();
-
-                            // Now update the deployment
-                            deployment.ancillaryData = ancillaryDataSources;
-
-                            // Send it back to the caller
-                            if (callback)
-                                callback(null, deployment);
+                            // Now attach the other information to that object
+                            ancillaryDataSources[instrumentType][logUnits]['varName'] = varName;
+                            ancillaryDataSources[instrumentType][logUnits]['varLongName'] = varLongName;
+                            ancillaryDataSources[instrumentType][logUnits]['units'] = varUnits;
+                            ancillaryDataSources[instrumentType][logUnits]['sourceID'] = parseInt(sourceID);
                         }
-                    });
+                    }
+                    logger.debug("Ancillary sources after sync: ", ancillaryDataSources);
 
+                    // Now update the deployment
+                    deployment.ancillaryData = ancillaryDataSources;
+
+                    // Send it back to the caller
+                    if (callback)
+                        callback(null, deployment);
                 }
             });
         } else {
@@ -3184,75 +3152,62 @@ function DataAccess(opts, logDir) {
                 logger.info("Opening ancillary data file for writing");
                 // Check for the file handle
                 if (fd) {
-                    // Let's run the query
-                    pg.connect(self.pgConnectionString, function (err, client, done) {
-                        // Check for error first
+                    // Run the query against the connection pool
+                    me.pgPool.query(query, function (err, result) {
+                        // Check for an error
                         if (err) {
-                            logger.error('Error caught trying to connect to DB');
+                            logger.error('Error running query ' + query);
                             logger.error(err);
+                            // End the stream and send the error to the callback
                             sourceStream.end();
                             if (callback)
                                 callback(err);
                         } else {
-                            // Run the query
-                            client.query(query, function (err, result) {
-                                // Check for an error
-                                if (err) {
-                                    logger.error('Error running query');
-                                    logger.error(err);
-                                    sourceStream.end();
-                                    if (callback)
-                                        callback(err);
-                                } else {
-                                    // Check for results first
-                                    if (result && result.rows && result.rows.length > 0) {
-                                        // Make sure there are rows to be written
-                                        var numRows = result.rows.length;
-                                        logger.info('Will write ' + numRows + ' rows to the file');
+                            // Check for results first
+                            if (result && result.rows && result.rows.length > 0) {
+                                // Make sure there are rows to be written
+                                var numRows = result.rows.length;
+                                logger.info('Will write ' + numRows + ' rows to the file');
 
-                                        // The row counter
-                                        var i = 0;
+                                // The row counter
+                                var i = 0;
 
-                                        // The function to write the results
-                                        function writeResults() {
-                                            logger.trace("Starting to write results to file");
+                                // The function to write the results
+                                function writeResults() {
+                                    logger.trace("Starting to write results to file");
 
-                                            // A boolean to indicate if the writing is backed up
-                                            var writeOK = true;
+                                    // A boolean to indicate if the writing is backed up
+                                    var writeOK = true;
 
-                                            // Loop over the rows watching for write backups
-                                            do {
-                                                // Now write it to the file
-                                                writeOK = sourceStream.write(result.rows[i]['epochseconds'] + ',' +
-                                                    result.rows[i]['timestamp_utc'] + ',' + result.rows[i]['string_agg'] + '\n');
+                                    // Loop over the rows watching for write backups
+                                    do {
+                                        // Now write it to the file
+                                        writeOK = sourceStream.write(result.rows[i]['epochseconds'] + ',' +
+                                            result.rows[i]['timestamp_utc'] + ',' + result.rows[i]['string_agg'] + '\n');
 
-                                                // Bump the counter
-                                                i++;
-                                            } while (i < numRows && writeOK);
+                                        // Bump the counter
+                                        i++;
+                                    } while (i < numRows && writeOK);
 
-                                            // Check to see if all the writes are done
-                                            if (i < numRows) {
-                                                logger.trace("Writing stopped at line " + i + " will wait for drain");
+                                    // Check to see if all the writes are done
+                                    if (i < numRows) {
+                                        logger.trace("Writing stopped at line " + i + " will wait for drain");
 
-                                                // Since not done, set up a handler to watch for the buffer to
-                                                // drain and then start writing again
-                                                sourceStream.once('drain', writeResults);
-                                            } else {
-                                                logger.info("All done writing to file, will end the write stream");
-                                                sourceStream.end();
-                                                done();
-                                            }
-                                        }
-
-                                        // Call the function to write the results
-                                        writeResults();
+                                        // Since not done, set up a handler to watch for the buffer to
+                                        // drain and then start writing again
+                                        sourceStream.once('drain', writeResults);
                                     } else {
-                                        logger.debug("No results, closing database client and write stream");
+                                        logger.info("All done writing to file, will end the write stream");
                                         sourceStream.end();
-                                        done();
                                     }
                                 }
-                            });
+
+                                // Call the function to write the results
+                                writeResults();
+                            } else {
+                                logger.debug("No results, closing database client and write stream");
+                                sourceStream.end();
+                            }
                         }
                     });
                 } else {

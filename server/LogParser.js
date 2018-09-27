@@ -1085,6 +1085,8 @@ function LogParser(dataAccess, dataDir, opts, logDir) {
 
                     // Let's convert that to local time
                     var logTimestampLocal = moment(lastTimestampUTC);
+                    // TODO kgomes: got deprecation warning on following line.  Fix this!
+                    // Deprecation warning: moment().zone is deprecated, use moment().utcOffset instead. http://momentjs.com/guides/#/warnings/zone
                     logTimestampLocal.zone(timezoneOffset);
                     logTimestampLocal.local();
 

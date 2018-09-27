@@ -1,14 +1,14 @@
-// Grab the path library to help with directory paths
-var path = require('path');
+// Import libraries
+var fs = require('fs');
 
 // Now export the configuration object
 module.exports = {
 
     // This is the location where the data for all the ESPs will be stored
-    dataDir: 'Put the absolute path to where the files will be stored on local disk here',
+    dataDir: './data',
 
     // And logs
-    logDir: 'Put the base path where you want the log files to go (unix style, no ending slash)',
+    logDir: './data/logs/server',
 
     // Options for the data crawling service
     crawlerOptions: {
@@ -23,7 +23,7 @@ module.exports = {
 
     // Application server options
     appServerOptions: {
-        hostBaseUrl:'Put the base URL of the application here (for example http://esp.mycompany.com)',
+        hostBaseUrl: 'http://localhost',
         port: 8081,
         loggerLevel: 'info',
         // The UserRouter options
@@ -50,14 +50,14 @@ module.exports = {
         couchHost: 'localhost',
         couchPort: 5984,
         couchSSL: false,
-        couchUsername: 'xxxxxx',
-        couchPassword: 'yyyyyy',
+        couchUsername: 'espadm',
+        couchPassword: 'espadmpw',
         couchDatabase: 'esp',
         pgProtocol: 'postgres',
         pgHost: 'localhost',
         pgPort: 5432,
-        pgUsername: 'xxxxxx',
-        pgPassword: 'yyyyyy',
+        pgUsername: 'espadm',
+        pgPassword: 'espadmpw',
         pgDatabase: 'esp_ancillary',
         loggerLevel: 'info',
         numAncillaryPointsToBatch: 1000
@@ -73,7 +73,7 @@ module.exports = {
         loggerLevel: 'info',
         useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
-        tempDir: 'Put the directory on your local disk where the server can write temp files',
+        tempDir: './data/tmp',
         numberOfAncillaryRecordsToBatch: 1000,
         // The timezone lookup table
         timezoneLookup: {
@@ -84,6 +84,10 @@ module.exports = {
             'EST': {
                 stringRep: '-0500',
                 hourOffset: -5
+            },
+            'CEST': {
+                stringRep: '+0200',
+                hourOffset: 2
             },
             'GMT': {
                 stringRep: '0000',
@@ -96,6 +100,10 @@ module.exports = {
             'PST': {
                 stringRep: '-0800',
                 hourOffset: -8
+            },
+            'MDT': {
+                stringRep: '-0600',
+                hourOffset: -6
             },
             'UTC': {
                 stringRep: '0000',
@@ -260,7 +268,161 @@ module.exports = {
     // The EventHandler options
     eventHandlerOptions: {
         loggerLevel: 'info',
-        hostBaseUrl: 'Put the base URL of the application here (for example http://esp.mycompany.com)',
-        slackWebHookURL: 'This is they URL of the incoming webhook for the Slack service (if you use it)'
+        hostBaseUrl: 'http://localhost',
+        slackWebHookURL: ''
+    },
+
+    // The function to setup files paths and check for environmental overrides
+    init: function () {
+        // First see if the ESP base directory was defined in the environment
+        if (process.env['ESP_APPS_BASEDIR']) {
+            this.dataDir = process.env['ESP_APPS_BASEDIR'] + '/data';
+            this.logParserOptions.tempDir = process.env['ESP_APPS_BASEDIR'] + '/data/tmp';
+            this.logDir = process.env['ESP_APPS_BASEDIR'] + '/logs/server';
+        }
+
+        // Now check to see if the log file directory was specifically called out in the environment variables
+        if (process.env['ESP_APPS_LOG_DIRECTORY']) {
+            this.logDir = process.env['ESP_APPS_LOG_DIRECTORY'];
+        }
+
+        // Before we start, we should look to make sure the paths for data and logs exist and if not, create them
+        if (!fs.existsSync(this.dataDir)) {
+            console.log("Data directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.dataDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+        if (!fs.existsSync(this.logParserOptions.tempDir)) {
+            console.log("Temp directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.logParserOptions.tempDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+        if (!fs.existsSync(this.logDir)) {
+            console.log("Log directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.logDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+
+        // Now check for crawlerOptions overrides
+        if (process.env['ESP_APPS_FTP_SYNC_INTERVAL_MILLIS']) {
+            this.crawlerOptions.ftpSyncIntervalMillis = parseInt(process.env['ESP_APPS_FTP_SYNC_INTERVAL_MILLIS']);
+        }
+        if (process.env['ESP_APPS_CRAWLER_LOGGER_LEVEL']) {
+            this.crawlerOptions.loggerLevel = process.env['ESP_APPS_CRAWLER_LOGGER_LEVEL'];
+        }
+
+        // Now check for server option overrides
+        if (process.env['ESP_APPS_SERVER_LOGGER_LEVEL']) {
+            this.serverOptions.loggerLevel = process.env['ESP_APPS_SERVER_LOGGER_LEVEL'];
+        }
+
+        // Now check for appServerOption overrides
+        if (process.env['ESP_APPS_HOST_BASE_URL']) {
+            this.appServerOptions.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
+        }
+        if (process.env['ESP_APPS_PORT']) {
+            this.appServerOptions.port = parseInt(process.env['ESP_APPS_PORT']);
+        }
+        if (process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL']) {
+            this.appServerOptions.loggerLevel = process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_USER_ROUTER_LOGGER_LEVEL']) {
+            this.appServerOptions.userRouterOptions.loggerLevel = process.env['ESP_APPS_USER_ROUTER_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_ESP_ROUTER_LOGGER_LEVEL']) {
+            this.appServerOptions.espRouterOptions.loggerLevel = process.env['ESP_APPS_ESP_ROUTER_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_DEPLOYMENT_ROUTER_LOGGER_LEVEL']) {
+            this.appServerOptions.deploymentRouterOptions.loggerLevel = process.env['ESP_APPS_DEPLOYMENT_ROUTER_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL']) {
+            this.appServerOptions.ancillaryDataRouterOptions = process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL'];
+        }
+
+        // Now check for dataStoreOption overrides
+        if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']){
+            this.dataStoreOptions.loggerLevel = process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_COUCH_HOST']) {
+            this.dataStoreOptions.couchHost = process.env['ESP_APPS_COUCH_HOST'];
+        }
+        if (process.env['ESP_APPS_COUCH_PORT']) {
+            this.dataStoreOptions.couchPort = parseInt(process.env['ESP_APPS_COUCH_PORT']);
+        }
+        if (process.env['ESP_APPS_COUCH_SSL']) {
+            this.dataStoreOptions.couchSSL = (process.env['ESP_APPS_COUCH_SSL'] == 'true');
+        }
+        if (process.env['ESP_APPS_COUCH_USERNAME']) {
+            this.dataStoreOptions.couchUsername = process.env['ESP_APPS_COUCH_USERNAME'];
+        }
+        if (process.env['ESP_APPS_COUCH_PASSWORD']) {
+            this.dataStoreOptions.couchPassword = process.env['ESP_APPS_COUCH_PASSWORD'];
+        }
+        if (process.env['ESP_APPS_COUCH_DATABASE']) {
+            this.dataStoreOptions.couchDatabase = process.env['ESP_APPS_COUCH_DATABASE'];
+        }
+        if (process.env['ESP_APPS_PG_PROTOCOL']) {
+            this.dataStoreOptions.pgProtocol = process.env['ESP_APPS_PG_PROTOCOL'];
+        }
+        if (process.env['ESP_APPS_PG_HOST']) {
+            this.dataStoreOptions.pgHost = process.env['ESP_APPS_PG_HOST'];
+        }
+        if (process.env['ESP_APPS_PG_PORT']) {
+            this.dataStoreOptions.pgPort = parseInt(process.env['ESP_APPS_PG_PORT'])
+        }
+        if (process.env['ESP_APPS_PG_USERNAME']) {
+            this.dataStoreOptions.pgUsername = process.env['ESP_APPS_PG_USERNAME'];
+        }
+        if (process.env['ESP_APPS_PG_PASSWORD']) {
+            this.dataStoreOptions.pgPassword = process.env['ESP_APPS_PG_PASSWORD'];
+        }
+        if (process.env['ESP_APPS_PG_DATABASE']) {
+            this.dataStoreOptions.pgDatabase = process.env['ESP_APPS_PG_DATABASE'];
+        }
+        if (process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']) {
+            this.dataStoreOptions.numAncillaryPointsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']);
+        }
+
+        // Now look for deploymentFileSync overrides
+        if (process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL']) {
+            this.deploymentFileSyncOptions.loggerLevel = process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL'];
+        }
+
+        // Now look for logParser overrides
+        if (process.env['ESP_APPS_LOG_PARSER_LOGGER_LEVEL']) {
+            this.logParserOptions.loggerLevel = process.env['ESP_APPS_LOG_PARSER_LOGGER_LEVEL'];
+        }
+        if (process.env['ESP_APPS_TEMP_DIR']) {
+            this.logParserOptions.tempDir = process.env['ESP_APPS_TEMP_DIR'];
+        }
+        if (process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']) {
+            this.logParserOptions.numberOfAncillaryRecordsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH'])
+        }
+
+        // Now look for eventHandler overrides
+        if (process.env['ESP_APPS_EVENT_HANDLER_LOGGER_LEVEL']) {
+            this.eventHandlerOptions.loggerLevel = process.env[''];
+        }
+        if (process.env['ESP_APPS_HOST_BASE_URL']) {
+            this.eventHandlerOptions.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
+        }
+        if (process.env['ESP_APPS_EVENT_HANDLER_SLACK_WEBHOOK_URL']) {
+            this.eventHandlerOptions.slackWebHookURL = process.env['ESP_APPS_EVENT_HANDLER_SLACK_WEBHOOK_URL'];
+        }
     }
 };

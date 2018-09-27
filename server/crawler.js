@@ -4,6 +4,7 @@
 
 // Read in the ESP application configuration
 var espCfg = require('./config.js');
+espCfg.init();
 
 // Import 3rd party library dependencies
 var log4js = require('log4js');

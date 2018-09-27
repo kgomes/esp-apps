@@ -1,5 +1,5 @@
 {
-  "name": "espApp",
+  "name": "esp-app",
   "version": "0.3.1",
   "homepage": "https://github.com/kgomes/esp-apps",
   "authors": [
@@ -29,7 +29,6 @@
     "respond": "~1.4.2",
     "date.format": "~1.2.3",
     "highstock-release": "2.1.5",
-    "angular-bootstrap": "0.6.0",
-    "jquery-ui-touch-punch": "*"
+    "angular-bootstrap": "0.6.0"
   }
 }
