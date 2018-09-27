@@ -1,0 +1,140 @@
+# ESP Docker Compose
+#
+# This file defines the services needed to run the ESP portal
+
+# Define the version of the Docker Compose file
+version: '3'
+
+# Define the services that this file composes
+services:
+  # This is the CouchDB instance that is used to store the document data for
+  # the ESP web portal
+  couchdb:
+    # Declare the file to read the environmental variables from
+    env_file: .env
+
+    # This is the image to use to run couchdb
+    image: couchdb:1.6
+
+    # Any environment variables
+    environment:
+      - COUCHDB_USER=${ESP_APPS_COUCHDB_USERNAME}
+      - COUCHDB_PASSWORD=${ESP_APPS_COUCHDB_PASSWORD}
+
+    # Open the CouchDB port to the other containers in this compose file
+    expose:
+      - "5984"
+
+    # Open the CouchDB port outside of the container itself so the host can
+    # access it.  This should be commented out for production.
+    ports:
+      - "5984:5984"
+
+    # These are the volumes to be mounted inside the container
+    volumes:
+      - "${ESP_APPS_BASEDIR_HOST}/couchdb/etc:/usr/local/etc/couchdb"
+      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/lib:/usr/local/var/lib/couchdb"
+      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/log:/usr/local/var/log/couchdb"
+      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/run:/usr/local/var/run/couchdb"
+
+    # Now give a sensible name to the container
+    container_name: esp-couchdb
+
+  # This is the PostgreSQL server service
+  postgres:
+    # Declare the file to read the environmental variables from
+    env_file: .env
+
+    # This is the image to use to run postgres
+    image: postgres:9.3
+
+    # Any environment variables
+    environment:
+      - POSTGRES_USER=${ESP_APPS_POSTGRES_USER}
+      - POSTGRES_DB=${ESP_APPS_POSTGRES_DB}
+
+    # Open the PostgreSQL port to the other containers in this compose file
+    expose:
+      - "5432"
+
+    # Open the PostgreSQL port outside of the container itself so the host can
+    # access it.  This should be commented out for production.
+    ports:
+      - "5432:5432"
+
+    # These are the volumes to be mounted inside the postgres container
+    volumes:
+      - "${ESP_APPS_BASEDIR_HOST}/postgresql/data:/var/lib/postgresql/data"
+      - "${ESP_APPS_BASEDIR_HOST}/postgresql/docker-entrypoint-initdb.d/init-esp-db.sh:/docker-entrypoint-initdb.d/init-esp-db.sh"
+
+    # Give the container a name
+    container_name: esp-postgresql
+
+  # This is the core ESP service (core ESP2Gscript and log parsing service)
+  core-service:
+    # Declare the file to read the environment variables from
+    env_file: .env
+
+    # Define the build file
+    build: ./core
+
+    # Define the port to expose to other containers
+    expose:
+      - "80"
+
+    # This is the post to expose outside the container to the host.  Note this
+    # will most likely be commented out so only the other containers can access
+    # the port
+    ports:
+      - "8080:80"
+
+    # The volumes to mount for the core service
+    volumes:
+      - "${ESP_APPS_BASEDIR_HOST}/core-service/logs:/var/log/httpd"
+      - "${ESP_APPS_BASEDIR_HOST}/core-service/uploads:/data/uploads"
+      - "${ESP_APPS_BASEDIR_HOST}/ESP2Gscript:/home/esp/ESP2Gscript"
+
+    # Give the container a name
+    container_name: esp-core-service
+
+  # This is an HTTP service for uploading images for auto analysis
+  ia-service:
+    # Declare the file to read the environment variables from
+    env_file: .env
+
+    # The image to use for the service
+    image: mbari/esp-ia-server
+
+    # The port to expose to other containers
+    expose:
+      - "8080"
+
+    # This is the port to open up to the host. This is mostly for
+    # debugging/testing as you would probably have this commented out in
+    # production
+    ports:
+      - "8082:8080"
+
+    # Give the container a name
+    container_name: esp-is-service
+
+  # Now run the ESP web portal
+  web-portal:
+    # Declare the file to read the environment variables from
+    env_file: .env
+
+    # Define the build file
+    build: .
+
+    # Expose HTTP port outside
+    ports:
+    - "8081:8081"
+
+    # The volumes to mount for the core service
+    volumes:
+    - ".:/opt/esp"
+    - "${ESP_APPS_BASEDIR_HOST}:${ESP_APPS_BASEDIR}"
+
+    # Give the container a name
+    container_name: esp-web-portal
+
