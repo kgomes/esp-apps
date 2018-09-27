@@ -6,3 +6,5 @@ espmob/www/lib
 .DS_Store
 server/config.js
 .idea/workspace.xml
+/server/.idea
+/.env
