@@ -130,10 +130,12 @@ services:
     ports:
     - "8081:8081"
 
-    # The volumes to mount for the core service
+    # The volumes to mount for the core service.  If you want to mount the working directory over the added directory
+    # (usually for development purposes), you can uncomment the second volume, just make sure you run 'npm install' on
+    # the host machine as well as 'bower install' in the app directory on the host machine.
     volumes:
-    - ".:/opt/esp"
     - "${ESP_APPS_BASEDIR_HOST}:${ESP_APPS_BASEDIR}"
+#    - ".:/opt/esp"
 
     # Give the container a name
     container_name: esp-web-portal
