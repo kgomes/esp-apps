@@ -1,0 +1,19 @@
+#!/bin/sh
+# install ESP ruby 1.8.7p352 build for workstation -- 5/8/17 brent@mbari.org
+# also install modules needed for ESP unless
+#   coreOnly environment variable is set
+#
+make "$@" all || exit 3
+make install DESTDIR=$DESTDIR || exit 1
+#chown $USER .installed.list || exit 2
+
+[ -n "$coreOnly" ] || {
+  echo "   Installing extensions required by MBARI ESP:"
+  PATH=.:$PATH
+  buildUtils clean all &&
+  echo "Installing MBARI extensions..."  &&
+  buildUtils install
+}
+
+cd /opt/mbari/share/man/man1 &&
+  gzip -f *.1
