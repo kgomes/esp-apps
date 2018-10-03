@@ -76,7 +76,12 @@ services:
     env_file: .env
 
     # Define the build file
-    build: ./core
+    build:
+      context: ./core
+      args:
+        ESP_NAME: chris
+        ESP_MODE: real
+        ESP_PORT: 7777
 
     # Define the port to expose to other containers
     expose:
