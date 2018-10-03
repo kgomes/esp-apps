@@ -21,71 +21,36 @@ ARG ESP_PORT
 # that are not part of the base CentOS 7 image. The following section all runs
 # as the root user
 RUN yum upgrade -y && \
-    yum update -y && \
-    yum install -y gmp-devel \
-    file \
+    yum update -y
+
+RUN yum install -y \
     gcc \
     git \
     which \
     autoconf \
     byacc \
-    zip \
-    texinfo \
-    gettext \
-    mpfr-devel \
-    flex \
-    flex-devel \
-    libmpc-devel \
-    libxslt \
-    libicu \
-    libicu-devel \
-    libstdc++-devel.i686 \
-    bison \
-    bison-devel \
-    glibc-devel \
-    glibc-devel.i686 \
-    tcl \
-    tcl-devel \
-    tk \
-    tk-devel \
-    bzip2 \
-    wget \
     make \
     httpd \
-    && cd \
-# Now grab the GCC source code from a web site
-    && wget http://www.netgull.com/gcc/snapshots/4.6-20130405/gcc-4.6-20130405.tar.bz2 \
-# Unpack it
-    && bzip2 -d gcc-4.6-20130405.tar.bz2 \
-    && tar -xvf gcc-4.6-20130405.tar \
-    && cd gcc-4.6-20130405 \
-    && mkdir objdir \
-# Create a directory to run the build in
-    && cd objdir \
-# Configure the build to only build C and C++ compilers and install the compiler in /usr/local/gcc46
-    && ../configure --enable-languages=c,c++ --prefix=/usr/local/gcc46 --program-suffix=-4.6 \
-# Run the build and install it.
-    && make \
-    && make install \
     && cd \
 # Now create a directory where we can build the MBARI patched ruby.
     && mkdir esp \
     && cd esp \
 # Grab the source code from GitHub
-    && git clone https://github.com/brentr/matzruby.git \
-    && cd matzruby \
+    && git clone https://github.com/brentr/matzruby.git ruby-1.8.7-mbari \
+    && cd ruby-1.8.7-mbari \
 # Check out the correct branch
-    && git checkout -b esp origin/esp \
-# Configure the build by telling it to use the GCC 4.6 compiler and enable the MBARI patches
-    && autoconf \
-    && CC=/usr/local/gcc46/bin/gcc-4.6 ./configure --prefix=/opt/mbari --enable-mbari-api --enable-pthread CFLAGS="-Wall -g -O2 -fno-stack-protector" \
-# Now build and install the patched ruby
-    && make \
-    && make install \
-# Now install the MBARI specific ruby files
-    && ./buildUtils clean all \
-    && ./buildUtils install \
-# Create the 'esp' group and user
+    && git checkout esp
+
+COPY ./espconfig /root/esp/ruby-1.8.7-mbari/espconfig
+RUN chmod -v +x /root/esp/ruby-1.8.7-mbari/espconfig
+COPY ./espinstall /root/esp/ruby-1.8.7-mbari/espinstall
+RUN chmod -v +x /root/esp/ruby-1.8.7-mbari/espinstall
+
+RUN cd \
+    && cd esp/ruby-1.8.7-mbari \
+    && export PATH=$PATH:. \
+    && espconfig \
+    && espinstall \
     && groupadd esp \
     && useradd -g esp -m -s /bin/bash esp \
 # Create a log directory and give the new user account ownership.  The ESP process will write to this directory.
