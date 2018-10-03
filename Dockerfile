@@ -9,7 +9,7 @@ ADD ./ /opt/esp
 RUN yum upgrade -y && \
     yum update -y && \
     curl --silent --location https://rpm.nodesource.com/setup_10.x | bash - && \
-    yum install -y nodejs ImageMagick && \
+    yum install -y git nodejs ImageMagick && \
     cd /opt/esp/server && \
     npm install && \
     cd /opt/esp/app && \
