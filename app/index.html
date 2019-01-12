@@ -155,12 +155,12 @@
         <div id="col-detail" class="col-xs-12" ng-controller="DetailPanelController">
             <div id="panel-detail" class="panel panel-default">
                 <div id="panel-body-detail" class="panel-body">
-                    <tabset>
-                        <tab ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active"
+                    <uib-tabset>
+                        <uib-tab ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active"
                              disabled="tab.disabled">
                             <div ng-include="tab.content"></div>
-                        </tab>
-                    </tabset>
+                        </uib-tab>
+                    </uib-tabset>
                 </div>
             </div>
         </div>
@@ -175,7 +175,7 @@
 <script src="node_modules/highstock-release/highstock.js"></script>
 <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="node_modules/angular/angular.min.js"></script>
-<script src="node_modules/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js"></script>
 <script src="node_modules/glfx/glfx.js"></script>
 <script src="js/app.js"></script>
 <script src="js/services/ESPAppCoordinator.js"></script>

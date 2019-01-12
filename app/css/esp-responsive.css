@@ -395,3 +395,16 @@
 .x-ng-cloak {
   display: none;
 }
+
+#panel-body-detail > div {
+  height: 100%;
+}
+
+.col-image-or-canvas {
+  text-align: center;
+}
+.col-image-or-canvas > canvas {
+  height: 95%;
+  padding-top: 5px;
+}
+

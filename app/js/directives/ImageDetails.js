@@ -86,7 +86,6 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
         if (placeholder) {
             try {
                 imageCanvas = fx.canvas();
-                imageCanvas.style.width = '100%';
                 imageCanvas.replace(placeholder);
                 webGLSupported = true;
 

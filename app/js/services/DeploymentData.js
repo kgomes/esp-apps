@@ -10,23 +10,26 @@ espApp.factory('deploymentData', function ($http, $log) {
 
         // This is the function to return the names of all the deployments available
         getAllDeploymentNames: function (successcb) {
-            $http({method: 'GET', url: '/deployments?namesOnly=true'}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).
-                error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
-                });
+            $http({
+                method: 'GET',
+                url: '/deployments?namesOnly=true'
+            }).then(function (response) {
+                successcb(response.data);
+            }, function (response) {
+                $log.warn(response);
+            });
         },
 
         // This is a method to return all deployments with a given name
         getDeploymentsByName: function (name, successcb) {
-            $http({method: 'GET', url: '/deployments?name=' + name}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
-                });
+            $http({
+                method: 'GET', url: '/deployments?name=' + name
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
+                }
+            );
         },
 
         // This method takes in a deployment ID and sends the errors object to the callback
@@ -36,11 +39,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("errorUrl: " + errorsUrl);
 
             // Make the call
-            $http({method: 'GET', url: errorsUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: errorsUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -52,11 +56,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("imageUrl: " + imagesUrl);
 
             // Make the call
-            $http({method: 'GET', url: imagesUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: imagesUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -68,11 +73,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("protocolRunUrl: " + protocolRunsUrl);
 
             // Make the call
-            $http({method: 'GET', url: protocolRunsUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: protocolRunsUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -84,11 +90,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("samplesUrl: " + samplesUrl);
 
             // Make the call
-            $http({method: 'GET', url: samplesUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: samplesUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -100,11 +107,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("errorsUrl: " + errorsUrl);
 
             // Make the call
-            $http({method: 'GET', url: errorsUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: errorsUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -116,11 +124,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("pcrsByTimeUrl: " + pcrsByTimeUrl);
 
             // Make the call
-            $http({method: 'GET', url: pcrsByTimeUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: pcrsByTimeUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -133,11 +142,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("pcrsFullTreeUrl: " + pcrsFullTreeUrl);
 
             // Make the call
-            $http({method: 'GET', url: pcrsFullTreeUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: pcrsFullTreeUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -150,11 +160,12 @@ espApp.factory('deploymentData', function ($http, $log) {
             //$log.log("pcrDataUrl: " + pcrDataUrl);
 
             // Make the call
-            $http({method: 'GET', url: pcrDataUrl}).
-                success(function (data, status, headers, config) {
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+            $http({
+                method: 'GET', url: pcrDataUrl
+            }).then(function (response) {
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
         },
@@ -174,16 +185,16 @@ espApp.factory('deploymentData', function ($http, $log) {
             }
             //$log.log("dataUrl: " + dataUrl);
 
-            $http({method: 'GET', url: dataUrl}).
-                success(function (data, status, headers, config) {
+            $http({
+                method: 'GET', url: dataUrl
+            }).then(function (response) {
                     // Send the data to the callback
-                    successcb(data);
-                }).error(function (data, status, headers, config) {
-                    $log.warn(data, status, headers, config);
+                    successcb(response.data);
+                }, function (response) {
+                    $log.warn(response);
                 }
             );
 
         }
     };
-})
-;
+});
