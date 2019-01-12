@@ -173,3 +173,13 @@ if [ ! -f ./server/config.js ]; then
 else
     echo "Application server configuration file server/config.js already exists, not copying over"
 fi
+
+# Install the server Node modules
+echo "Installing server Node Modules"
+cd ./server
+npm install
+
+# Install the client Node modules
+echo "Installing client app Node modules"
+cd ../app
+npm install
