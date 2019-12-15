@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Sleep to allow the other services to start
-echo "Sleeping 30 seconds to allow other services to start"
-sleep 30s
+echo "Sleeping 60 seconds to allow other services to start"
+sleep 60s
 
 # Start the FTP file crawler
 echo "Starting FTP crawler"
