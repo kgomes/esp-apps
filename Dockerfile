@@ -13,8 +13,8 @@ RUN yum upgrade -y && \
     cd /opt/esp/server && \
     npm install && \
     cd /opt/esp/app && \
-    npm install bower && \
-    ./node_modules/bower/bin/bower --allow-root install && \
+#    npm install bower && \
+#    ./node_modules/bower/bin/bower --allow-root install && \
     npm install -g forever
 
 ADD run.sh /run.sh
