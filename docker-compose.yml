@@ -121,27 +121,27 @@ services:
       - "8082:8080"
 
     # Give the container a name
-    container_name: esp-is-service
+    container_name: esp-ia-service
 
   # Now run the ESP web portal
-  web-portal:
+#  web-portal:
     # Declare the file to read the environment variables from
-    env_file: .env
+#    env_file: .env
 
     # Define the build file
-    build: .
+#    build: .
 
     # Expose HTTP port outside
-    ports:
-    - "8081:8081"
+#    ports:
+#    - "8081:8081"
 
     # The volumes to mount for the core service.  If you want to mount the working directory over the added directory
     # (usually for development purposes), you can uncomment the second volume, just make sure you run 'npm install' on
     # the host machine as well as 'bower install' in the app directory on the host machine.
-    volumes:
-    - "${ESP_APPS_BASEDIR_HOST}:${ESP_APPS_BASEDIR}"
-#    - ".:/opt/esp"
+#    volumes:
+#    - "${ESP_APPS_BASEDIR_HOST}:${ESP_APPS_BASEDIR}"
+##    - ".:/opt/esp"
 
     # Give the container a name
-    container_name: esp-web-portal
+#    container_name: esp-web-portal
 
