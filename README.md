@@ -69,3 +69,25 @@ To run the ESP Portal using Docker, do the following:
 1. From the terminal window at the top level of the ESP_APPS_BASEDIR_HOST, clone the ESP2Gscript using git.  This should create a directory at ESP_APPS_BASEDIR_HOST/ESP2Gscript
 1. Edit any variables to configure the application to run the way you want it to.  This can be done in two ways: edit the server/config.js file or edit the variables in the .env file.  The .env variables will override those defined in the config.js file, so that is usually the best place to define them.
 1. Now from the command line, run 'docker-compose up' and after a minute or so, the application should be visible at http://localhost:8080.
+
+One thing I need to fix is the have a web form in the portal that allows you to create ESP deployments, right now you have to do that directly in the CouchDB web interface (ick!).  To do this, go to the [CouchDB web interface](http://localhost:5984/_utils) and login as the user defined in the .env file.  Then you can create a new document in the esp database that is of the form:
+
+```json
+{
+   "resource": "Deployment",
+   "name": "Test Deployment",
+   "startDate": "2018-08-16T00:00:00PST",
+   "description": "A Test Deployment for my testing",
+   "notifySlack": true,
+   "esp": {
+       "ftpHost": "your.esp.ftp.host",
+       "ftpPort": 21,
+       "ftpUsername": "ftp_username",
+       "ftpPassword": "ftp_password",
+       "ftpWorkingDir": "/esp/log/base/path",
+       "logFile": "esp/real.log",
+       "mode": "real",
+       "name": "ESPName"
+   }
+}
+```
