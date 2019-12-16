@@ -7,11 +7,14 @@ This project contains a web application for inspecting 2G ESP deployments. For d
 These instructions assume you have cloned the Git repository for this project into a folder on your local machine. Before doing anything. To get going, do the following steps:
 
 1. Install Docker on your local machine.
+1. Install NodeJS on your local machine.
+1. Install [Imagemagick](https://imagemagick.org/script/download.php#macosx) on your local machine.
 1. If you want to test the functionality that posts messages to a Slack channel, you will need to create a Slack App and an Incoming Web Hook which will end up giving you a URL that you will need to set in the environment variables. For more information, see [the Slack documentation](https://api.slack.com/messaging/webhooks#getting-started)
 1. Find or create a directory on your host machine where all the data, logs, etc. will be stored by your docker images. For these instructions, we will use ```/host/path/data/directory``` as an example.
 1. You need to next define all the environment variables that will be used by the various components and services. Copy the env.template file to a file named .env and open in your favorite editor.
 1. You can use the comments in the .env file to help you fill out the different variables, but the key variables are:
     1. ESP_APPS_BASEDIR_HOST (this is ```/host/path/data/directory``` in this example)
+    1. ESP_APPS_BASEDIR (if running locally, this is the same as ESP_APPS_BASEDIR_HOST, which is ```/host/path/data/directory``` in this example)
     1. ESP_APPS_COUCHDB_USERNAME (whatever you choose)
     1. ESP_APPS_COUCHDB_PASSWORD (whatever you choose)
     1. ESP_APPS_PG_USERNAME (whatever you choose)
@@ -34,6 +37,7 @@ These instructions assume you have cloned the Git repository for this project in
 1. Once you've gathered up the FTP site information, go to the CouchDB web portal (link above) and click on 'login' in the lower right corner.  Use the username and password you defined in your environment variables to log into CouchDB portal.
 1. Now click on the 'esp' database link
 1. Now click on 'New Document'.  This will generate a new document with one property, which is the ID of the document.  
+1. Click on the 'Source' tab to change to the source view.
 1. Double click on the document and it should open it in an editor.  Add a comma after the ID and then the other information in the following format (Note the Slack property should be true only if you have create and configured a Slack web hook, otherwise make it false.  If you are using Slack, the channel name should be an existing Slack channel that you want to publish message to.):
 
     ```json
