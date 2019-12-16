@@ -59,17 +59,16 @@ fi
 # Copy CouchDB configuration files to their deployment location
 if [ ! -f ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/default.ini ]; then
     echo "Copying CouchDB default.ini file to the data repository..."
-    cp ./couchdb/default.ini ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/default.ini
+    cp ./services/couchdb/default.ini ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/default.ini
 else
     echo "CouchDB default.ini already in repository, not copying over"
 fi
 if [ ! -f ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/local.ini ]; then
     echo "Copying CouchDB local.ini file to the data repository..."
-    cp ./couchdb/local.ini ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/local.ini
+    cp ./services/couchdb/local.ini ${ESP_APPS_BASEDIR_HOST}/couchdb/etc/local.ini
 else
     echo "CouchDB local.ini already in repository, not copying over"
 fi
-
 
 echo "Creating the PostgreSQL directories"
 if [ ! -d ${ESP_APPS_BASEDIR_HOST}/postgresql ]; then
@@ -99,13 +98,13 @@ fi
 # Copy PostgreSQL configuration files
 if [ ! -f ${ESP_APPS_BASEDIR_HOST}/postgresql/conf/postgresql.conf ]; then
     echo "Copying PostgreSQL configuration file to the data repostiory..."
-    cp ./postgresql/postgresql.conf.sample ${ESP_APPS_BASEDIR_HOST}/postgresql/conf/postgresql.conf
+    cp ./services/postgresql/postgresql.conf.sample ${ESP_APPS_BASEDIR_HOST}/postgresql/conf/postgresql.conf
 else
     echo "PostgreSQL configuration already in repository, not copying over"
 fi
 if [ ! -f ${ESP_APPS_BASEDIR_HOST}/postgresql/docker-entrypoint-initdb.d/init-esp-db.sh ]; then
     echo "Copying PostgreSQL database configuration file to the data repostiory..."
-    cp ./postgresql/init-esp-db.sh ${ESP_APPS_BASEDIR_HOST}/postgresql/docker-entrypoint-initdb.d/init-esp-db.sh
+    cp ./services/postgresql/init-esp-db.sh ${ESP_APPS_BASEDIR_HOST}/postgresql/docker-entrypoint-initdb.d/init-esp-db.sh
 else
     echo "PostgreSQL database configuration already in repository, not copying over"
 fi
