@@ -8,3 +8,4 @@ server/config.js
 .idea/workspace.xml
 /server/.idea
 /.env
+/esp.code-workspace
