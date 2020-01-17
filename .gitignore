@@ -9,3 +9,5 @@ server/config.js
 /server/.idea
 /.env
 /esp.code-workspace
+/server/test/moe-real2.log
+/server/test/moe-real2.out
