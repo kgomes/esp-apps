@@ -4,7 +4,8 @@
   "author": "Kevin Gomes <kgomes@mbari.org>",
   "version": "0.0.1",
   "scripts": {
-    "start": "node_modules/.bin/supervisor server.js"
+    "start": "node_modules/.bin/supervisor server.js",
+    "test": "jest"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "grunt": "^0.4.5",
+    "jest": "^24.9.0",
     "mocha": "*",
     "should": "*",
     "vows": "0.5.x"

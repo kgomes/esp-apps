@@ -1,0 +1,1432 @@
+@18:42:54.72PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@18:42:57.03 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@18:42:59.89 Gate.setWakeString! "\r\nRING\r\n",15
+@18:43:00.20 Polling Can every 10:00
+@18:43:00.22 Cleanly exited at 18:42:24PST12-Dec-19
+@18:43:00.26 Waiting for espclients...
+@18:43:01.17 <brent> Session Begun
+@18:43:08.34 -> MainThread.exit
+@18:43:08.41 Session Ended
+/home/esp/esp2/bin/esp: line 7: cannot create /dev/null: Permission denied
+@18:50:39.24PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@18:50:41.39 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@18:50:44.41 Gate.setWakeString! "\r\nRING\r\n",15
+@18:50:44.74 Polling Can every 10:00
+@18:50:44.78 Loading /home/esp/esp2/mission/long/test.rb mission
+@18:50:44.83 <Qmail> GoodNews.email "Starting test\n{}\nCan@18:50:44, 21.2C, 63% humidity, 14.7psia, 13.709V, 0.077A, 0.077A avg, 1.06W",Subject: "test begun"
+@18:50:44.96 <MAIN> Starting test mission in /home/esp/esp2/mission/long/test.rb
+@18:50:45.18 <shutdown> Shutdown
+@18:50:45.22 <MAIN> Asleep / Shutdown
+Bringing up bg96 ...
+@18:51:11.19 <Qmail> GoodNews.email "At 19:00, at('12/12/19 7PM') {exercise}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@18:50:45, 21.2C, 63% humidity, 14.7psia, 13.709V, 0.077A, 0.077A avg, 1.06W",Subject: "Powered off until 19:00"
+@18:51:14.92 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@18:51:15.29 <MAIN> Sending Email
+@18:51:17.40 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@18:51:17.43 <MAIN> Powering down until 19:00
+/home/esp/esp2/bin/esp: line 7: cannot create /dev/null: Permission denied
+@18:59:22.16PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@18:59:24.29 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@18:59:27.22 Gate.setWakeString! "\r\nRING\r\n",15
+@18:59:27.24 Gate.setWakeAckString! "\rWAKING\r"
+@18:59:27.53 Polling Can every 10:00
+@18:59:27.55 Cleanly exited at 18:50:45PST12-Dec-19
+@18:59:27.59 Loading /home/esp/esp2/mission/long/test.rb mission
+@18:59:27.67 Continuing test from /home/esp/esp2/mission/long/test.rb:10
+@18:59:27.72 Waiting until 19:00
+@19:00:00.05 Powering core bus
+@19:00:04.77 Gate.power :raw,:ON
+@19:00:05.46 CS.configure :default
+@19:00:05.55 PS.configure :default
+@19:00:05.64 SS.configure :default
+@19:00:05.72 CC.configure :default
+@19:00:05.81 PC.configure :default
+@19:00:05.93 Forearm.configure :loose
+@19:00:06.02 Elbow.configure :loose
+@19:00:06.13 SC.configure :loose
+@19:00:06.22 SE.configure :default
+@19:00:06.26 CH.coast
+@19:00:06.31 CH.configure :default
+@19:00:06.34 PH.coast
+@19:00:06.39 PH.configure :default
+@19:00:06.42 All dwarf controllers running firmware version 3.85
+@19:00:06.53 Valve.reset
+@19:00:06.77 <rdySampler> Intake.select :close
+@19:00:06.83 Exhaust.select :close
+@19:00:06.84 CTV.dial :air
+@19:00:06.92 <rdyProcessing> PSV.dial :air
+@19:00:06.99 <rdySampler> CSV.dial :waste1
+@19:00:07.12 <rdyProcessing> PS.reconfigure :default
+@19:00:07.14 <MAIN> Forearm.reconfigure :loose
+@19:00:07.22 <rdyProcessing> PS.home.seek 0ml
+@19:00:07.26 <MAIN> Forearm.home.seek :retract
+@19:00:07.34 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@19:00:07.48 <readyCS> CS.reconfigure :fast
+@19:00:07.51 <rdySampler> SS.reconfigure :default
+@19:00:07.59 <readyCS> CS.home.seek 0ml
+@19:00:07.62 <rdySampler> SS.home.seek 0ml
+@19:00:08.07 <closeHand> Hand.close
+@19:00:08.11 <MAIN> Elbow.jog 1500
+@19:00:08.66 Elbow.reconfigure :loose
+@19:00:08.70 Elbow.home.seek :clear
+@19:00:13.63 SE.reconfigure :default
+@19:00:13.67 SE.home.seek :down
+@19:00:14.25 SC.reconfigure :sloppy
+@19:00:14.30 SC.home.seek :initial
+@19:00:16.19 <rdyProcessing> PS.coast
+@19:00:17.51 <MAIN> Forearm.seek :retract
+@19:00:17.58 Elbow.seek :hammer
+@19:00:18.69 Forearm.reconfigure :tight
+@19:00:18.74 Forearm.seek retracted
+@19:00:18.97 <openPC> PC.reconfigure :default
+@19:00:19.00 <MAIN> CC.reconfigure :default
+@19:00:19.08 CC.home.seek :open
+@19:00:19.11 <openPC> PC.home.seek :open
+@19:00:21.95 <MAIN> Phase [at('12/12/19 7PM') {exercise}]
+@19:00:21.96 <Qmail> Notice.suppressMail "At 19:00:21 began at('12/12/19 7PM') {exercise}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@19:00:21, 21.2C, 64% humidity, 14.7psia, 13.601V, 0.410A, 0.410A avg, 5.58W",Subject: "Started test phase at('12/12/19 7PM') {exercise}"
+@19:00:21.97 <MAIN> Phase #1 on Thursday
+@19:00:21.99 Completed [at('12/12/19 7PM') {exercise}] begun 19:00:21
+@19:00:22.08 <shutdown> CS.coast
+@19:00:22.10 <MAIN> Asleep / Shutdown
+@19:00:22.13 <shutdown> SS.coast
+@19:00:22.16 CC.coast
+@19:00:22.19 PC.coast
+@19:00:22.22 Forearm.coast
+@19:00:22.25 Elbow.coast
+@19:00:22.29 SC.coast
+@19:00:22.32 SE.coast
+@19:00:22.70 Gate.power :core,:OFF
+@19:00:22.72 Gate.power :raw,:OFF
+@19:00:22.73 Shutdown
+@19:00:22.76 <Qmail> GoodNews.email "At 21:00, at('9PM') {exercise}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@19:00:22, 21.2C, 64% humidity, 14.7psia, 13.601V, 0.410A, 0.410A avg, 5.58W",Subject: "Powered off until 21:00"
+Bringing up bg96 ...
+@19:00:53.31 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@19:00:53.35 <MAIN> Powering down until 21:00
+/home/esp/esp2/bin/esp: line 7: cannot create /dev/null: Permission denied
+@19:20:04.82PST12-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:20:06.98 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:20:10.03 Gate.setWakeString! "\r\nRING\r\n",15
+@19:20:10.05 Gate.setWakeAckString! "\rWAKING\r"
+@19:20:10.35 Polling Can every 10:00
+@19:20:10.37 Cleanly exited at 19:00:22PST12-Dec-19
+@19:20:10.40 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:20:10.61 <brent> Session Begun
+@19:20:10.79 <pause> delay 8:00
+@19:20:10.85 Woken in MAIN -- Reset or Power Cycled before test 21:00 phase /home/esp/esp2/mission/long/test.rb:11
+21.0C, 64% humidity, 14.7psia, 13.709V, 0.083A, 0.077A avg, 1.14W
+@19:20:10.89 <MAIN> Waiting to Resume from Checkpoint "Reset or Power Cycled before test 21:00 phase /home/esp/esp2/mission/long/test.rb:11
+21.0C, 64% humidity, 14.7psia, 13.709V, 0.083A, 0.077A avg, 1.14W"
+@19:20:10.91 <Qmail> BadNews.email "Reset or Power Cycled before test 21:00 phase /home/esp/esp2/mission/long/test.rb:11\n21.0C, 64% humidity, 14.7psia, 13.709V, 0.083A, 0.077A avg, 1.14W",Subject: "Woken in MAIN"
+Bringing up bg96 ...
+@19:20:12.38 <brent> -> MainThread.exit
+@19:20:15.25 -> MainThread.exit
+@19:20:15.28 <MAIN> Sending Email
+@19:20:17.18 <brent> -> MainThread.exit
+@19:20:17.22 Email::Error in MAIN -- flush aborted!
+@19:20:17.39 Session Ended
+/home/esp/esp2/bin/esp: line 7: cannot create /dev/null: Permission denied
+No 'test' script found on ESPpath:
+  /home/esp/esp2/mission:.
+/home/esp/esp2/bin/esp: line 7: cannot create /dev/null: Permission denied
+No 'test' script found on ESPpath:
+  /home/esp/esp2/mission:.
+@19:53:44.59PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:53:46.73 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:53:49.73 Gate.setWakeString! "\r\nRING\r\n",15
+@19:53:49.99 Polling Can every 10:00
+@19:53:50.03 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:53:50.09 Starting test mission in /home/esp/esp2/mission/long/test.rb
+@19:53:50.12 <Qmail> GoodNews.email "Starting test\n{}\nCan@19:53:49, 21.3C, 63% humidity, 14.7psia, 13.704V, 0.077A, 0.077A avg, 1.06W",Subject: "test begun"
+@19:53:50.43 <shutdown> Shutdown
+@19:53:50.47 <MAIN> Asleep / Shutdown
+Bringing up bg96 ...
+@19:54:17.19 <Qmail> GoodNews.email "At 20:00, at('12/12/19 8PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@19:53:50, 21.2C, 63% humidity, 14.7psia, 13.709V, 0.077A, 0.077A avg, 1.06W",Subject: "Powered off until 20:00"
+@19:54:20.53 <MAIN> Sending Email
+@19:54:28.13 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@19:54:29.47 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@19:54:29.51 <MAIN> Powering down until 20:00
+@19:59:22.48PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:59:24.69 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:59:27.69 Gate.setWakeString! "\r\nRING\r\n",15
+@19:59:27.73 Gate.setWakeAckString! "\rWAKING\r"
+@19:59:28.02 Polling Can every 10:00
+@19:59:28.04 Cleanly exited at 19:53:50PST12-Dec-19
+@19:59:28.08 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:59:28.16 Continuing test from /home/esp/esp2/mission/long/test.rb:10
+@19:59:28.21 Waiting until 20:00
+@20:00:00.05 Powering core bus
+@20:00:05.14 Gate.power :raw,:ON
+@20:00:05.95 CS.configure :default
+@20:00:06.04 PS.configure :default
+@20:00:06.13 SS.configure :default
+@20:00:06.22 CC.configure :default
+@20:00:06.30 PC.configure :default
+@20:00:06.42 Forearm.configure :loose
+@20:00:06.51 Elbow.configure :loose
+@20:00:06.62 SC.configure :loose
+@20:00:06.71 SE.configure :default
+@20:00:06.75 CH.coast
+@20:00:06.80 CH.configure :default
+@20:00:06.83 PH.coast
+@20:00:06.88 PH.configure :default
+@20:00:06.91 All dwarf controllers running firmware version 3.85
+@20:00:07.02 Valve.reset
+@20:00:07.29 <rdySampler> Intake.select :close
+@20:00:07.30 Exhaust.select :close
+@20:00:07.31 CTV.dial :air
+@20:00:07.39 <rdyProcessing> PSV.dial :air
+@20:00:07.53 <rdySampler> CSV.dial :waste1
+@20:00:07.56 <MAIN> Forearm.reconfigure :loose
+@20:00:07.67 Forearm.home.seek :retract
+@20:00:07.68 <rdyProcessing> PS.reconfigure :default
+@20:00:07.70 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@20:00:07.82 <rdyProcessing> PS.home.seek 0ml
+@20:00:07.94 <readyCS> CS.reconfigure :fast
+@20:00:07.97 <rdySampler> SS.reconfigure :default
+@20:00:08.06 <readyCS> CS.home.seek 0ml
+@20:00:08.08 <rdySampler> SS.home.seek 0ml
+@20:00:08.48 <closeHand> Hand.close
+@20:00:08.53 <MAIN> Elbow.jog 1500
+@20:00:09.12 Elbow.reconfigure :loose
+@20:00:09.16 Elbow.home.seek :clear
+@20:00:14.04 SE.reconfigure :default
+@20:00:14.08 SE.home.seek :down
+@20:00:14.70 SC.reconfigure :sloppy
+@20:00:14.74 SC.home.seek :initial
+@20:00:16.75 <rdyProcessing> PS.coast
+@20:00:17.95 <MAIN> Forearm.seek :retract
+@20:00:18.14 Elbow.seek :hammer
+@20:00:19.33 Forearm.reconfigure :tight
+@20:00:19.37 Forearm.seek retracted
+@20:00:19.69 CC.reconfigure :default
+@20:00:19.70 <openPC> PC.reconfigure :default
+@20:00:19.79 <MAIN> CC.home.seek :open
+@20:00:19.80 <openPC> PC.home.seek :open
+@20:00:22.65 <MAIN> Phase [at('12/12/19 8PM') {exercise "2:00"}]
+@20:00:22.67 <Qmail> Notice.suppressMail "At 20:00:22 began at('12/12/19 8PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@20:00:22, 21.2C, 64% humidity, 14.7psia, 13.675V, 0.200A, 0.194A avg, 2.74W",Subject: "Started test phase at('12/12/19 8PM') {exercise \"2:00\"}"
+@20:00:22.68 <MAIN> Phase #1 on Thursday
+@20:00:22.69 delay 2:00
+@20:02:22.72 Completed [at('12/12/19 8PM') {exercise "2:00"}] begun 20:00:22
+@20:02:22.82 <shutdown> CS.coast
+@20:02:22.84 <MAIN> Asleep / Shutdown
+@20:02:22.87 <shutdown> SS.coast
+@20:02:22.90 CC.coast
+@20:02:22.94 PC.coast
+@20:02:22.97 Forearm.coast
+@20:02:23.01 Elbow.coast
+@20:02:23.04 SC.coast
+@20:02:23.08 SE.coast
+@20:02:23.49 Gate.power :core,:OFF
+@20:02:23.52 Gate.power :raw,:OFF
+@20:02:23.53 Shutdown
+@20:02:23.59 <Qmail> GoodNews.email "At 21:00, at('9PM') {exercise \"1:00:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@20:02:22, 21.2C, 64% humidity, 14.7psia, 13.670V, 0.200A, 0.194A avg, 2.74W",Subject: "Powered off until 21:00"
+@20:02:24.19 <brent> Session Begun
+Bringing up bg96 ...
+@20:02:28.45 -> MainThread.exit
+@20:02:57.54 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:02:57.63 <brent> Session Ended
+@20:06:18.47PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:06:20.66 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:06:23.71 Gate.setWakeString! "\r\nRING\r\n",15
+@20:06:23.96 Polling Can every 10:00
+@20:06:24.01 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:06:24.06 Starting test mission in /home/esp/esp2/mission/long/test.rb
+@20:06:24.09 <Qmail> GoodNews.email "Starting test\n{}\nCan@20:06:23, 21.2C, 64% humidity, 14.7psia, 13.699V, 0.108A, 0.108A avg, 1.48W",Subject: "test begun"
+@20:06:24.40 <shutdown> Shutdown
+@20:06:24.43 <MAIN> Asleep / Shutdown
+Bringing up bg96 ...
+@20:06:50.36 <Qmail> GoodNews.email "At 20:10, at('12/12/19 8:10PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@20:06:24, 21.2C, 64% humidity, 14.7psia, 13.709V, 0.083A, 0.083A avg, 1.14W",Subject: "Powered off until 20:10"
+@20:06:54.48 <MAIN> Sending Email
+@20:06:54.63 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:06:59.56 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:06:59.59 <MAIN> Powering down until 20:10
+@20:09:22.51PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:09:24.65 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:09:27.69 Gate.setWakeString! "\r\nRING\r\n",15
+@20:09:27.75 Gate.setWakeAckString! "\rWAKING\r"
+@20:09:28.05 Polling Can every 10:00
+@20:09:28.07 Cleanly exited at 20:06:24PST12-Dec-19
+@20:09:28.11 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:09:28.19 Continuing test from /home/esp/esp2/mission/long/test.rb:10
+@20:09:28.25 Waiting until 20:10
+@20:10:00.05 Powering core bus
+@20:10:05.05 Gate.power :raw,:ON
+@20:10:05.61 CS.configure :default
+@20:10:05.70 PS.configure :default
+@20:10:05.79 SS.configure :default
+@20:10:05.88 CC.configure :default
+@20:10:05.97 PC.configure :default
+@20:10:06.08 Forearm.configure :loose
+@20:10:06.17 Elbow.configure :loose
+@20:10:06.28 SC.configure :loose
+@20:10:06.37 SE.configure :default
+@20:10:06.41 CH.coast
+@20:10:06.46 CH.configure :default
+@20:10:06.49 PH.coast
+@20:10:06.54 PH.configure :default
+@20:10:06.57 All dwarf controllers running firmware version 3.85
+@20:10:06.68 Valve.reset
+@20:10:06.90 <rdySampler> Intake.select :close
+@20:10:06.95 Exhaust.select :close
+@20:10:06.98 CTV.dial :air
+@20:10:07.06 <rdyProcessing> PSV.dial :air
+@20:10:07.12 <rdySampler> CSV.dial :waste1
+@20:10:07.22 <MAIN> Forearm.reconfigure :loose
+@20:10:07.28 Forearm.home.seek :retract
+@20:10:07.31 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@20:10:07.33 <rdyProcessing> PS.reconfigure :default
+@20:10:07.46 PS.home.seek 0ml
+@20:10:07.58 <readyCS> CS.reconfigure :fast
+@20:10:07.61 <rdySampler> SS.reconfigure :default
+@20:10:07.70 <readyCS> CS.home.seek 0ml
+@20:10:07.72 <rdySampler> SS.home.seek 0ml
+@20:10:08.22 <closeHand> Hand.close
+@20:10:08.25 <MAIN> Elbow.jog 1500
+@20:10:09.08 Elbow.reconfigure :loose
+@20:10:09.12 Elbow.home.seek :clear
+@20:10:13.95 SE.reconfigure :default
+@20:10:13.99 SE.home.seek :down
+@20:10:14.57 SC.reconfigure :sloppy
+@20:10:14.61 SC.home.seek :initial
+@20:10:16.37 <rdyProcessing> PS.coast
+@20:10:17.82 <MAIN> Forearm.seek :retract
+@20:10:17.89 Elbow.seek :hammer
+@20:10:19.03 Forearm.reconfigure :tight
+@20:10:19.08 Forearm.seek retracted
+@20:10:19.41 CC.reconfigure :default
+@20:10:19.42 <openPC> PC.reconfigure :default
+@20:10:19.51 <MAIN> CC.home.seek :open
+@20:10:19.53 <openPC> PC.home.seek :open
+@20:10:22.38 <Qmail> Notice.suppressMail "At 20:10:22 began at('12/12/19 8:10PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@20:10:22, 21.2C, 64% humidity, 14.7psia, 13.601V, 0.416A, 0.416A avg, 5.66W",Subject: "Started test phase at('12/12/19 8:10PM') {exercise \"2:00\"}"
+@20:10:22.40 <MAIN> Phase [at('12/12/19 8:10PM') {exercise "2:00"}]
+@20:10:22.41 Phase #1 on Thursday
+@20:10:22.43 ArgumentError in MAIN -- wrong number of arguments (1 for 2)
+@20:10:22.44 Waiting to Resume from Checkpoint "Phase [at('12/12/19 8:10PM') {exercise "2:00"}]"
+@20:10:22.45 <Qmail> BadNews.email "wrong number of arguments (1 for 2)",Subject: "ArgumentError in MAIN"
+Bringing up bg96 ...
+@20:10:51.73 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:12:01.66 <brent> Session Begun
+@20:12:05.52 -> progress
+@20:13:15.37 -> list GoodNews.method :email
+@20:14:04.86 -> GoodNews.email "Exercising for #{Delay 499}"
+@20:14:04.88 ArgumentError in brent -- wrong number of arguments (1 for 2)
+@20:14:10.81 -> GoodNews.email "Exercising for"
+@20:14:10.82 ArgumentError in brent -- wrong number of arguments (1 for 2)
+@20:14:16.90 -> backtrace
+@20:18:24.37 -> abort! "fixed email again"
+@20:18:24.38 CmdServer::Client::Error in brent -- Aborting Mission: fixed email again
+@20:18:24.44 <Qmail> BadNews.email "fixed email again",Subject: "test ABORTED!"
+@20:18:29.10 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:18:29.22 <brent> Session Ended
+@20:19:50.54PST12-Dec-19 <MAIN> >OVERRUN< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:19:52.77 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:19:55.78 Gate.setWakeString! "\r\nRING\r\n",15
+@20:19:56.09 Polling Can every 10:00
+@20:19:57.77 CS.configure :default
+@20:19:57.81 CS.hold
+@20:19:57.88 CS.configure :default
+@20:19:57.97 PS.configure :default
+@20:19:58.05 SS.configure :default
+@20:19:58.09 SS.hold
+@20:19:58.15 SS.configure :default
+@20:19:58.24 CC.configure :default
+@20:19:58.28 CC.hold
+@20:19:58.35 CC.configure :default
+@20:19:58.44 PC.configure :default
+@20:19:58.48 PC.hold
+@20:19:58.54 PC.configure :default
+@20:19:58.65 Forearm.configure :loose
+@20:19:58.69 Forearm.hold
+@20:19:58.74 Forearm.configure :loose
+@20:19:58.82 Elbow.configure :loose
+@20:19:58.86 Elbow.hold
+@20:19:58.91 Elbow.configure :loose
+@20:19:59.02 SC.configure :loose
+@20:19:59.06 SC.hold
+@20:19:59.11 SC.configure :loose
+@20:19:59.19 SE.configure :default
+@20:19:59.23 SE.hold
+@20:19:59.28 SE.configure :default
+@20:19:59.32 CH.coast
+@20:19:59.37 CH.configure :default
+@20:19:59.40 PH.coast
+@20:19:59.45 PH.configure :default
+@20:19:59.48 All dwarf controllers running firmware version 3.85
+@20:19:59.59 Cleanly exited at 20:18:29PST12-Dec-19
+@20:19:59.62 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:19:59.69 <pause> delay 8:00
+@20:19:59.71 MissionLog::Error in MAIN -- Mission differs at phase #1
+12/12/19 8:25PM {at('12/12/19 8:25PM') {exercise "2:00"}} #10
+12/12/19 8:10PM {at('12/12/19 8:10PM') {exercise "2:00"}} #10
+@20:19:59.73 <MAIN> Waiting to Resume from Checkpoint "Mission differs at phase #1
+12/12/19 8:25PM {at('12/12/19 8:25PM') {exercise "2:00"}} #10
+12/12/19 8:10PM {at('12/12/19 8:10PM') {exercise "2:00"}} #10"
+@20:19:59.75 <Qmail> BadNews.email "Mission differs at phase #1\n12/12/19 8:25PM {at('12/12/19 8:25PM') {exercise \"2:00\"}} #10\n12/12/19 8:10PM {at('12/12/19 8:10PM') {exercise \"2:00\"}} #10",Subject: "MissionLog::Error in MAIN"
+Bringing up bg96 ...
+@20:20:15.74 <brent> Session Begun
+@20:20:19.89 -> MainThread.exit
+@20:20:28.92 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:20:29.05 <brent> Session Ended
+@20:21:47.51PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:21:49.67 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:21:52.61 Gate.setWakeString! "\r\nRING\r\n",15
+@20:21:52.94 Polling Can every 10:00
+@20:21:54.61 CS.configure :default
+@20:21:54.65 CS.hold
+@20:21:54.73 CS.configure :default
+@20:21:54.81 PS.configure :default
+@20:21:54.89 SS.configure :default
+@20:21:54.93 SS.hold
+@20:21:54.98 SS.configure :default
+@20:21:55.07 CC.configure :default
+@20:21:55.11 CC.hold
+@20:21:55.15 CC.configure :default
+@20:21:55.24 PC.configure :default
+@20:21:55.28 PC.hold
+@20:21:55.35 PC.configure :default
+@20:21:55.45 Forearm.configure :loose
+@20:21:55.49 Forearm.hold
+@20:21:55.54 Forearm.configure :loose
+@20:21:55.62 Elbow.configure :loose
+@20:21:55.66 Elbow.hold
+@20:21:55.71 Elbow.configure :loose
+@20:21:55.82 SC.configure :loose
+@20:21:55.86 SC.hold
+@20:21:55.91 SC.configure :loose
+@20:21:56.00 SE.configure :default
+@20:21:56.04 SE.hold
+@20:21:56.08 SE.configure :default
+@20:21:56.12 CH.coast
+@20:21:56.17 CH.configure :default
+@20:21:56.20 PH.coast
+@20:21:56.25 PH.configure :default
+@20:21:56.29 All dwarf controllers running firmware version 3.85
+@20:21:56.42 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:21:56.48 Starting test mission in /home/esp/esp2/mission/long/test.rb
+@20:21:56.49 <Qmail> GoodNews.email "Starting test\n{}\nCan@20:21:52, 21.3C, 63% humidity, 14.7psia, 13.650V, 0.244A, 0.244A avg, 3.32W",Subject: "test begun"
+@20:21:56.81 <shutdown> CS.coast
+@20:21:56.86 <MAIN> Asleep / Shutdown
+@20:21:56.93 <shutdown> SS.coast
+@20:21:56.99 CC.coast
+@20:21:57.07 PC.coast
+@20:21:57.15 Forearm.coast
+@20:21:57.21 Elbow.coast
+@20:21:57.29 SC.coast
+@20:21:57.37 SE.coast
+Bringing up bg96 ...
+@20:22:19.48 Gate.power :core,:OFF
+@20:22:19.50 Gate.power :raw,:OFF
+@20:22:19.51 Shutdown
+@20:22:22.84 <Qmail> GoodNews.email "At 20:25, at('12/12/19 8:25PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@20:21:56, 21.3C, 63% humidity, 14.7psia, 13.655V, 0.244A, 0.244A avg, 3.33W",Subject: "Powered off until 20:25"
+@20:22:26.34 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:22:28.54 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:22:28.57 <MAIN> Powering down until 20:25
+@20:24:21.61PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:24:23.75 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:24:26.75 Gate.setWakeString! "\r\nRING\r\n",15
+@20:24:26.78 Gate.setWakeAckString! "\rWAKING\r"
+@20:24:27.01 Polling Can every 10:00
+@20:24:27.03 Cleanly exited at 20:22:19PST12-Dec-19
+@20:24:27.07 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:24:27.14 Continuing test from /home/esp/esp2/mission/long/test.rb:10
+@20:24:27.20 Waiting until 20:25
+@20:25:00.05 Powering core bus
+@20:25:04.98 Gate.power :raw,:ON
+@20:25:05.70 CS.configure :default
+@20:25:05.79 PS.configure :default
+@20:25:05.88 SS.configure :default
+@20:25:05.96 CC.configure :default
+@20:25:06.05 PC.configure :default
+@20:25:06.16 Forearm.configure :loose
+@20:25:06.24 Elbow.configure :loose
+@20:25:06.36 SC.configure :loose
+@20:25:06.44 SE.configure :default
+@20:25:06.48 CH.coast
+@20:25:06.53 CH.configure :default
+@20:25:06.56 PH.coast
+@20:25:06.61 PH.configure :default
+@20:25:06.65 All dwarf controllers running firmware version 3.85
+@20:25:06.76 Valve.reset
+@20:25:07.03 <rdySampler> Intake.select :close
+@20:25:07.04 Exhaust.select :close
+@20:25:07.05 CTV.dial :air
+@20:25:07.13 <rdyProcessing> PSV.dial :air
+@20:25:07.24 <rdySampler> CSV.dial :waste1
+@20:25:07.28 <MAIN> Forearm.reconfigure :loose
+@20:25:07.37 Forearm.home.seek :retract
+@20:25:07.40 <rdyProcessing> PS.reconfigure :default
+@20:25:07.43 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@20:25:07.53 <rdyProcessing> PS.home.seek 0ml
+@20:25:07.67 <readyCS> CS.reconfigure :fast
+@20:25:07.69 <rdySampler> SS.reconfigure :default
+@20:25:07.79 SS.home.seek 0ml
+@20:25:07.81 <readyCS> CS.home.seek 0ml
+@20:25:08.23 <closeHand> Hand.close
+@20:25:08.26 <MAIN> Elbow.jog 1500
+@20:25:08.82 Elbow.reconfigure :loose
+@20:25:08.86 Elbow.home.seek :clear
+@20:25:13.74 SE.reconfigure :default
+@20:25:13.78 SE.home.seek :down
+@20:25:14.35 SC.reconfigure :sloppy
+@20:25:14.40 SC.home.seek :initial
+@20:25:16.43 <rdyProcessing> PS.coast
+@20:25:17.60 <MAIN> Forearm.seek :retract
+@20:25:17.67 Elbow.seek :hammer
+@20:25:18.75 Forearm.reconfigure :tight
+@20:25:18.80 Forearm.seek retracted
+@20:25:19.04 CC.reconfigure :default
+@20:25:19.06 <openPC> PC.reconfigure :default
+@20:25:19.14 <MAIN> CC.home.seek :open
+@20:25:19.17 <openPC> PC.home.seek :open
+@20:25:22.00 <MAIN> Phase [at('12/12/19 8:25PM') {exercise "2:00"}]
+@20:25:22.01 <Qmail> Notice.suppressMail "At 20:25:21 began at('12/12/19 8:25PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@20:25:21, 21.2C, 63% humidity, 14.7psia, 13.586V, 0.459A, 0.459A avg, 6.24W",Subject: "Started test phase at('12/12/19 8:25PM') {exercise \"2:00\"}"
+@20:25:22.03 <MAIN> Phase #1 on Thursday
+@20:25:22.04 delay 2:00
+@20:25:22.06 <Qmail> GoodNews.email "Exercising for 2:00"
+Bringing up bg96 ...
+@20:25:49.54 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:26:37.47 <brent> Session Begun
+@20:26:42.42 -> Email.disconnect
+@20:26:46.50 -> Email.connected
+@20:26:53.16 -> Email.idle?
+@20:27:22.08 <MAIN> Completed [at('12/12/19 8:25PM') {exercise "2:00"}] begun 20:25:21
+@20:27:22.24 <shutdown> CS.coast
+@20:27:22.28 <MAIN> Asleep / Shutdown
+@20:27:22.36 <shutdown> SS.coast
+@20:27:22.43 CC.coast
+@20:27:22.49 PC.coast
+@20:27:22.57 Forearm.coast
+@20:27:22.63 Elbow.coast
+@20:27:22.70 SC.coast
+@20:27:22.77 SE.coast
+@20:27:23.20 Gate.power :core,:OFF
+@20:27:23.22 Gate.power :raw,:OFF
+@20:27:23.25 Shutdown
+@20:27:23.30 <Qmail> GoodNews.email "At 21:00, at('9PM') {exercise \"1:00:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@20:27:22, 21.3C, 63% humidity, 14.7psia, 13.645V, 0.262A, 0.262A avg, 3.58W",Subject: "Powered off until 21:00"
+@20:27:26.88 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@20:27:26.93 <MAIN> Powering down until 21:00
+@20:59:21.13PST12-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:59:23.27 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:59:26.25 Gate.setWakeString! "\r\nRING\r\n",15
+@20:59:26.29 Gate.setWakeAckString! "\rWAKING\r"
+@20:59:26.59 Polling Can every 10:00
+@20:59:26.61 Cleanly exited at 20:27:23PST12-Dec-19
+@20:59:26.65 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:59:26.77 Continuing test from /home/esp/esp2/mission/long/test.rb:11
+@20:59:26.82 Waiting until 21:00
+@21:00:00.05 Powering core bus
+@21:00:04.89 Gate.power :raw,:ON
+@21:00:05.73 CS.configure :default
+@21:00:05.82 PS.configure :default
+@21:00:05.91 SS.configure :default
+@21:00:06.00 CC.configure :default
+@21:00:06.09 PC.configure :default
+@21:00:06.21 Forearm.configure :loose
+@21:00:06.30 Elbow.configure :loose
+@21:00:06.41 SC.configure :loose
+@21:00:06.50 SE.configure :default
+@21:00:06.54 CH.coast
+@21:00:06.59 CH.configure :default
+@21:00:06.62 PH.coast
+@21:00:06.68 PH.configure :default
+@21:00:06.72 All dwarf controllers running firmware version 3.85
+@21:00:06.83 Valve.reset
+@21:00:07.06 <rdySampler> Intake.select :close
+@21:00:07.12 Exhaust.select :close
+@21:00:07.13 CTV.dial :air
+@21:00:07.23 <rdyProcessing> PSV.dial :air
+@21:00:07.34 <rdySampler> CSV.dial :waste1
+@21:00:07.37 <rdyProcessing> PS.reconfigure :default
+@21:00:07.40 <MAIN> Forearm.reconfigure :loose
+@21:00:07.50 <rdyProcessing> PS.home.seek 0ml
+@21:00:07.56 <MAIN> Forearm.home.seek :retract
+@21:00:07.63 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@21:00:07.75 <readyCS> CS.reconfigure :fast
+@21:00:07.78 <rdySampler> SS.reconfigure :default
+@21:00:07.87 <readyCS> CS.home.seek 0ml
+@21:00:07.90 <rdySampler> SS.home.seek 0ml
+@21:00:08.40 <closeHand> Hand.close
+@21:00:08.45 <MAIN> Elbow.jog 1500
+@21:00:09.36 Elbow.reconfigure :loose
+@21:00:09.43 Elbow.home.seek :clear
+@21:00:13.92 SE.reconfigure :default
+@21:00:13.96 SE.home.seek :down
+@21:00:14.55 SC.reconfigure :sloppy
+@21:00:14.59 SC.home.seek :initial
+@21:00:16.71 <rdyProcessing> PS.coast
+@21:00:17.79 <MAIN> Forearm.seek :retract
+@21:00:17.94 Elbow.seek :hammer
+@21:00:19.15 Forearm.reconfigure :tight
+@21:00:19.19 Forearm.seek retracted
+@21:00:19.52 <openPC> PC.reconfigure :default
+@21:00:19.54 <MAIN> CC.reconfigure :default
+@21:00:19.61 <openPC> PC.home.seek :open
+@21:00:19.64 <MAIN> CC.home.seek :open
+@21:00:22.49 Phase [at('9PM') {exercise "1:00:00"}]
+@21:00:22.50 <Qmail> Notice.suppressMail "At 21:00:22 began at('9PM') {exercise \"1:00:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@21:00:22, 21.0C, 65% humidity, 14.7psia, 13.611V, 0.392A, 0.392A avg, 5.33W",Subject: "Started test phase at('9PM') {exercise \"1:00:00\"}"
+@21:00:22.52 <MAIN> Phase #2 on Thursday
+@21:00:22.54 delay 1:00:00
+@21:00:22.55 <Qmail> GoodNews.email "Exercising for 1:00:00"
+Bringing up bg96 ...
+@21:00:52.49 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@21:36:54.71 <brent> Session Begun
+@21:37:02.28 -> exit
+@21:37:02.29 Session Ended
+@21:37:19.63 <brent> Session Begun
+@21:37:58.97 -> Email.empty?
+@21:38:02.47 -> Email.idle?
+@21:38:24.47 -> Email.disconnectNetwork
+Shutting down bg96 ...
+@21:38:32.95 -> exit
+@21:38:32.96 Session Ended
+@22:00:22.57 <MAIN> Completed [at('9PM') {exercise "1:00:00"}] begun 21:00:22
+@22:00:22.71 <shutdown> CS.coast
+@22:00:22.74 <MAIN> Asleep / Shutdown
+@22:00:22.79 <shutdown> SS.coast
+@22:00:22.83 CC.coast
+@22:00:22.87 PC.coast
+@22:00:22.92 Forearm.coast
+@22:00:22.96 Elbow.coast
+@22:00:23.00 SC.coast
+@22:00:23.05 SE.coast
+@22:00:23.45 Gate.power :core,:OFF
+@22:00:23.47 Gate.power :raw,:OFF
+@22:00:23.48 Shutdown
+@22:00:23.52 <Qmail> GoodNews.email "At 03:00PST13-Dec-19, at('3AM') {exercise \"1:30:00\"}\n/home/esp/esp2/mission/long/test.rb:12\n{}\nCan@22:00:22, 21.2C, 63% humidity, 14.7psia, 13.665V, 0.207A, 0.207A avg, 2.82W",Subject: "Powered off until 03:00PST13-Dec-19"
+@22:00:28.93 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@22:00:28.97 <MAIN> Powering down until 03:00PST13-Dec-19
+@02:59:22.10PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@02:59:24.25 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@02:59:27.20 Gate.setWakeString! "\r\nRING\r\n",15
+@02:59:27.23 Gate.setWakeAckString! "\rWAKING\r"
+@02:59:27.52 Polling Can every 10:00
+@02:59:27.54 Cleanly exited at 22:00:23PST12-Dec-19
+@02:59:27.58 Loading /home/esp/esp2/mission/long/test.rb mission
+@02:59:27.74 Continuing test from /home/esp/esp2/mission/long/test.rb:12
+@02:59:27.80 Waiting until 03:00
+@03:00:00.05 Powering core bus
+@03:00:04.95 Gate.power :raw,:ON
+@03:00:05.77 CS.configure :default
+@03:00:05.87 PS.configure :default
+@03:00:05.96 SS.configure :default
+@03:00:06.05 CC.configure :default
+@03:00:06.14 PC.configure :default
+@03:00:06.25 Forearm.configure :loose
+@03:00:06.34 Elbow.configure :loose
+@03:00:06.45 SC.configure :loose
+@03:00:06.54 SE.configure :default
+@03:00:06.58 CH.coast
+@03:00:06.64 CH.configure :default
+@03:00:06.66 PH.coast
+@03:00:06.72 PH.configure :default
+@03:00:06.75 All dwarf controllers running firmware version 3.85
+@03:00:06.86 Valve.reset
+@03:00:07.12 <rdySampler> Intake.select :close
+@03:00:07.15 Exhaust.select :close
+@03:00:07.16 CTV.dial :air
+@03:00:07.24 <rdyProcessing> PSV.dial :air
+@03:00:07.38 <rdySampler> CSV.dial :waste1
+@03:00:07.40 <MAIN> Forearm.reconfigure :loose
+@03:00:07.48 Forearm.home.seek :retract
+@03:00:07.55 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@03:00:07.57 <rdyProcessing> PS.reconfigure :default
+@03:00:07.65 PS.home.seek 0ml
+@03:00:07.79 <readyCS> CS.reconfigure :fast
+@03:00:07.81 <rdySampler> SS.reconfigure :default
+@03:00:07.90 <readyCS> CS.home.seek 0ml
+@03:00:07.93 <rdySampler> SS.home.seek 0ml
+@03:00:08.21 <closeHand> Hand.close
+@03:00:08.24 <MAIN> Elbow.jog 1500
+@03:00:09.23 Elbow.reconfigure :loose
+@03:00:09.27 Elbow.home.seek :clear
+@03:00:13.80 SE.reconfigure :default
+@03:00:13.84 SE.home.seek :down
+@03:00:14.41 SC.reconfigure :sloppy
+@03:00:14.45 SC.home.seek :initial
+@03:00:16.59 <rdyProcessing> PS.coast
+@03:00:17.68 <MAIN> Forearm.seek :retract
+@03:00:17.75 Elbow.seek :hammer
+@03:00:19.01 Forearm.reconfigure :tight
+@03:00:19.05 Forearm.seek retracted
+@03:00:19.28 CC.reconfigure :default
+@03:00:19.29 <openPC> PC.reconfigure :default
+@03:00:19.38 <MAIN> CC.home.seek :open
+@03:00:19.40 <openPC> PC.home.seek :open
+@03:00:22.27 <MAIN> Phase [at('3AM') {exercise "1:30:00"}]
+@03:00:22.28 <Qmail> Notice.suppressMail "At 03:00:22 began at('3AM') {exercise \"1:30:00\"}\n/home/esp/esp2/mission/long/test.rb:12\n{}\nCan@03:00:22, 21.0C, 65% humidity, 14.7psia, 13.611V, 0.398A, 0.398A avg, 5.41W",Subject: "Started test phase at('3AM') {exercise \"1:30:00\"}"
+@03:00:22.29 <MAIN> Phase #3 on Friday
+@03:00:22.32 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+@03:00:22.33 delay 1:30:00
+@03:00:22.35 Email::Queue::Purge in Qmail -- Purged output queue
+@04:30:22.36 Completed [at('3AM') {exercise "1:30:00"}] begun 03:00:22
+@04:30:22.46 <shutdown> CS.coast
+@04:30:22.48 <MAIN> Asleep / Shutdown
+@04:30:22.51 <shutdown> SS.coast
+@04:30:22.55 CC.coast
+@04:30:22.58 PC.coast
+@04:30:22.61 Forearm.coast
+@04:30:22.65 Elbow.coast
+@04:30:22.68 SC.coast
+@04:30:22.72 SE.coast
+@04:30:23.10 Gate.power :core,:OFF
+@04:30:23.12 Gate.power :raw,:OFF
+Shutdown
+@04:30:23.15 <Qmail> GoodNews.email "At 07:00, at('7AM') {exercise \"30:00\"}\n/home/esp/esp2/mission/long/test.rb:13\n{}\nCan@04:30:22, 21.3C, 63% humidity, 14.7psia, 13.665V, 0.213A, 0.213A avg, 2.91W",Subject: "Powered off until 07:00"
+Bringing up bg96 ...
+@04:30:50.45 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+Shutting down bg96 ...
+@04:30:51.42 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+rsync: safe_read failed to read 1 bytes [sender]: Connection reset by peer (104)
+rsync error: error in rsync protocol data stream (code 12) at io.c(276) [sender=3.1.3]
+Shutting down bg96 ...
+@04:30:54.00 <MAIN> Powering down until 07:00
+@06:59:22.10PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@06:59:24.25 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@06:59:27.20 Gate.setWakeString! "\r\nRING\r\n",15
+@06:59:27.22 Gate.setWakeAckString! "\rWAKING\r"
+@06:59:27.52 Polling Can every 10:00
+@06:59:27.54 Cleanly exited at 04:30:23PST13-Dec-19
+@06:59:27.58 Loading /home/esp/esp2/mission/long/test.rb mission
+@06:59:27.79 Continuing test from /home/esp/esp2/mission/long/test.rb:13
+@06:59:27.84 Waiting until 07:00
+@07:00:00.04 Powering core bus
+@07:00:05.09 Gate.power :raw,:ON
+@07:00:05.80 CS.configure :default
+@07:00:05.89 PS.configure :default
+@07:00:05.98 SS.configure :default
+@07:00:06.07 CC.configure :default
+@07:00:06.16 PC.configure :default
+@07:00:06.26 Forearm.configure :loose
+@07:00:06.35 Elbow.configure :loose
+@07:00:06.46 SC.configure :loose
+@07:00:06.55 SE.configure :default
+@07:00:06.59 CH.coast
+@07:00:06.64 CH.configure :default
+@07:00:06.67 PH.coast
+@07:00:06.72 PH.configure :default
+@07:00:06.75 All dwarf controllers running firmware version 3.85
+@07:00:06.86 Valve.reset
+@07:00:07.09 <rdySampler> Intake.select :close
+@07:00:07.15 Exhaust.select :close
+@07:00:07.16 CTV.dial :air
+@07:00:07.25 <rdyProcessing> PSV.dial :air
+@07:00:07.31 <rdySampler> CSV.dial :waste1
+@07:00:07.44 <rdyProcessing> PS.reconfigure :default
+@07:00:07.46 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@07:00:07.50 <MAIN> Forearm.reconfigure :loose
+@07:00:07.60 <rdyProcessing> PS.home.seek 0ml
+@07:00:07.63 <MAIN> Forearm.home.seek :retract
+@07:00:07.78 <readyCS> CS.reconfigure :fast
+@07:00:07.81 <rdySampler> SS.reconfigure :default
+@07:00:07.91 SS.home.seek 0ml
+@07:00:07.92 <readyCS> CS.home.seek 0ml
+@07:00:08.39 <closeHand> Hand.close
+@07:00:08.80 <MAIN> Elbow.jog 1500
+@07:00:09.59 Elbow.reconfigure :loose
+@07:00:09.64 Elbow.home.seek :clear
+@07:00:14.04 SE.reconfigure :default
+@07:00:14.09 SE.home.seek :down
+@07:00:14.66 SC.reconfigure :sloppy
+@07:00:14.70 SC.home.seek :initial
+@07:00:16.56 <rdyProcessing> PS.coast
+@07:00:17.91 <MAIN> Forearm.seek :retract
+@07:00:17.98 Elbow.seek :hammer
+@07:00:19.18 Forearm.reconfigure :tight
+@07:00:19.22 Forearm.seek retracted
+@07:00:19.54 <openPC> PC.reconfigure :default
+@07:00:19.56 <MAIN> CC.reconfigure :default
+@07:00:19.65 CC.home.seek :open
+@07:00:19.67 <openPC> PC.home.seek :open
+@07:00:22.51 <MAIN> Phase [at('7AM') {exercise "30:00"}]
+@07:00:22.52 <Qmail> Notice.suppressMail "At 07:00:22 began at('7AM') {exercise \"30:00\"}\n/home/esp/esp2/mission/long/test.rb:13\n{}\nCan@07:00:22, 20.8C, 65% humidity, 14.7psia, 13.611V, 0.398A, 0.398A avg, 5.41W",Subject: "Started test phase at('7AM') {exercise \"30:00\"}"
+@07:00:22.54 <MAIN> Phase #4 on Friday
+@07:00:22.56 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+@07:00:22.58 delay 30:00
+@07:00:22.59 Email::Queue::Purge in Qmail -- Purged output queue
+@07:30:22.60 Completed [at('7AM') {exercise "30:00"}] begun 07:00:22
+@07:30:22.70 <shutdown> CS.coast
+@07:30:22.72 <MAIN> Asleep / Shutdown
+@07:30:22.76 <shutdown> SS.coast
+@07:30:22.79 CC.coast
+@07:30:22.83 PC.coast
+@07:30:22.86 Forearm.coast
+@07:30:22.89 Elbow.coast
+@07:30:22.93 SC.coast
+@07:30:22.96 SE.coast
+@07:30:23.34 Gate.power :core,:OFF
+@07:30:23.35 Gate.power :raw,:OFF
+@07:30:23.36 Shutdown
+@07:30:23.39 <Qmail> GoodNews.email "At 09:00, at('9AM') {exercise \"5:00\"}\n/home/esp/esp2/mission/long/test.rb:14\n{}\nCan@07:30:22, 21.2C, 64% humidity, 14.7psia, 13.665V, 0.231A, 0.231A avg, 3.16W",Subject: "Powered off until 09:00"
+Bringing up bg96 ...
+@07:30:50.43 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+Shutting down bg96 ...
+@07:30:51.40 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+rsync: safe_read failed to read 1 bytes [sender]: Connection reset by peer (104)
+rsync error: error in rsync protocol data stream (code 12) at io.c(276) [sender=3.1.3]
+Shutting down bg96 ...
+@07:30:53.83 <MAIN> Powering down until 09:00
+@08:59:22.30PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@08:59:24.45 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@08:59:27.38 Gate.setWakeString! "\r\nRING\r\n",15
+@08:59:27.44 Gate.setWakeAckString! "\rWAKING\r"
+@08:59:27.67 Polling Can every 10:00
+@08:59:27.69 Cleanly exited at 07:30:23PST13-Dec-19
+@08:59:27.73 Loading /home/esp/esp2/mission/long/test.rb mission
+@08:59:27.98 Continuing test from /home/esp/esp2/mission/long/test.rb:14
+@08:59:28.04 Waiting until 09:00
+@09:00:00.05 Powering core bus
+@09:00:05.08 Gate.power :raw,:ON
+@09:00:05.85 CS.configure :default
+@09:00:05.95 PS.configure :default
+@09:00:06.03 SS.configure :default
+@09:00:06.12 CC.configure :default
+@09:00:06.21 PC.configure :default
+@09:00:06.33 Forearm.configure :loose
+@09:00:06.42 Elbow.configure :loose
+@09:00:06.53 SC.configure :loose
+@09:00:06.62 SE.configure :default
+@09:00:06.66 CH.coast
+@09:00:06.71 CH.configure :default
+@09:00:06.74 PH.coast
+@09:00:06.79 PH.configure :default
+@09:00:06.82 All dwarf controllers running firmware version 3.85
+@09:00:06.94 Valve.reset
+@09:00:07.19 <rdySampler> Intake.select :close
+@09:00:07.22 Exhaust.select :close
+@09:00:07.23 CTV.dial :air
+@09:00:07.33 <rdyProcessing> PSV.dial :air
+@09:00:07.37 <rdySampler> CSV.dial :waste1
+@09:00:07.51 <rdyProcessing> PS.reconfigure :default
+@09:00:07.53 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@09:00:07.57 <MAIN> Forearm.reconfigure :loose
+@09:00:07.69 <rdyProcessing> PS.home.seek 0ml
+@09:00:07.70 <MAIN> Forearm.home.seek :retract
+@09:00:07.86 <readyCS> CS.reconfigure :fast
+@09:00:07.90 <rdySampler> SS.reconfigure :default
+@09:00:07.97 <readyCS> CS.home.seek 0ml
+@09:00:08.00 <rdySampler> SS.home.seek 0ml
+@09:00:08.88 <closeHand> Hand.close
+@09:00:08.91 <MAIN> Elbow.jog 1500
+@09:00:09.50 Elbow.reconfigure :loose
+@09:00:09.55 Elbow.home.seek :clear
+@09:00:14.09 SE.reconfigure :default
+@09:00:14.14 SE.home.seek :down
+@09:00:14.71 SC.reconfigure :sloppy
+@09:00:14.75 SC.home.seek :initial
+@09:00:16.71 <rdyProcessing> PS.coast
+@09:00:17.94 <MAIN> Forearm.seek :retract
+@09:00:18.01 Elbow.seek :hammer
+@09:00:19.18 Forearm.reconfigure :tight
+@09:00:19.22 Forearm.seek retracted
+@09:00:19.44 <openPC> PC.reconfigure :default
+@09:00:19.48 PC.home.seek :open
+@09:00:19.81 <MAIN> CC.reconfigure :default
+@09:00:19.86 CC.home.seek :open
+@09:00:22.66 Phase [at('9AM') {exercise "5:00"}]
+@09:00:22.67 <Qmail> Notice.suppressMail "At 09:00:22 began at('9AM') {exercise \"5:00\"}\n/home/esp/esp2/mission/long/test.rb:14\n{}\nCan@09:00:22, 20.8C, 65% humidity, 14.7psia, 13.665V, 0.237A, 0.231A avg, 3.24W",Subject: "Started test phase at('9AM') {exercise \"5:00\"}"
+@09:00:22.70 <MAIN> Phase #5 on Friday
+@09:00:22.71 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+@09:00:22.73 delay 5:00
+@09:00:22.74 Email::Queue::Purge in Qmail -- Purged output queue
+@09:05:22.76 Completed [at('9AM') {exercise "5:00"}] begun 09:00:22
+@09:05:22.81 <shutdown> CS.coast
+@09:05:22.84 <MAIN> Asleep after completing test assays
+@09:05:22.87 <shutdown> SS.coast
+@09:05:22.89 <Qmail> GoodNews.email "{}\nCan@09:00:22, 20.8C, 65% humidity, 14.7psia, 13.665V, 0.237A, 0.231A avg, 3.24W",Subject: "Asleep after completing test assays"
+@09:05:23.04 <shutdown> CC.coast
+@09:05:23.12 PC.coast
+@09:05:23.19 Forearm.coast
+@09:05:23.26 Elbow.coast
+@09:05:23.33 SC.coast
+@09:05:23.40 SE.coast
+Bringing up bg96 ...
+@09:05:45.69 Gate.power :core,:OFF
+@09:05:45.70 Gate.power :raw,:OFF
+@09:05:45.71 Shutdown
+@09:05:45.77 <MAIN> Asleep / Shutdown
+@09:05:45.81 <shutdown> Shutdown
+@09:05:49.82 <Qmail> GoodNews.email "Asleep until woken by modem RING",Subject: "Finished"
+@09:06:02.02 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+Shutting down bg96 ...
+@09:06:02.32 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@09:06:04.16 Email::Queue::Purge in Qmail -- Purged output queue
+@09:06:04.85 <MAIN> Powering down indefinitely
+@09:43:44.20PST13-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@09:43:46.34 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@09:43:49.34 Gate.setWakeString! "\r\nRING\r\n",15
+@09:43:49.36 Gate.setWakeAckString! "\rWAKING\r"
+@09:43:49.67 Polling Can every 10:00
+@09:43:49.69 Cleanly exited at 09:05:45PST13-Dec-19
+@09:43:49.73 Loading /home/esp/esp2/mission/long/test.rb mission
+@09:43:50.00 <pause> delay 8:00
+@09:43:50.03 MissionLog::Error in MAIN -- test mission ended at 09:05:22.77PST13-Dec-19
+@09:43:50.05 <MAIN> Waiting to Resume from Checkpoint "test mission ended at 09:05:22.77PST13-Dec-19"
+@09:43:50.06 <Qmail> BadNews.email "test mission ended at 09:05:22.77PST13-Dec-19",Subject: "MissionLog::Error in MAIN"
+Bringing up bg96 ...
+@09:44:19.05 NoMethodError in Qmail -- undefined method `unloading' for Log:Class
+Shutting down bg96 ...
+@09:44:20.06 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+rsync: didn't get server startup line
+rsync error: error starting client-server protocol (code 5) at main.c(1657) [sender=3.1.3]
+Shutting down bg96 ...
+@09:44:22.81 Email::Queue::Purge in Qmail -- Purged output queue
+Log::Locked in trapHandler -- Another process is already writing to /var/log/esp/real.log
+@09:48:16.44PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@09:48:18.59 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@09:48:21.60 Gate.setWakeString! "\r\nRING\r\n",15
+@09:48:21.92 Polling Can every 10:00
+@09:48:21.97 Loading /home/esp/esp2/mission/long/test.rb mission
+@09:48:22.02 Starting test mission in /home/esp/esp2/mission/long/test.rb
+@09:48:22.05 <Qmail> GoodNews.email "Starting test\n{}\nCan@09:48:21, 20.9C, 65% humidity, 14.7psia, 13.709V, 0.077A, 0.077A avg, 1.06W",Subject: "test begun"
+@09:48:22.35 <MAIN> Waiting until 09:50
+Bringing up bg96 ...
+@09:48:54.30 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@09:50:00.06 <MAIN> Powering core bus
+@09:50:04.90 Gate.power :raw,:ON
+@09:50:05.62 CS.configure :default
+@09:50:05.71 PS.configure :default
+@09:50:05.80 SS.configure :default
+@09:50:05.89 CC.configure :default
+@09:50:05.98 PC.configure :default
+@09:50:06.09 Forearm.configure :loose
+@09:50:06.18 Elbow.configure :loose
+@09:50:06.29 SC.configure :loose
+@09:50:06.38 SE.configure :default
+@09:50:06.42 CH.coast
+@09:50:06.47 CH.configure :default
+@09:50:06.50 PH.coast
+@09:50:06.55 PH.configure :default
+@09:50:06.59 All dwarf controllers running firmware version 3.85
+@09:50:06.70 Valve.reset
+@09:50:06.97 <rdySampler> Intake.select :close
+@09:50:06.99 Exhaust.select :close
+@09:50:07.00 CTV.dial :air
+@09:50:07.42 <rdyProcessing> PSV.dial :air
+@09:50:07.46 <rdySampler> CSV.dial :waste1
+@09:50:07.63 SSV.dial :spit,avoiding: :exhaust
+@09:50:07.65 <MAIN> Forearm.reconfigure :loose
+@09:50:07.68 <rdyProcessing> PS.reconfigure :default
+@09:50:07.78 <MAIN> Forearm.home.seek :retract
+@09:50:07.81 <rdyProcessing> PS.home.seek 0ml
+@09:50:07.97 <readyCS> CS.reconfigure :fast
+@09:50:08.00 <rdySampler> SS.reconfigure :default
+@09:50:08.10 SS.home.seek 0ml
+@09:50:08.12 <readyCS> CS.home.seek 0ml
+@09:50:08.67 <closeHand> Hand.close
+@09:50:08.71 <MAIN> Elbow.jog 1500
+@09:50:09.29 Elbow.reconfigure :loose
+@09:50:09.33 Elbow.home.seek :clear
+@09:50:13.85 SE.reconfigure :default
+@09:50:13.89 SE.home.seek :down
+@09:50:14.47 SC.reconfigure :sloppy
+@09:50:14.51 SC.home.seek :initial
+@09:50:16.76 <rdyProcessing> PS.coast
+@09:50:17.72 <MAIN> Forearm.seek :retract
+@09:50:17.85 Elbow.seek :hammer
+@09:50:19.06 Forearm.reconfigure :tight
+@09:50:19.10 Forearm.seek retracted
+@09:50:19.48 CC.reconfigure :default
+@09:50:19.50 <openPC> PC.reconfigure :default
+@09:50:19.59 <MAIN> CC.home.seek :open
+@09:50:19.61 <openPC> PC.home.seek :open
+@09:50:22.57 <MAIN> Phase [at('12/13/19 9:50') {exercise "2:00"}]
+@09:50:22.58 <Qmail> Notice.suppressMail "At 09:50:22 began at('12/13/19 9:50') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@09:50:22, 20.9C, 64% humidity, 14.7psia, 13.606V, 0.398A, 0.398A avg, 5.41W",Subject: "Started test phase at('12/13/19 9:50') {exercise \"2:00\"}"
+@09:50:22.60 <MAIN> Phase #1 on Friday
+@09:50:22.61 <Qmail> GoodNews.email "Exercising for 2:00"
+@09:50:22.67 <MAIN> delay 2:00
+Bringing up bg96 ...
+@09:50:47.97 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@09:52:22.71 <MAIN> Completed [at('12/13/19 9:50') {exercise "2:00"}] begun 09:50:22
+@09:52:22.81 <shutdown> CS.coast
+@09:52:22.84 <MAIN> Asleep / Shutdown
+@09:52:22.87 <shutdown> SS.coast
+@09:52:22.90 CC.coast
+@09:52:22.94 PC.coast
+@09:52:22.97 Forearm.coast
+@09:52:23.00 Elbow.coast
+@09:52:23.03 SC.coast
+@09:52:23.06 SE.coast
+@09:52:23.44 Gate.power :core,:OFF
+@09:52:23.46 Gate.power :raw,:OFF
+Shutdown
+@09:52:23.49 <Qmail> GoodNews.email "At 10:00, at('10AM') {exercise \"5:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@09:52:22, 20.8C, 65% humidity, 14.7psia, 13.665V, 0.225A, 0.225A avg, 3.08W",Subject: "Powered off until 10:00"
+Bringing up bg96 ...
+@09:52:48.37 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@09:52:50.93 <MAIN> Powering down until 10:00
+@09:59:08.61PST13-Dec-19 Errno::EACCES in MAIN -- Permission denied - /dev/I2Cgate -- Missing core Gateway!
+@09:59:08.64 SystemExit in MAIN -- exit
+/home/esp/esp2/lib/log.rb:559:in `reopen': Permission denied - /dev/null (Errno::EACCES)
+	from /home/esp/esp2/lib/log.rb:559:in `terminate!'
+	from /home/esp/esp2/lib/rmutex.rb:85:in `synchronize'
+	from /home/esp/esp2/lib/log.rb:553:in `terminate!'
+	from /home/esp/esp2/lib/log.rb:144:in `initialize'
+	from /home/esp/esp2/lib/esp.rb:339
+@10:02:24.60PST13-Dec-19 Errno::EACCES in MAIN -- Permission denied - /dev/I2Cgate -- Missing core Gateway!
+@10:02:24.62 SystemExit in MAIN -- exit
+/home/esp/esp2/lib/log.rb:559:in `reopen': Permission denied - /dev/null (Errno::EACCES)
+	from /home/esp/esp2/lib/log.rb:559:in `terminate!'
+	from /home/esp/esp2/lib/rmutex.rb:85:in `synchronize'
+	from /home/esp/esp2/lib/log.rb:553:in `terminate!'
+	from /home/esp/esp2/lib/log.rb:144:in `initialize'
+	from /home/esp/esp2/lib/esp.rb:339
+@10:59:00.52PST13-Dec-19 Errno::EACCES in MAIN -- Permission denied - /dev/I2Cgate -- Missing core Gateway!
+@10:59:00.55 SystemExit in MAIN -- exit
+/home/esp/esp2/lib/log.rb:559:in `reopen': Permission denied - /dev/null (Errno::EACCES)
+	from /home/esp/esp2/lib/log.rb:559:in `terminate!'
+	from /home/esp/esp2/lib/rmutex.rb:85:in `synchronize'
+	from /home/esp/esp2/lib/log.rb:553:in `terminate!'
+	from /home/esp/esp2/lib/log.rb:144:in `initialize'
+	from /home/esp/esp2/lib/esp.rb:339
+@11:07:59.63PST13-Dec-19 Errno::EACCES in MAIN -- Permission denied - /dev/I2Cgate -- Missing core Gateway!
+@11:07:59.65 SystemExit in MAIN -- exit
+/home/esp/esp2/lib/log.rb:559:in `reopen': Permission denied - /dev/null (Errno::EACCES)
+	from /home/esp/esp2/lib/log.rb:559:in `terminate!'
+	from /home/esp/esp2/lib/rmutex.rb:85:in `synchronize'
+	from /home/esp/esp2/lib/log.rb:553:in `terminate!'
+	from /home/esp/esp2/lib/log.rb:144:in `initialize'
+	from /home/esp/esp2/lib/esp.rb:339
+@19:11:33.16PST13-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:11:35.32 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:11:38.35 Gate.setWakeString! "\r\nRING\r\n",15
+@19:11:38.38 Gate.setWakeAckString! "\rWAKING\r"
+@19:11:38.67 Polling Can every 10:00
+@19:11:38.75 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:11:38.87 Starting test mission in /home/esp/esp2/mission/long/test.rb
+@19:11:38.94 <Qmail> GoodNews.email "Starting test\n{}\nCan@19:11:38, 21.3C, 63% humidity, 14.7psia, 13.709V, 0.077A, 0.077A avg, 1.06W",Subject: "test begun"
+@19:11:39.31 <shutdown> Shutdown
+@19:11:39.36 <MAIN> Asleep / Shutdown
+Bringing up bg96 ...
+@19:12:05.67 <Qmail> GoodNews.email "At 19:15, at('12/13/19 7:15PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@19:11:39, 21.4C, 63% humidity, 14.7psia, 13.709V, 0.083A, 0.077A avg, 1.14W",Subject: "Powered off until 19:15"
+@19:12:09.43 <MAIN> Sending Email
+@19:12:48.37 Uploading Logs
+@19:14:52.55 <brent> Session Begun
+@19:14:56.46 -> threads
+@19:15:03.77 -> showlog
+@19:15:08.16 -> showlog 50
+@19:16:00.87 -> quit
+@19:16:00.88 Session Ended
+@19:17:53.51 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@19:17:56.08 <MAIN> Powering down until 19:15
+@19:18:57.17PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:18:59.36 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:19:02.45 Gate.setWakeString! "\r\nRING\r\n",15
+@19:19:02.49 Gate.setWakeAckString! "\rWAKING\r"
+@19:19:02.79 Polling Can every 10:00
+@19:19:02.80 Cleanly exited at 19:11:39PST13-Dec-19
+@19:19:02.84 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:19:02.92 Continuing test from /home/esp/esp2/mission/long/test.rb:10
+@19:19:02.98 Waiting until 19:15
+@19:19:03.00 Delay::Late in MAIN -- running 4:03 late
+@19:19:03.06 Powering core bus
+@19:19:08.10 Gate.power :raw,:ON
+@19:19:08.74 CS.configure :default
+@19:19:08.83 PS.configure :default
+@19:19:08.92 SS.configure :default
+@19:19:09.01 CC.configure :default
+@19:19:09.10 PC.configure :default
+@19:19:09.21 Forearm.configure :loose
+@19:19:09.30 Elbow.configure :loose
+@19:19:09.41 SC.configure :loose
+@19:19:09.50 SE.configure :default
+@19:19:09.54 CH.coast
+@19:19:09.59 CH.configure :default
+@19:19:09.62 PH.coast
+@19:19:09.67 PH.configure :default
+@19:19:09.71 All dwarf controllers running firmware version 3.85
+@19:19:09.81 Valve.reset
+@19:19:10.04 <rdySampler> Intake.select :close
+@19:19:10.10 Exhaust.select :close
+@19:19:10.11 CTV.dial :air
+@19:19:10.20 <rdyProcessing> PSV.dial :air
+@19:19:10.26 <rdySampler> CSV.dial :waste1
+@19:19:10.41 <rdyProcessing> PS.reconfigure :default
+@19:19:10.45 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@19:19:10.49 <MAIN> Forearm.reconfigure :loose
+@19:19:10.56 <rdyProcessing> PS.home.seek 0ml
+@19:19:10.63 <MAIN> Forearm.home.seek :retract
+@19:19:10.77 <readyCS> CS.reconfigure :fast
+@19:19:10.80 <rdySampler> SS.reconfigure :default
+@19:19:10.87 <readyCS> CS.home.seek 0ml
+@19:19:10.91 <rdySampler> SS.home.seek 0ml
+@19:19:11.47 <closeHand> Hand.close
+@19:19:11.51 <MAIN> Elbow.jog 1500
+@19:19:12.21 Elbow.reconfigure :loose
+@19:19:12.62 Elbow.home.seek :clear
+@19:19:17.19 SE.reconfigure :default
+@19:19:17.24 SE.home.seek :down
+@19:19:17.81 SC.reconfigure :sloppy
+@19:19:17.85 SC.home.seek :initial
+@19:19:19.57 <rdyProcessing> PS.coast
+@19:19:21.11 <MAIN> Forearm.seek :retract
+@19:19:21.18 Elbow.seek :hammer
+@19:19:22.39 Forearm.reconfigure :tight
+@19:19:22.43 Forearm.seek retracted
+@19:19:22.81 CC.reconfigure :default
+@19:19:22.82 <openPC> PC.reconfigure :default
+@19:19:22.91 <MAIN> CC.home.seek :open
+@19:19:22.93 <openPC> PC.home.seek :open
+@19:19:25.78 <MAIN> Phase [at('12/13/19 7:15PM') {exercise "2:00"}]
+@19:19:25.79 <Qmail> Notice.suppressMail "At 19:19:25 began at('12/13/19 7:15PM') {exercise \"2:00\"}\n/home/esp/esp2/mission/long/test.rb:10\n{}\nCan@19:19:25, 21.3C, 63% humidity, 14.6psia, 13.625V, 0.355A, 0.348A avg, 4.83W",Subject: "Started test phase at('12/13/19 7:15PM') {exercise \"2:00\"}"
+@19:19:25.80 <MAIN> Phase #1 on Friday
+@19:19:25.82 delay 2:00
+@19:19:25.83 <Qmail> GoodNews.email "Exercising for 2:00"
+Bringing up bg96 ...
+@19:19:58.15 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@19:21:25.85 <MAIN> Completed [at('12/13/19 7:15PM') {exercise "2:00"}] begun 19:19:25
+@19:21:25.96 <shutdown> CS.coast
+@19:21:25.98 <MAIN> Asleep / Shutdown
+@19:21:26.03 <shutdown> SS.coast
+@19:21:26.06 CC.coast
+@19:21:26.09 PC.coast
+@19:21:26.12 Forearm.coast
+@19:21:26.16 Elbow.coast
+@19:21:26.19 SC.coast
+@19:21:26.23 SE.coast
+@19:21:26.61 Gate.power :core,:OFF
+@19:21:26.62 Gate.power :raw,:OFF
+@19:21:26.63 Shutdown
+@19:21:26.66 <Qmail> GoodNews.email "At 19:25, at('7:25PM') {exercise \"5:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@19:21:25, 21.3C, 63% humidity, 14.7psia, 13.670V, 0.219A, 0.219A avg, 2.99W",Subject: "Powered off until 19:25"
+Bringing up bg96 ...
+@19:21:53.84 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@19:21:56.49 <MAIN> Powering down until 19:25
+@19:24:25.24PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@19:24:27.40 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@19:24:30.36 Gate.setWakeString! "\r\nRING\r\n",15
+@19:24:30.39 Gate.setWakeAckString! "\rWAKING\r"
+@19:24:30.69 Polling Can every 10:00
+@19:24:30.71 Cleanly exited at 19:21:26PST13-Dec-19
+@19:24:30.75 Loading /home/esp/esp2/mission/long/test.rb mission
+@19:24:30.87 Continuing test from /home/esp/esp2/mission/long/test.rb:11
+@19:24:30.92 Waiting until 19:25
+@19:25:00.06 Powering core bus
+@19:25:05.08 Gate.power :raw,:ON
+@19:25:05.80 CS.configure :default
+@19:25:05.89 PS.configure :default
+@19:25:05.98 SS.configure :default
+@19:25:06.07 CC.configure :default
+@19:25:06.16 PC.configure :default
+@19:25:06.27 Forearm.configure :loose
+@19:25:06.36 Elbow.configure :loose
+@19:25:06.47 SC.configure :loose
+@19:25:06.56 SE.configure :default
+@19:25:06.60 CH.coast
+@19:25:06.65 CH.configure :default
+@19:25:06.67 PH.coast
+@19:25:06.73 PH.configure :default
+@19:25:06.76 All dwarf controllers running firmware version 3.85
+@19:25:06.86 Valve.reset
+@19:25:07.11 <rdySampler> Intake.select :close
+@19:25:07.15 Exhaust.select :close
+@19:25:07.16 CTV.dial :air
+@19:25:07.26 <rdyProcessing> PSV.dial :air
+@19:25:07.30 <rdySampler> CSV.dial :waste1
+@19:25:07.43 <MAIN> Forearm.reconfigure :loose
+@19:25:07.44 <rdyProcessing> PS.reconfigure :default
+@19:25:07.53 <MAIN> Forearm.home.seek :retract
+@19:25:07.55 <rdyProcessing> PS.home.seek 0ml
+@19:25:07.63 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@19:25:07.76 <readyCS> CS.reconfigure :fast
+@19:25:07.79 <rdySampler> SS.reconfigure :default
+@19:25:07.87 <readyCS> CS.home.seek 0ml
+@19:25:07.90 <rdySampler> SS.home.seek 0ml
+@19:25:08.29 <closeHand> Hand.close
+@19:25:08.34 <MAIN> Elbow.jog 1500
+@19:25:09.17 Elbow.reconfigure :loose
+@19:25:09.25 Elbow.home.seek :clear
+@19:25:13.76 SE.reconfigure :default
+@19:25:13.80 SE.home.seek :down
+@19:25:14.37 SC.reconfigure :sloppy
+@19:25:14.42 SC.home.seek :initial
+@19:25:16.51 <rdyProcessing> PS.coast
+@19:25:17.64 <MAIN> Forearm.seek :retract
+@19:25:17.70 Elbow.seek :hammer
+@19:25:18.91 Forearm.reconfigure :tight
+@19:25:18.96 Forearm.seek retracted
+@19:25:19.20 CC.reconfigure :default
+@19:25:19.21 <openPC> PC.reconfigure :default
+@19:25:19.29 <MAIN> CC.home.seek :open
+@19:25:19.32 <openPC> PC.home.seek :open
+@19:25:22.16 <MAIN> Phase [at('7:25PM') {exercise "5:00"}]
+@19:25:22.17 <Qmail> Notice.suppressMail "At 19:25:22 began at('7:25PM') {exercise \"5:00\"}\n/home/esp/esp2/mission/long/test.rb:11\n{}\nCan@19:25:22, 21.3C, 63% humidity, 14.7psia, 13.606V, 0.410A, 0.410A avg, 5.58W",Subject: "Started test phase at('7:25PM') {exercise \"5:00\"}"
+@19:25:22.19 <MAIN> Phase #2 on Friday
+@19:25:22.20 <Qmail> GoodNews.email "Exercising for 5:00"
+@19:25:22.22 <MAIN> delay 5:00
+Bringing up bg96 ...
+@19:25:52.78 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@19:30:22.34 <MAIN> Completed [at('7:25PM') {exercise "5:00"}] begun 19:25:22
+@19:30:22.44 <shutdown> CS.coast
+@19:30:22.47 <MAIN> Asleep / Shutdown
+@19:30:22.50 <shutdown> SS.coast
+@19:30:22.53 CC.coast
+@19:30:22.56 PC.coast
+@19:30:22.60 Forearm.coast
+@19:30:22.63 Elbow.coast
+@19:30:22.67 SC.coast
+@19:30:22.70 SE.coast
+@19:30:23.08 Gate.power :core,:OFF
+@19:30:23.10 Gate.power :raw,:OFF
+Shutdown
+@19:30:23.13 <Qmail> GoodNews.email "At 21:00, at('9PM') {exercise \"90:00\"}\n/home/esp/esp2/mission/long/test.rb:12\n{}\nCan@19:30:22, 21.3C, 63% humidity, 14.7psia, 13.660V, 0.231A, 0.225A avg, 3.16W",Subject: "Powered off until 21:00"
+Bringing up bg96 ...
+@19:30:49.09 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@19:30:51.72 <MAIN> Powering down until 21:00
+@20:59:24.26PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@20:59:26.40 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@20:59:29.34 Gate.setWakeString! "\r\nRING\r\n",15
+@20:59:29.37 Gate.setWakeAckString! "\rWAKING\r"
+@20:59:29.68 Polling Can every 10:00
+@20:59:29.70 Cleanly exited at 19:30:23PST13-Dec-19
+@20:59:29.74 Loading /home/esp/esp2/mission/long/test.rb mission
+@20:59:29.90 Continuing test from /home/esp/esp2/mission/long/test.rb:12
+@20:59:29.95 Waiting until 21:00
+@21:00:00.06 Powering core bus
+@21:00:04.96 Gate.power :raw,:ON
+@21:00:05.95 CS.configure :default
+@21:00:06.04 PS.configure :default
+@21:00:06.12 SS.configure :default
+@21:00:06.21 CC.configure :default
+@21:00:06.30 PC.configure :default
+@21:00:06.41 Forearm.configure :loose
+@21:00:06.50 Elbow.configure :loose
+@21:00:06.61 SC.configure :loose
+@21:00:06.70 SE.configure :default
+@21:00:06.74 CH.coast
+@21:00:06.79 CH.configure :default
+@21:00:06.82 PH.coast
+@21:00:06.87 PH.configure :default
+@21:00:06.91 All dwarf controllers running firmware version 3.85
+@21:00:07.01 Valve.reset
+@21:00:07.28 <rdySampler> Intake.select :close
+@21:00:07.30 Exhaust.select :close
+@21:00:07.31 CTV.dial :air
+@21:00:07.39 <rdyProcessing> PSV.dial :air
+@21:00:07.44 <rdySampler> CSV.dial :waste1
+@21:00:07.57 <MAIN> Forearm.reconfigure :loose
+@21:00:07.64 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@21:00:07.67 <MAIN> Forearm.home.seek :retract
+@21:00:07.69 <rdyProcessing> PS.reconfigure :default
+@21:00:07.80 PS.home.seek 0ml
+@21:00:07.93 <readyCS> CS.reconfigure :fast
+@21:00:07.96 <rdySampler> SS.reconfigure :default
+@21:00:08.04 <readyCS> CS.home.seek 0ml
+@21:00:08.07 <rdySampler> SS.home.seek 0ml
+@21:00:08.60 <closeHand> Hand.close
+@21:00:08.65 <MAIN> Elbow.jog 1500
+@21:00:09.56 Elbow.reconfigure :loose
+@21:00:09.60 Elbow.home.seek :clear
+@21:00:14.20 SE.reconfigure :default
+@21:00:14.24 SE.home.seek :down
+@21:00:14.81 SC.reconfigure :sloppy
+@21:00:14.86 SC.home.seek :initial
+@21:00:16.91 <rdyProcessing> PS.coast
+@21:00:18.06 <MAIN> Forearm.seek :retract
+@21:00:18.12 Elbow.seek :hammer
+@21:00:19.26 Forearm.reconfigure :tight
+@21:00:19.31 Forearm.seek retracted
+@21:00:19.70 CC.reconfigure :default
+@21:00:19.72 <openPC> PC.reconfigure :default
+@21:00:19.80 <MAIN> CC.home.seek :open
+@21:00:19.83 <openPC> PC.home.seek :open
+@21:00:22.65 <MAIN> Phase [at('9PM') {exercise "90:00"}]
+@21:00:22.66 <Qmail> Notice.suppressMail "At 21:00:22 began at('9PM') {exercise \"90:00\"}\n/home/esp/esp2/mission/long/test.rb:12\n{}\nCan@21:00:22, 20.9C, 64% humidity, 14.7psia, 13.665V, 0.244A, 0.237A avg, 3.33W",Subject: "Started test phase at('9PM') {exercise \"90:00\"}"
+@21:00:22.68 <MAIN> Phase #3 on Friday
+@21:00:22.69 delay 1:30:00
+@21:00:22.71 <Qmail> GoodNews.email "Exercising for 1:30:00"
+Bringing up bg96 ...
+@21:00:55.20 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@22:30:22.72 <MAIN> Completed [at('9PM') {exercise "90:00"}] begun 21:00:22
+@22:30:22.83 <shutdown> CS.coast
+@22:30:22.85 <MAIN> Asleep / Shutdown
+@22:30:22.89 <shutdown> SS.coast
+@22:30:22.92 CC.coast
+@22:30:22.96 PC.coast
+@22:30:22.99 Forearm.coast
+@22:30:23.03 Elbow.coast
+@22:30:23.07 SC.coast
+@22:30:23.10 SE.coast
+@22:30:23.49 Gate.power :core,:OFF
+@22:30:23.50 Gate.power :raw,:OFF
+@22:30:23.51 Shutdown
+@22:30:23.54 <Qmail> GoodNews.email "At 23:00, at('11PM') {exercise \"30:00\"}\n/home/esp/esp2/mission/long/test.rb:13\n{}\nCan@22:30:22, 21.4C, 62% humidity, 14.6psia, 13.660V, 0.219A, 0.219A avg, 2.99W",Subject: "Powered off until 23:00"
+Bringing up bg96 ...
+@22:30:52.53 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@22:30:55.17 <MAIN> Powering down until 23:00
+@22:59:24.16PST13-Dec-19 <MAIN> ESP2 v3.40 I2C Gateway v3.20 for core bus
+@22:59:26.34 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@22:59:29.35 Gate.setWakeString! "\r\nRING\r\n",15
+@22:59:29.39 Gate.setWakeAckString! "\rWAKING\r"
+@22:59:29.62 Polling Can every 10:00
+@22:59:29.64 Cleanly exited at 22:30:23PST13-Dec-19
+@22:59:29.68 Loading /home/esp/esp2/mission/long/test.rb mission
+@22:59:29.89 Continuing test from /home/esp/esp2/mission/long/test.rb:13
+@22:59:29.95 Waiting until 23:00
+@23:00:00.05 Powering core bus
+@23:00:05.10 Gate.power :raw,:ON
+@23:00:05.89 CS.configure :default
+@23:00:05.98 PS.configure :default
+@23:00:06.07 SS.configure :default
+@23:00:06.16 CC.configure :default
+@23:00:06.25 PC.configure :default
+@23:00:06.36 Forearm.configure :loose
+@23:00:06.44 Elbow.configure :loose
+@23:00:06.56 SC.configure :loose
+@23:00:06.64 SE.configure :default
+@23:00:06.69 CH.coast
+@23:00:06.74 CH.configure :default
+@23:00:06.77 PH.coast
+@23:00:06.82 PH.configure :default
+@23:00:06.85 All dwarf controllers running firmware version 3.85
+@23:00:06.96 Valve.reset
+@23:00:07.17 <rdySampler> Intake.select :close
+@23:00:07.21 Exhaust.select :close
+@23:00:07.25 CTV.dial :air
+@23:00:07.32 <rdyProcessing> PSV.dial :air
+@23:00:07.37 <rdySampler> CSV.dial :waste1
+@23:00:07.54 <rdyProcessing> PS.reconfigure :default
+@23:00:07.57 <rdySampler> SSV.dial :spit,avoiding: :exhaust
+@23:00:07.60 <MAIN> Forearm.reconfigure :loose
+@23:00:07.71 <rdyProcessing> PS.home.seek 0ml
+@23:00:07.72 <MAIN> Forearm.home.seek :retract
+@23:00:07.89 <readyCS> CS.reconfigure :fast
+@23:00:07.92 <rdySampler> SS.reconfigure :default
+@23:00:08.00 <readyCS> CS.home.seek 0ml
+@23:00:08.04 <rdySampler> SS.home.seek 0ml
+@23:00:08.52 <closeHand> Hand.close
+@23:00:08.87 <MAIN> Elbow.jog 1500
+@23:00:09.55 Elbow.reconfigure :loose
+@23:00:09.59 Elbow.home.seek :clear
+@23:00:14.00 SE.reconfigure :default
+@23:00:14.04 SE.home.seek :down
+@23:00:14.62 SC.reconfigure :sloppy
+@23:00:14.67 SC.home.seek :initial
+@23:00:16.69 <rdyProcessing> PS.coast
+@23:00:17.88 <MAIN> Forearm.seek :retract
+@23:00:17.94 Elbow.seek :hammer
+@23:00:19.14 Forearm.reconfigure :tight
+@23:00:19.18 Forearm.seek retracted
+@23:00:19.49 CC.reconfigure :default
+@23:00:19.51 <openPC> PC.reconfigure :default
+@23:00:19.60 <MAIN> CC.home.seek :open
+@23:00:19.61 <openPC> PC.home.seek :open
+@23:00:22.50 <MAIN> Phase [at('11PM') {exercise "30:00"}]
+@23:00:22.51 <Qmail> Notice.suppressMail "At 23:00:22 began at('11PM') {exercise \"30:00\"}\n/home/esp/esp2/mission/long/test.rb:13\n{}\nCan@23:00:22, 21.0C, 63% humidity, 14.7psia, 13.606V, 0.416A, 0.422A avg, 5.66W",Subject: "Started test phase at('11PM') {exercise \"30:00\"}"
+@23:00:22.53 <MAIN> Phase #4 on Friday
+@23:00:22.54 delay 30:00
+@23:00:22.56 <Qmail> GoodNews.email "Exercising for 30:00"
+Bringing up bg96 ...
+@23:00:55.14 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@23:30:22.58 <MAIN> Completed [at('11PM') {exercise "30:00"}] begun 23:00:22
+@23:30:22.63 <shutdown> CS.coast
+@23:30:22.66 <MAIN> Asleep after completing test assays
+@23:30:22.68 <Qmail> GoodNews.email "{}\nCan@23:29:32, 21.3C, 63% humidity, 14.7psia, 13.655V, 0.237A, 0.237A avg, 3.24W",Subject: "Asleep after completing test assays"
+@23:30:22.73 <shutdown> SS.coast
+@23:30:22.83 CC.coast
+@23:30:22.89 PC.coast
+@23:30:22.95 Forearm.coast
+@23:30:23.03 Elbow.coast
+@23:30:23.11 SC.coast
+@23:30:23.18 SE.coast
+Bringing up bg96 ...
+@23:30:43.01 Gate.power :core,:OFF
+@23:30:43.05 Gate.power :raw,:OFF
+@23:30:43.06 Shutdown
+@23:30:43.11 <MAIN> Asleep / Shutdown
+@23:30:43.15 <shutdown> Shutdown
+@23:30:48.47 <Qmail> GoodNews.email "Asleep until woken by modem RING",Subject: "Finished"
+@23:30:50.34 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@23:30:52.63 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@23:30:55.25 <MAIN> Powering down indefinitely
+@15:23:02.13PST16-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@15:23:04.29 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@15:23:06.70 LoadError in MAIN -- no such file to load -- BAC in wcr
+@15:23:06.73 LoadError in MAIN -- no such file to load -- HAB in HAB
+@15:23:07.03 TypeError in MAIN -- can't dup NilClass in BAC
+@15:23:07.60 Gate.setWakeString! "\r\nRING\r\n",15
+@15:23:07.62 Gate.setWakeAckString! "\rWAKING\r"
+@15:23:07.92 Polling Can every 10:00
+@15:23:07.94 Cleanly exited at 23:30:43PST13-Dec-19
+@15:23:07.98 Loading /home/esp/esp2/mission/long/test.rb mission
+@15:23:08.22 <pause> delay 8:00
+@15:23:08.24 MissionLog::Error in MAIN -- test mission ended at 23:30:22.59PST13-Dec-19
+@15:23:08.26 <MAIN> Waiting to Resume from Checkpoint "test mission ended at 23:30:22.59PST13-Dec-19"
+@15:23:08.28 <Qmail> BadNews.email "test mission ended at 23:30:22.59PST13-Dec-19",Subject: "MissionLog::Error in MAIN"
+Bringing up bg96 ...
+@15:23:10.97 <brent> Session Begun
+@15:23:14.95 -> showlog 50
+@15:23:40.77 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@15:24:04.67 <brent> -> abort! "Misson over!"
+@15:24:04.68 CmdServer::Client::Error in brent -- Aborting Mission: Misson over!
+@15:24:04.73 <Qmail> BadNews.email "Misson over!",Subject: "test ABORTED!"
+Bringing up bg96 ...
+@15:24:33.18 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@15:24:35.85 <brent> Session Ended
+@15:29:37.72PST16-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@15:29:41.88 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@15:29:46.73 Gate.setWakeString! "\r\nRING\r\n",15
+@15:29:46.76 Gate.setWakeAckString! "\rWAKING\r"
+@15:29:47.00 Polling Can every 10:00
+@15:29:47.02 Cleanly exited at 15:24:35PST16-Dec-19
+@15:29:47.06 Loading /home/esp/esp2/mission/long/test.rb mission
+@15:29:47.28 <pause> delay 8:00
+@15:29:47.30 MissionLog::Error in MAIN -- test mission ended at 23:30:22.59PST13-Dec-19
+@15:29:47.32 <MAIN> Waiting to Resume from Checkpoint "test mission ended at 23:30:22.59PST13-Dec-19"
+@15:29:47.34 <Qmail> BadNews.email "test mission ended at 23:30:22.59PST13-Dec-19",Subject: "MissionLog::Error in MAIN"
+Bringing up bg96 ...
+@15:30:04.40 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+Shutting down bg96 ...
+@15:37:47.30 <MAIN> Resuming Thread after test mission ended at 23:30:22.59PST13-Dec-19 at 15:29:47
+@15:37:47.33 <shutdown> Shutdown
+@15:37:47.35 <Qmail> GoodNews.email "Asleep until woken by modem RING",Subject: @15:29:47 MissionLog::Error: test mission ended at 23:30:22.59PST13-Dec-19
+@15:37:47.37 <MAIN> Asleep / Shutdown
+@15:37:52.67 <uploadLog> Uploading real real.* *.spr *.pcr .././messages in /var/log/esp to shore::waldo/esp
+@15:37:52.71 <MAIN> Powering down indefinitely
+@15:59:17.49PST16-Dec-19 <MAIN> >RESET< ESP2 v3.40 I2C Gateway v3.20 for core bus
+@15:59:20.21 Configuration for waldo 12/2/19 brent@mbari.org
+/home/esp/esp2/type/shallow/waldo/configure.rb
+@15:59:23.14 Gate.setWakeString! "\r\nRING\r\n",15
+@15:59:23.16 Gate.setWakeAckString! "\rWAKING\r"
+@15:59:23.45 Polling Can every 10:00
+@15:59:23.47 Cleanly exited at 15:37:47PST16-Dec-19
+@15:59:23.51 Loading /home/esp/esp2/mission/long/test.rb mission
+@15:59:23.73 <pause> delay 8:00
+@15:59:23.76 MissionLog::Error in MAIN -- test mission ended at 23:30:22.59PST13-Dec-19
+@15:59:23.78 <MAIN> Waiting to Resume from Checkpoint "test mission ended at 23:30:22.59PST13-Dec-19"
+@15:59:23.79 <Qmail> BadNews.email "test mission ended at 23:30:22.59PST13-Dec-19",Subject: "MissionLog::Error in MAIN"
