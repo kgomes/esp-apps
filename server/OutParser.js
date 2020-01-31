@@ -149,6 +149,7 @@ function parseAncillaryDataPayload(timestamp, source, hour, minute, second, payl
     dataTimestamp.hour(hour);
     dataTimestamp.minute(minute);
     dataTimestamp.second(second);
+    dataTimestamp.millisecond(0);
 
     // Now make sure new timestamp isn't later than the line timestamp which would be
     // impossible. If it is, that means I need to roll a day backwards
@@ -311,12 +312,23 @@ function parseAncillaryDataFromLine(line, timestamp) {
 // ancillary data from more than one source (i.e. Can and/or CTD), this functions
 // returns an array of JSON objects containing ancillary data.
 function lookForAncillaryData(line, timestamp) {
+
     // The handle that will be returned (defaults to nothing)
     var ancillaryDataToReturn = [];
 
+
     // The first thing we need to do is figure out if the line is actually made up
     // of multiple lines separated by \n.
-    var lineSplitOnNewLines = line.split('\n');
+    var lineSeparator = '\n';
+
+    // We do need to check for the special case when the line is a record of an email because the \n
+    // is a string in this case so the line separator is a bit different.
+    if (line.indexOf('Can@') >= 0 || line.indexOf('CTD@') >= 0 || line.indexOf('ISUS@') >= 0) {
+        if (line.indexOf('.email') >= 0) {
+            lineSeparator = '\\n';
+        }
+    }
+    var lineSplitOnNewLines = line.split(lineSeparator);
 
     // Now iterate over that array of lines to look for ancillary data
     for (var i = 0; i < lineSplitOnNewLines.length; i++) {
@@ -466,7 +478,7 @@ function lookForImage(line, timestamp) {
 }
 
 // This method takes in a line and parses for information and attaches to the parsedObject if found
-function parseLine(parsedObject, line, previousTimestamp) {
+function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
     // First update the timestamp for the most recent line
     var newTimestamp = updateTimestamp(line, previousTimestamp);
 
@@ -495,7 +507,7 @@ function parseLine(parsedObject, line, previousTimestamp) {
                     if (!parsedObject['ancillaryData'][ancillaryData[i]['source']][ancillaryData[i]['timestamp']]) {
                         parsedObject['ancillaryData'][ancillaryData[i]['source']][ancillaryData[i]['timestamp']] = ancillaryData[i]['data'];
                     } else {
-                        logger.debug('Ancillary data already in the parsed object, will skip!');
+                        logger.debug('Line ' + lineNumber + ': ' + ancillaryData[i]['source'] + ' data at ' + moment.unix(ancillaryData[i]['timestamp'] / 1000).format() + ' already parsed, will skip');
                     }
                 }
             } else {
@@ -613,7 +625,7 @@ async function parseFile(outFile, callback) {
         //logger.info("Completed reading of file " + fileToParse);
         // Since I am using new lines to make sure I have complete lines before parsing, I need
         // to process the last line read as it may not have been processed in the loop
-        parseLine(parsedObject, previousLine, previousLineTimestamp);
+        parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber);
         //        logger.debug(parsedObject);
 
         // Call the callback
@@ -626,7 +638,7 @@ async function parseFile(outFile, callback) {
     for await (const line of rl) {
         // Bump the line number
         lineNumber++;
-        // logger.debug(`Line ${lineNumber}: ${line}`);
+        //logger.debug(`Line ${lineNumber}: ${line}`);
 
         // The first thing we need to do, is decide if this is a new line or 
         // a continuation of a previous line.  All new line entries should start
@@ -635,7 +647,7 @@ async function parseFile(outFile, callback) {
 
             // Call the method to parse the line and get back the updated timestamp of the line
             if (previousLine) {
-                previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp);
+                previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber);
             }
 
             // Now assign the new line to the placeholder

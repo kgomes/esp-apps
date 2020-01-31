@@ -66,6 +66,7 @@ default = filter = 'true'
 logFn = server_file
 $datestampAll=true
 $sourceStampAll=true
+$changeTZ=true
 
 module ESP
   module_function
@@ -118,7 +119,7 @@ class LogFollower < Log::Reader
     @hitEOF = !wt4eof
     @pollInterval=pollInterval
     @atTail=atTail
-    super logFile, parsers
+    super logFile, parsers, $changeTZ
   end
   def eof?
     false
@@ -168,7 +169,7 @@ else
       end
     end
   end
-  LogReader.new(logFile, Targets)
+  LogReader.new(logFile, Targets, $changeTZ)
 end
 
 reader = start.dup

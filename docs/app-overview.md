@@ -85,3 +85,38 @@ This code is responsible for parsing through a log file and extracting all the p
 1. Once that cleaning is done, the ancillary data stats are updated on the deployment document in CouchDB
 1. Once that is done, the deployment is updated in CouchDB with all the new information that was parsed from the file.
 1. Lastly a method is called to sync the ancillary data file with the ancillary data from the database.
+
+## OutParser.js
+
+This code is responsible for parsing a '.out' file and returning the information in the .out file as a JSON object containing properties like images, samples, protocol runs, ancillary data, etc.
+
+### Parsing Rules
+
+In order to parse correctly, here are the things that the code has to handle and the patterns that it looks for.
+
+1. Ancillary Data: In order to parse ancillary data correctly, it has to be able to handle several different styles of entry.  Here are examples:
+
+```ascii
+@17:10:02.35 <Qmail> HABfans.email "Can@17:05:52, 16.9C, 31% humidity, 14.8psia, 13.804V, 0.475A, 0.475A avg, 6.56W\nCTD data unavailable\nISUS data unavailable",:Subject=>"hab sampling at most 100ml"
+
+@11:10:34.24 Can@11:09:33, 14.0C, 59% humidity, 14.9psia, 15.699V, 0.311A, 0.298A avg, 4.88W
+CTD@11:10:28, 13.027C, 24.116m, 33.530psu, 6.67mg/m^3, 84.71%, 4.49ml/L
+
+@11:15:34.95 <pollContext> Can@11:14:59, 13.8C, 59% humidity, 14.9psia, 15.739V, 0.201A, 0.201A avg, 3.16W
+CTD@11:15:29, 13.046C, 23.919m, 33.522psu, 5.75mg/m^3, 82.80%, 5.20ml/L
+
+@11:48:44.07 <Qmail> HABfans.email "Can@11:48:34, 13.4C, 60% humidity, 14.9psia, 15.540V, 0.598A, 0.591A avg, 9.29W\nCTD@11:43:57, 12.849C, 23.735m, 33.506psu, 6.00mg/m^3, 78.91%, 4.93ml/L",:Subject=>"hab sampling at most 1000ml"
+
+@00:04:08.14PST08-Mar-13 Can@00:03:34, 12.6C, 63% humidity, 14.9psia, 15.227V, 0.207A, 0.207A avg, 3.15W
+CTD@00:03:57, 12.826C, 24.425m, 33.518psu, 5.42mg/m^3, 85.93%, 4.80ml/L
+
+@00:31:05.97UTC05-Mar-13 <pollContext>Can@16:26:10, 17.3C, 29% humidity, 14.9psia, 13.799V, 0.555A, 0.549A avg, 7.66W
+CTD@16:31:05, 15.384C, 0.033m, 0.124psu, 3.36mg/m^3, 66.28%, 6.34ml/L
+
+@01:10:02.36UTC05-Mar-13 <Qmail>HABfans.email "Can@17:05:52, 16.9C, 31% humidity, 14.8psia, 13.804V, 0.475A, 0.475A avg, 6.56W\nCTD data unavailable\nISUS data unavailable",:Subject=>"hab sampling at most 100ml"
+
+@18:20:51.11UTC07-Mar-13 <pollContext>Can@10:19:18, 15.7C, 56% humidity, 14.9psia, 15.789V, 0.201A, 0.201A avg, 3.17W
+CTD@10:20:50, 12.988C, 24.357m, 33.535psu, 8.17mg/m^3, 32.26%, 4.12ml/L
+
+@19:48:44.07UTC07-Mar-13 <Qmail>HABfans.email "Can@11:48:34, 13.4C, 60% humidity, 14.9psia, 15.540V, 0.598A, 0.591A avg, 9.29W\nCTD@11:43:57, 12.849C, 23.735m, 33.506psu, 6.00mg/m^3, 78.91%, 4.93ml/L",:Subject=>"hab sampling at most 1000ml"
+```
