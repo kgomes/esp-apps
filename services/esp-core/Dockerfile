@@ -86,6 +86,14 @@ USER root
 ADD run-httpd.sh /run-httpd.sh
 RUN chmod -v +x /run-httpd.sh
 
+# Add links to timezones needed for log parsing
+RUN ln -s /usr/share/zoneinfo/PST8PDT /usr/share/zoneinfo/PST \
+    && ln -s /usr/share/zoneinfo/PST8PDT /usr/share/zoneinfo/PDT \
+    && ln -s /usr/share/zoneinfo/EST5EDT /usr/share/zoneinfo/EDT \
+    && ln -s /usr/share/zoneinfo/MST7MDT /usr/share/zoneinfo/MDT \
+    && ln -s /usr/share/zoneinfo/CST6CDT /usr/share/zoneinfo/CDT \
+    && ln -s /usr/share/zoneinfo/CST6CDT /usr/share/zoneinfo/CST
+
 # And set the command
 CMD ["/run-httpd.sh"]
 EXPOSE 80
