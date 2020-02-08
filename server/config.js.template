@@ -10,6 +10,9 @@ module.exports = {
     // And logs
     logDir: './data/logs/server',
 
+    // The web hood URL for Slack
+    slackWebHookURL: '',
+
     // Options for the data crawling service
     crawlerOptions: {
         ftpSyncIntervalMillis: 60000,
@@ -268,8 +271,7 @@ module.exports = {
     // The EventHandler options
     eventHandlerOptions: {
         loggerLevel: 'info',
-        hostBaseUrl: 'http://localhost',
-        slackWebHookURL: ''
+        hostBaseUrl: 'http://localhost'
     },
 
     // The function to setup files paths and check for environmental overrides
@@ -284,6 +286,11 @@ module.exports = {
         // Now check to see if the log file directory was specifically called out in the environment variables
         if (process.env['ESP_APPS_LOG_DIRECTORY']) {
             this.logDir = process.env['ESP_APPS_LOG_DIRECTORY'];
+        }
+
+        // Now check to see if Slack Webhook URL was defined in the environment
+        if (process.env['ESP_APPS_SLACK_WEBHOOK_URL']) {
+            this.slackWebHookURL = process.env['ESP_APPS_SLACK_WEBHOOK_URL'];
         }
 
         // Before we start, we should look to make sure the paths for data and logs exist and if not, create them
@@ -354,8 +361,8 @@ module.exports = {
             this.appServerOptions.ancillaryDataRouterOptions = process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL'];
         }
 
-        // Now check for dataStoreOption overrides
-        if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']){
+        // Now check for dataStoreOption overrides        
+        if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']) {
             this.dataStoreOptions.loggerLevel = process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL'];
         }
         if (process.env['ESP_APPS_COUCH_HOST']) {
@@ -398,6 +405,11 @@ module.exports = {
             this.dataStoreOptions.numAncillaryPointsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']);
         }
 
+        // The data stores need a copy of a couple of properties from the parent config so attach those
+        this.dataStoreOptions['dataDir'] = this.dataDir;
+        this.dataStoreOptions['dataBaseUrl'] = this.appServerOptions['hostBaseUrl'] + '/data';
+        this.dataStoreOptions['slackWebHookURL'] = this.slackWebHookURL;
+
         // Now look for deploymentFileSync overrides
         if (process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL']) {
             this.deploymentFileSyncOptions.loggerLevel = process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL'];
@@ -421,8 +433,8 @@ module.exports = {
         if (process.env['ESP_APPS_HOST_BASE_URL']) {
             this.eventHandlerOptions.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
         }
-        if (process.env['ESP_APPS_EVENT_HANDLER_SLACK_WEBHOOK_URL']) {
-            this.eventHandlerOptions.slackWebHookURL = process.env['ESP_APPS_EVENT_HANDLER_SLACK_WEBHOOK_URL'];
-        }
+        // Add the Slack web hook URL
+        this.eventHandlerOptions['slackWebHookURL'] = this.slackWebHookURL;
+
     }
 };
