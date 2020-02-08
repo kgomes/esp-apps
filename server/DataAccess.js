@@ -3,13 +3,14 @@ var util = require('util');
 var fs = require('fs');
 var cradle = require('cradle');
 var os = require('os');
-var {Pool} = require('pg');
+var { Pool } = require('pg');
 var path = require('path');
 var fs = require('fs');
 var readline = require('readline');
 var stream = require('stream');
 var moment = require('moment');
 var eventEmitter = require('events').EventEmitter;
+var Slack = require('node-slackr');
 
 // Grab the object that can be used to initialize the views in CouchDB if the database does not exist
 var couchViews = require('./couch-views');
@@ -36,6 +37,10 @@ function DataAccess(opts, logDir) {
         logger.setLevel(opts.loggerLevel);
     }
 
+    // Slack variables
+    this.slack = null;
+    this.slackUsername = 'esps';
+
     // Grab reference to this for scoping
     var me = this;
 
@@ -45,6 +50,16 @@ function DataAccess(opts, logDir) {
 
     // Grab the number of points that will be batch inserted
     this.numAncillaryPointsToBatch = opts.numAncillaryPointsToBatch;
+
+    // Create the slack connection if a web hook url is specified
+    if (opts.slackWebHookURL) {
+        logger.info("Will send message to Slack at URL " + opts.slackWebHookURL);
+        this.slack = new Slack(opts.slackWebHookURL);
+    }
+
+    // Create an array that will act as a queue for slack messages so we can make sure we don't send messages
+    // too fast
+    this.slackQueue = [];
 
     // Set the local properties for the data connection to couch DB
     this.couchConfiguration = {
@@ -147,6 +162,187 @@ function DataAccess(opts, logDir) {
     this.ancillaryDataSourceIDLookupCallbackQueue = {};
 
     // ***********************************************************
+    // This function gets a deployment by it's ID
+    // ***********************************************************
+    this.getDeploymentByID = function (id, returnFull, callback) {
+        // Check to see if the caller wants the full version by having a parameter
+        // called returnFull that is true.
+        if (returnFull) {
+            // Grab the full deployment using the ID
+            this.couchDBConn.get(id, function (err, result) {
+                logger.debug('getDeploymentByID called with ID ' + id);
+                if (err) {
+                    logger.error('Error caught trying to find Deployment by ID');
+                    logger.error(err);
+                    if (callback)
+                        callback(err);
+                } else {
+                    logger.debug('Found a Deployment and will return it');
+                    if (callback)
+                        callback(null, result);
+                }
+            })
+        } else {
+            // Specify options that will pull the deployment with just that ID from the collection
+            // of shallow deployments
+            var opts = {
+                key: id
+            };
+
+            // Query for all Deployments in the shallow form
+            this.couchDBConn.view('deployments/all', opts, function (err, result) {
+                logger.debug('getDeploymentByID called with ID ' + id);
+                // Check for an error first
+                if (err) {
+                    logger.error('Error trying to find by using all view with ID as key');
+                    logger.error(err);
+                    if (callback)
+                        callback(err);
+                } else {
+                    logger.debug('Got ' + result.length + ' Deployments from CouchDB: ');
+
+                    // Since we are looking for only one and we filtered by that ID, we should return
+                    // the first one specified
+                    if (result.length > 0) {
+                        // Now pass it to the callback function
+                        if (callback)
+                            callback(err, result[0].value);
+                    } else {
+                        // Nothing was found, just return null
+                        if (callback)
+                            callback(null, null);
+                    }
+                }
+            });
+        }
+    }
+
+    // ***********************************************************
+    // This function looks for Deployments that have the given
+    // name and also have an ESP with the given ESP name. This
+    // should be almost the equivalent of an ID.
+    // ***********************************************************
+    this.getDeploymentsByNameAndESPName = function (deploymentName, espname, callback) {
+        logger.debug('Going to get deployments with the name ' + deploymentName + ' and ESP name ' + espname);
+        var opts = {
+            key: [deploymentName, espname]
+        }
+        // Run the couch query
+        this.couchDBConn.view('deployments/byNameAndESPName', opts, function (err, result) {
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployments by name ' + deploymentName + ' and ESP name ' + espname);
+                logger.error(err);
+                if (callback)
+                    callback(err);
+            } else {
+                logger.debug('Got deployments by name and espname');
+                logger.debug(result);
+
+                // Create an array to process
+                var deploymentArray = [];
+
+                // Put the deployments in the array
+                for (var i = 0; i < result.length; i++) {
+                    deploymentArray.push(result[i].value);
+                }
+
+                // Now pass it to the callback function
+                if (callback)
+                    callback(null, deploymentArray);
+            }
+        });
+    }
+
+    // ***********************************************************
+    // This function takes in a deployment JSON object and looks 
+    // for it's equivalent in CouchDB.  Basically, if it has an
+    // ID, it tries that.  If not ID is specified or if the ID
+    // does not return anything, then it looks by deployment name
+    // and ESP name which should basically be an alternative primary
+    // key.
+    // ***********************************************************
+    this.getPersistentDeployment = function (deployment, callback) {
+        // Let's see if it has an ID already
+        var deploymentID = deployment['_id'] || deployment['id'];
+        if (deploymentID) {
+            logger.debug("Deployment ID Before " + deployment._id);
+            logger.debug("Deployment Rev Before " + deployment._rev);
+            // Try to find a Deployment with that ID
+            this.getDeploymentByID(deploymentID, true, function (err, result) {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                } else {
+                    // Check to see if a deployment was found and return it
+                    if (result) {
+                        if (callback) {
+                            callback(null, result);
+                        }
+                    } else {
+                        // Since nothing was found with that ID, try by name
+                        // and ESP name
+                        this.getDeploymentsByNameAndESPName(deployment['name'], deployment['esp']['name'], function (err, results) {
+                            // Check for an error first
+                            if (err) {
+                                logger.error('Error trying to look up Deployments by name and ESP name');
+                                logger.error(err);
+                                if (callback) {
+                                    callback(err);
+                                }
+                            } else {
+                                // Check to see if there was a result
+                                if (results) {
+                                    // Make sure there is one or more
+                                    if (results.length > 0) {
+                                        // Just return the first result
+                                        if (callback) {
+                                            callback(null, results[0]);
+                                        }
+                                    } else {
+                                        if (callback)
+                                            callback(null, null);
+                                    }
+                                } else {
+                                    if (callback) {
+                                        callback(null, null);
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+
+            });
+        } else {
+            // Since there was no ID, let's try to look up an existing deployment
+            // by it's name and ESP name
+            this.getDeploymentsByNameAndESPName(deployment['name'], deployment['esp']['name'], function (err, results) {
+                // Check for an error first
+                if (err) {
+                    logger.error('Error trying to look up Deployments by name and ESP name');
+                    logger.error(err);
+                    if (callback) {
+                        callback(err);
+                    }
+                } else {
+                    // Make sure there were results
+                    if (results.length > 0) {
+                        // Just return the first result
+                        if (callback) {
+                            callback(null, results[0]);
+                        }
+                    } else {
+                        if (callback)
+                            callback(null, null);
+                    }
+                }
+            })
+        }
+    }
+
+    // ***********************************************************
     // This function returns an array of deployments from the
     // data store.  The deployments are shallow and only have
     // flags that indicate if there is further data associated
@@ -159,24 +355,24 @@ function DataAccess(opts, logDir) {
     this.getDeployments = function (callback) {
         // Query for all Deployments in the shallow form
         this.couchDBConn.view('deployments/all', function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get all deployments! ', err);
-                } else {
-                    logger.debug('Got Deployments from CouchDB: ', res);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get all deployments! ', err);
+            } else {
+                logger.debug('Got Deployments from CouchDB: ', res);
 
-                    // Create an array to process
-                    var deploymentArray = [];
+                // Create an array to process
+                var deploymentArray = [];
 
-                    // Push the Deployments
-                    for (var i = 0; i < res.length; i++) {
-                        deploymentArray.push(res[i].value);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, deploymentArray);
+                // Push the Deployments
+                for (var i = 0; i < res.length; i++) {
+                    deploymentArray.push(res[i].value);
                 }
+
+                // Now pass it to the callback function
+                callback(err, deploymentArray);
             }
+        }
         );
     }
 
@@ -185,26 +381,26 @@ function DataAccess(opts, logDir) {
     // ***********************************************************
     this.getDeploymentNames = function (callback) {
         // Run the couch query
-        this.couchDBConn.view('deployments/names', {group: true, reduce: true}, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployments names');
-                    logger.error(err);
-                } else {
-                    logger.debug('Got names');
+        this.couchDBConn.view('deployments/names', { group: true, reduce: true }, function (err, res) {
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployments names');
+                logger.error(err);
+            } else {
+                logger.debug('Got names');
 
-                    // Create an array to process
-                    var deploymentNameArray = [];
+                // Create an array to process
+                var deploymentNameArray = [];
 
-                    // Put the deployment name in the array
-                    for (var i = 0; i < res.length; i++) {
-                        deploymentNameArray.push(res[i].key);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, deploymentNameArray);
+                // Put the deployment name in the array
+                for (var i = 0; i < res.length; i++) {
+                    deploymentNameArray.push(res[i].key);
                 }
+
+                // Now pass it to the callback function
+                callback(err, deploymentNameArray);
             }
+        }
         );
     }
 
@@ -216,25 +412,25 @@ function DataAccess(opts, logDir) {
 
         // Query for data and use the given callback
         this.couchDBConn.view('deployments/open', function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get open deployments!');
-                    logger.error(err);
-                } else {
-                    logger.debug('Got deployments from couch');
-                    logger.debug(res);
-                    // Create an array to process
-                    var deploymentArray = [];
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get open deployments!');
+                logger.error(err);
+            } else {
+                logger.debug('Got deployments from couch');
+                logger.debug(res);
+                // Create an array to process
+                var deploymentArray = [];
 
-                    // Extract just the deployments and put them in the array
-                    for (var i = 0; i < res.length; i++) {
-                        deploymentArray.push(res[i].value);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, deploymentArray);
+                // Extract just the deployments and put them in the array
+                for (var i = 0; i < res.length; i++) {
+                    deploymentArray.push(res[i].value);
                 }
+
+                // Now pass it to the callback function
+                callback(err, deploymentArray);
             }
+        }
         );
     }
 
@@ -248,74 +444,27 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/byName', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployments by name ' + deploymentName);
-                    logger.error(err);
-                } else {
-                    logger.debug('Got deployments by name');
-                    logger.debug(res);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployments by name ' + deploymentName);
+                logger.error(err);
+            } else {
+                logger.debug('Got deployments by name');
+                logger.debug(res);
 
-                    // Create an array to process
-                    var deploymentArray = [];
+                // Create an array to process
+                var deploymentArray = [];
 
-                    // Put the deployments in the array
-                    for (var i = 0; i < res.length; i++) {
-                        deploymentArray.push(res[i].value);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, deploymentArray);
+                // Put the deployments in the array
+                for (var i = 0; i < res.length; i++) {
+                    deploymentArray.push(res[i].value);
                 }
+
+                // Now pass it to the callback function
+                callback(err, deploymentArray);
             }
-        );
-    }
-
-    // ***********************************************************
-    // This function gets a deployment by it's ID
-    // ***********************************************************
-    this.getDeploymentByID = function (id, returnFull, callback) {
-        // Check to see if the caller wants the full version by having a parameter
-        // called returnFull that is true.
-        if (returnFull) {
-            this.couchDBConn.get(id, function (err, doc) {
-                if (err) {
-                    if (callback)
-                        callback(err);
-                } else {
-                    if (callback)
-                        callback(null, doc);
-                }
-            })
-        } else {
-            // Specify options that will pull the deployment with just that ID from the collection
-            // of shallow deployments
-            var opts = {
-                key: id
-            };
-
-            // Query for all Deployments in the shallow form
-            this.couchDBConn.view('deployments/all', opts, function (err, res) {
-                    // Check for an error first
-                    if (err) {
-                        logger.error('Error trying to get all deployments! ', err);
-                        if (callback)
-                            callback(err);
-                    } else {
-                        logger.debug('Got Deployments from CouchDB: ', res);
-
-                        // Since we are looking for only one and we filtered by that ID, we should return
-                        // the first one specified
-                        if (res.length > 0) {
-                            // Now pass it to the callback function
-                            callback(err, res[0].value);
-                        } else {
-                            callback(null, null);
-                        }
-                    }
-                }
-            );
         }
+        );
     }
 
     // ***********************************************************
@@ -329,15 +478,15 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/errors', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment errors ');
-                    logger.error(err);
-                } else {
-                    // Now pass it to the callback function
-                    callback(err, res[0].value);
-                }
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment errors ');
+                logger.error(err);
+            } else {
+                // Now pass it to the callback function
+                callback(err, res[0].value);
             }
+        }
         );
     }
 
@@ -352,15 +501,15 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/protocolRuns', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment protocolRuns ');
-                    logger.error(err);
-                } else {
-                    // Now pass it to the callback function
-                    callback(err, res[0].value);
-                }
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment protocolRuns ');
+                logger.error(err);
+            } else {
+                // Now pass it to the callback function
+                callback(err, res[0].value);
             }
+        }
         );
     }
 
@@ -375,15 +524,15 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/samples', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment samples');
-                    logger.error(err);
-                } else {
-                    // Now pass it to the callback function
-                    callback(err, res[0].value);
-                }
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment samples');
+                logger.error(err);
+            } else {
+                // Now pass it to the callback function
+                callback(err, res[0].value);
             }
+        }
         );
     }
 
@@ -398,15 +547,15 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/images', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment images');
-                    logger.error(err);
-                } else {
-                    // Now pass it to the callback function
-                    callback(err, res[0].value);
-                }
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment images');
+                logger.error(err);
+            } else {
+                // Now pass it to the callback function
+                callback(err, res[0].value);
             }
+        }
         );
     }
 
@@ -421,19 +570,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrTypes', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrTypes');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrTypes');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value.sort());
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value.sort());
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -448,19 +597,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrsByTime', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrs by time');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrs by time');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value);
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value);
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -476,19 +625,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrTypesFullTree', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrTypesFullTree');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrTypesFullTree');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value);
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value);
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -497,31 +646,31 @@ function DataAccess(opts, logDir) {
     // associated with the deployment with the given ID and the
     // given pcrType
     // ***********************************************************
-//    this.getDeploymentPCRRunNames = function (id, pcrType, callback) {
-//        logger.debug('Going to get pcr runNames array for deployment with ID: ' + id + ' and pcr type ' + pcrType);
-//        var opts = {
-//            key: [id, pcrType]
-//        }
-//        // Run the couch query
-//        this.couchDBConn.view('deployments/pcrRunNames', opts, function (err, res) {
-//                logger.debug("response", res);
-//                logger.debug("res[0]", res[0]);
-//                logger.debug("res[0].value", res[0].value);
-//                // Check for an error first
-//                if (err) {
-//                    logger.error('Error trying to get deployment prcRunNames');
-//                    logger.error(err);
-//                } else {
-//                    if (res && res[0] && res[0].value) {
-//                        // Now pass it to the callback function
-//                        callback(err, res[0].value);
-//                    } else {
-//                        callback(err, []);
-//                    }
-//                }
-//            }
-//        );
-//    }
+    //    this.getDeploymentPCRRunNames = function (id, pcrType, callback) {
+    //        logger.debug('Going to get pcr runNames array for deployment with ID: ' + id + ' and pcr type ' + pcrType);
+    //        var opts = {
+    //            key: [id, pcrType]
+    //        }
+    //        // Run the couch query
+    //        this.couchDBConn.view('deployments/pcrRunNames', opts, function (err, res) {
+    //                logger.debug("response", res);
+    //                logger.debug("res[0]", res[0]);
+    //                logger.debug("res[0].value", res[0].value);
+    //                // Check for an error first
+    //                if (err) {
+    //                    logger.error('Error trying to get deployment prcRunNames');
+    //                    logger.error(err);
+    //                } else {
+    //                    if (res && res[0] && res[0].value) {
+    //                        // Now pass it to the callback function
+    //                        callback(err, res[0].value);
+    //                    } else {
+    //                        callback(err, []);
+    //                    }
+    //                }
+    //            }
+    //        );
+    //    }
 
     // ***********************************************************
     // This method queries for an array of pcr epoch seconds
@@ -536,19 +685,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrEpochSeconds', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrEpochSeconds');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrEpochSeconds');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value.sort());
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value.sort());
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -565,19 +714,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrColumnNames', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrColumnNames');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrColumnNames');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value.sort());
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value.sort());
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -596,19 +745,19 @@ function DataAccess(opts, logDir) {
         }
         // Run the couch query
         this.couchDBConn.view('deployments/pcrDataRecords', opts, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get deployment pcrDataRecords');
-                    logger.error(err);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get deployment pcrDataRecords');
+                logger.error(err);
+            } else {
+                if (res && res[0] && res[0].value) {
+                    // Now pass it to the callback function
+                    callback(err, res[0].value);
                 } else {
-                    if (res && res[0] && res[0].value) {
-                        // Now pass it to the callback function
-                        callback(err, res[0].value);
-                    } else {
-                        callback(err, []);
-                    }
+                    callback(err, []);
                 }
             }
+        }
         );
     }
 
@@ -634,31 +783,31 @@ function DataAccess(opts, logDir) {
             }
             // Run the couch query
             this.couchDBConn.view('esps/inDeploymentNames', opts, function (err, res) {
-                    // Check for an error first
-                    if (err) {
-                        logger.error('Error trying to get esp names from deployment');
-                        logger.error(err);
-                    } else {
-                        logger.debug('Got ESP names');
-                        logger.debug(res);
+                // Check for an error first
+                if (err) {
+                    logger.error('Error trying to get esp names from deployment');
+                    logger.error(err);
+                } else {
+                    logger.debug('Got ESP names');
+                    logger.debug(res);
 
-                        // Create an array to process
-                        var espNameArray = [];
+                    // Create an array to process
+                    var espNameArray = [];
 
-                        // Put the esp names in the array
-                        for (var i = 0; i < res.length; i++) {
-                            espNameArray.push(res[i].value);
-                        }
-
-                        // Now pass it to the callback function
-                        callback(err, espNameArray);
+                    // Put the esp names in the array
+                    for (var i = 0; i < res.length; i++) {
+                        espNameArray.push(res[i].value);
                     }
+
+                    // Now pass it to the callback function
+                    callback(err, espNameArray);
                 }
+            }
             );
 
         } else if (nameOnly && nameOnly === 'true') {
             logger.debug('getAllESPNames called');
-            me.couchDBConn.view('esps/allNames', {group: true, reduce: true}, function (err, res) {
+            me.couchDBConn.view('esps/allNames', { group: true, reduce: true }, function (err, res) {
                 // Check for an error first
                 if (err) {
                     logger.error('Error trying to get all ESP names:', err);
@@ -683,49 +832,49 @@ function DataAccess(opts, logDir) {
             }
             // Run the couch query
             this.couchDBConn.view('esps/inDeployment', opts, function (err, res) {
-                    // Check for an error first
-                    if (err) {
-                        logger.error('Error trying to get esp names from deployment');
-                        logger.error(err);
-                    } else {
-                        logger.debug('Got ESP names');
-                        logger.debug(res);
+                // Check for an error first
+                if (err) {
+                    logger.error('Error trying to get esp names from deployment');
+                    logger.error(err);
+                } else {
+                    logger.debug('Got ESP names');
+                    logger.debug(res);
 
-                        // Create an array to process
-                        var espNameArray = [];
+                    // Create an array to process
+                    var espNameArray = [];
 
-                        // Put the esp names in the array
-                        for (var i = 0; i < res.length; i++) {
-                            espNameArray.push(res[i].value);
-                        }
-
-                        // Now pass it to the callback function
-                        callback(err, espNameArray);
+                    // Put the esp names in the array
+                    for (var i = 0; i < res.length; i++) {
+                        espNameArray.push(res[i].value);
                     }
+
+                    // Now pass it to the callback function
+                    callback(err, espNameArray);
                 }
+            }
             );
 
         } else {
             // Query for all ESPs
-            this.couchDBConn.view('esps/all', {group: true, reduce: true}, function (err, res) {
-                    // Check for an error first
-                    if (err) {
-                        logger.error('Error trying to get all ESPs! ', err);
-                    } else {
-                        logger.debug('Got ESPs from CouchDB: ', res);
+            this.couchDBConn.view('esps/all', { group: true, reduce: true }, function (err, res) {
+                // Check for an error first
+                if (err) {
+                    logger.error('Error trying to get all ESPs! ', err);
+                } else {
+                    logger.debug('Got ESPs from CouchDB: ', res);
 
-                        // Create an array to process
-                        var espArray = [];
+                    // Create an array to process
+                    var espArray = [];
 
-                        // Push the ESPs
-                        for (var i = 0; i < res.length; i++) {
-                            espArray.push(res[i].key);
-                        }
-
-                        // Now pass it to the callback function
-                        callback(err, espArray);
+                    // Push the ESPs
+                    for (var i = 0; i < res.length; i++) {
+                        espArray.push(res[i].key);
                     }
+
+                    // Now pass it to the callback function
+                    callback(err, espArray);
                 }
+            }
             );
         }
     }
@@ -737,24 +886,24 @@ function DataAccess(opts, logDir) {
     this.getAllUsers = function (callback) {
         // Query for all Users
         this.couchDBConn.view('users/allUsers', function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get all Users! ', err);
-                } else {
-                    logger.debug('Got Users from CouchDB: ', res);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get all Users! ', err);
+            } else {
+                logger.debug('Got Users from CouchDB: ', res);
 
-                    // Create an array to process
-                    var userArray = [];
+                // Create an array to process
+                var userArray = [];
 
-                    // Push the Users
-                    for (var i = 0; i < res.length; i++) {
-                        userArray.push(res[i].value);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, userArray);
+                // Push the Users
+                for (var i = 0; i < res.length; i++) {
+                    userArray.push(res[i].value);
                 }
+
+                // Now pass it to the callback function
+                callback(err, userArray);
             }
+        }
         );
     }
 
@@ -769,24 +918,24 @@ function DataAccess(opts, logDir) {
         }
         // Query for all Users
         this.couchDBConn.view('users/allUsers', searchOptions, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get a User by id ', err);
-                } else {
-                    logger.debug('Got User by ID: ', res);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get a User by id ', err);
+            } else {
+                logger.debug('Got User by ID: ', res);
 
-                    // Create an array to process
-                    var userArray = [];
+                // Create an array to process
+                var userArray = [];
 
-                    // Push the Users
-                    for (var i = 0; i < res.length; i++) {
-                        userArray.push(res[i].value);
-                    }
-
-                    // Now pass it to the callback function
-                    callback(err, userArray);
+                // Push the Users
+                for (var i = 0; i < res.length; i++) {
+                    userArray.push(res[i].value);
                 }
+
+                // Now pass it to the callback function
+                callback(err, userArray);
             }
+        }
         );
     }
 
@@ -806,22 +955,22 @@ function DataAccess(opts, logDir) {
         }
         // Query for all Users
         this.couchDBConn.view('users/userByLoginTypeAndLoginID', searchOptions, function (err, res) {
-                // Check for an error first
-                if (err) {
-                    logger.error('Error trying to get a User by loginType and loginID ', err);
-                } else {
-                    logger.debug('Got User by loginType and loginID ', res);
+            // Check for an error first
+            if (err) {
+                logger.error('Error trying to get a User by loginType and loginID ', err);
+            } else {
+                logger.debug('Got User by loginType and loginID ', res);
 
-                    // If the response array is empty, return null
-                    if (res.length === 0) {
-                        // Now pass it to the callback function
-                        callback(err, null);
-                    } else {
-                        // Now pass it to the callback function
-                        callback(err, res[0]);
-                    }
+                // If the response array is empty, return null
+                if (res.length === 0) {
+                    // Now pass it to the callback function
+                    callback(err, null);
+                } else {
+                    // Now pass it to the callback function
+                    callback(err, res[0]);
                 }
             }
+        }
         );
 
     }
@@ -885,40 +1034,644 @@ function DataAccess(opts, logDir) {
     }
 
     // ***********************************************************
+    // This function takes in two deployments and attempts to do
+    // an additive update only. It will not remove anything.  If
+    // the deployment is marked to post changes to Slack, events
+    // will be generated and sent to Slack to the channel 
+    // specified in the 'slackChannel' field
+    // ***********************************************************
+    this.mergeDeployments = function (source, target) {
+        // Make sure both deployment coming in exist
+        if (target && source) {
+            logger.debug('mergeDeployments:');
+            logger.debug('Source: ' + source['name']);
+            logger.debug('Target: ' + target['name'])
+
+            // Let's start with the slack flag and channel name
+            if (source['notifySlack']) {
+                logger.debug('Seting notifySlack to ' + source['notifySlack']);
+                target['notifySlack'] = source['notifySlack'];
+            }
+            if (source['slackChannel']) {
+                logger.debug('Setting slack channel to ' + source['slackChannel']);
+                target['slackChannel'] = source['slackChannel'];
+            }
+
+            // Check to see if the source has a name
+            if (source['name'] && source['name'] != '') {
+                // Now check to see if the target either does not have a name or it is different.
+                if (!target['name'] || source['name'] != target['name']) {
+
+                    // Before making the change, check if slack should be notified
+                    if (target['notifySlack'] && target['notifySlack'] == true) {
+                        // Create the message parts
+                        var text = '';
+                        // If the target does not have a name, message that it's a new
+                        // deployment
+                        if (!target['name'] || target['name'] == '') {
+                            text = 'Deployment "' + source['name'] + '" was created in the web portal';
+                        } else {
+                            text = 'Deployment name changed from "' + target['name'] + '" to "' +
+                                source['name'] + '" in the web portal';
+                        }
+
+                        // Now add the message to the queue
+                        this.slackQueue.push({
+                            'text': text,
+                            channel: target['slackChannel'],
+                            username: me.slackUsername
+                        });
+                    }
+
+                    // Make the change
+                    target['name'] = source['name'];
+                }
+            }
+
+            // Check to see if the source has a description
+            if (source['description'] && source['description'] != '') {
+
+                // Check to see if the target either does not have a description or it's different
+                if (!target['description'] || source['description'] != target['description']) {
+                    // Don't bother with slack on a descripton, just make the change
+                    target['description'] = source['description'];
+                }
+
+            }
+
+            // Check to see if the incoming deployment has an ESP associated with it
+            if (source['esp']) {
+                // First check to see if there is an ESP attached to the target
+                if (!target['esp']) {
+                    // Just assign the incoming one
+                    target['esp'] = source['esp'];
+                } else {
+                    // This means there is something on the target, so go field by field
+                    if (source['esp']['name']) target['esp']['name'] = source['esp']['name'];
+                    if (source['esp']['ftpHost']) target['esp']['ftpHost'] = source['esp']['ftpHost'];
+                    if (source['esp']['ftpPort']) target['esp']['ftpPort'] = source['esp']['ftpPort'];
+                    if (source['esp']['ftpUsername']) target['esp']['ftpUsername'] = source['esp']['ftpUsername'];
+                    if (source['esp']['ftpPassword']) target['esp']['ftpPassword'] = source['esp']['ftpPassword'];
+                    if (source['esp']['ftpWorkingDir']) target['esp']['ftpWorkingDir'] = source['esp']['ftpWorkingDir'];
+                    if (source['esp']['logFile']) target['esp']['logFile'] = source['esp']['logFile'];
+                    if (source['esp']['mode']) target['esp']['mode'] = source['esp']['mode'];
+                }
+            }
+
+            // Check if the source has a start date
+            if (source['startDate'] && source['startDate'] != '') {
+                // Check to see if target is empty or it's different
+                if (!target['startDate'] || source['startDate'] != target['startDate']) {
+                    // Not really slack worthy, just update it
+                    target['startDate'] = source['startDate'];
+                }
+            }
+
+            // Check if the source has an end date
+            if (source['endDate'] && source['endDate'] != '') {
+                // Check to see if target is empty or it's different
+                if (!target['endDate'] || source['endDate'] != target['endDate']) {
+
+                    // This could be slack worthy.  If the target end date is not
+                    // defined and it's now being set, the portal will stop parsing
+                    // the deployment so this will end log parsing
+                    if (target['notifySlack'] && target['notifySlack'] == true) {
+                        // Now check to see if the target end date is not set yet
+                        if (!target['endDate'] || target['endDate'] == '') {
+
+                            // Start the message
+                            var text = 'Deployment "' + target['name'] + '"';
+                            // If there is an ESP attached, add the name to the message
+                            if (target['esp'] && target['esp']['name']) text += ' of ESP ' + target['esp']['name'];
+                            // Finish message
+                            text += ' was marked as ended';
+
+                            // Now try to parse the end date
+                            var parsedEndDate = null;
+                            try {
+                                parsedEndDate = moment(source['endDate'], 'YYYY-MM-DDTHH:mm:ssZZZ');
+                            } catch (err) {
+                                logger.warn('Could not parse end date of deployment ' + target['name']);
+                                logger.warn(err);
+                            }
+                            if (parsedEndDate) {
+                                text += ' at ' + parsedEndDate.format('YYYY-MM-DD HH:mm:ss ZZ');
+                            }
+                            text += ', it will no longer be monitored in the portal.'
+
+                            // Send out a message that the deployment was marked as complete
+                            this.slackQueue.push({
+                                'text': text,
+                                channel: target['slackChannel'],
+                                username: me.slackUsername
+                            });
+                        }
+                    }
+
+                    // Update the target end date
+                    target['endDate'] = source['endDate'];
+                }
+            }
+
+            // Check to see if there are any errors associated with the source deployment
+            if (source['errors'] && Object.keys(source['errors'].length > 0)) {
+
+                // Grab all the timestamps of the incoming errors
+                var errorTimestamps = Object.keys(source['errors']);
+
+                // Loop over the errors timestamps on the source object and see if they exist on the target
+                for (var i = 0; i < errorTimestamps.length; i++) {
+                    logger.debug('Working with error timestamp of ' + errorTimestamps[i]);
+
+                    // First, make sure there is an 'errors' object on the target
+                    if (!target['errors']) {
+                        target['errors'] = {};
+                    }
+
+                    // If the timestamp from the source deployment is not in the target, add the error
+                    if (Object.keys(target['errors']).indexOf(errorTimestamps[i]) < 0) {
+
+                        // Grab the error that needs to be added
+                        var errorToAdd = source['errors'][errorTimestamps[i]];
+                        logger.debug('Adding error');
+                        logger.debug(errorToAdd);
+
+                        // Add it
+                        target['errors'][errorTimestamps[i]] = errorToAdd;
+
+                        // Now check to see if we need to send a message to Slack
+                        if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
+                            logger.debug('Slack message will be queued');
+
+                            // Create the message
+                            var messageToSend = {
+                                text: "_" + moment(Number(errorTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                    "_\n*ERROR*: " + errorToAdd.subject,
+                                channel: target['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: "ERROR Occurred",
+                                        color: "danger",
+                                        text: "Actor: " + errorToAdd.actor + "\n" +
+                                            "Message: " + errorToAdd.message
+                                    }
+                                ]
+                            };
+                            this.slackQueue.push(messageToSend);
+                        }
+                    }
+                }
+            }
+
+            // Now, let's look at the protocol runs coming in on the source
+            if (source['protocolRuns'] && Object.keys(source['protocolRuns']).length > 0) {
+
+                // Grab all the timestamps for the protocol runs
+                var protocolRunTimestamps = Object.keys(source['protocolRuns']);
+
+                // Make sure the target at least has an object to store protocol runs in
+                if (!target['protocolRuns']) {
+                    target['protocolRuns'] = {};
+                }
+
+                // Now let's iterate over the source protocol run timestamps
+                for (var i = 0; i < protocolRunTimestamps.length; i++) {
+                    // Check to see if the protocol run timestamp is already in the target
+                    if (Object.keys(target['protocolRuns']).indexOf(protocolRunTimestamps[i]) < 0) {
+                        // It needs to be added, so grab it from the source
+                        var protocolRunToAdd = source['protocolRuns'][protocolRunTimestamps[i]];
+
+                        // Add it to the target
+                        target['protocolRuns'][protocolRunTimestamps[i]] = protocolRunToAdd;
+
+                        // Now check slack to see if it needs to be sent out
+                        if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
+                            var messageToSend = {
+                                text: "_" + moment(Number(protocolRunTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                    "_\n*Protocol Run Started*: " + protocolRunToAdd['name'],
+                                channel: target['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: "Protocol Run Started",
+                                        color: "good",
+                                        text: "Actor: " + protocolRunToAdd['actor'] + "\n" +
+                                            "Target Volume: " + protocolRunToAdd['targetVol']
+                                    }
+                                ]
+                            };
+                            // Add it to the slack queue
+                            me.slackQueue.push(messageToSend);
+                        }
+                    }
+                }
+            }
+
+            // Now, look at samples
+            if (source['samples'] && Object.keys(source['samples']).length > 0) {
+
+                // Grab all the timestamps for the samples
+                var sampleTimestamps = Object.keys(source['samples']);
+
+                // Make sure the target at least has an object to store samples in
+                if (!target['samples']) {
+                    target['samples'] = {};
+                }
+
+                // Now let's iterate over the source sample timestamps
+                for (var i = 0; i < sampleTimestamps.length; i++) {
+
+                    // Grab the sample from the source
+                    var sourceSample = source['samples'][sampleTimestamps[i]];
+
+                    // A flag that indicates a message should be sent
+                    var messageSlackWorthy = false;
+
+                    // Let's start a message in case we need to post it to slack
+                    var slackMessage = {
+                        text: "_" + moment(Number(sampleTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_',
+                        channel: target['slackChannel'],
+                        username: me.slackUsername,
+                        attachments: [
+                            {
+                                fallback: '',
+                                color: 'good',
+                                text: 'Actor: ' + sourceSample['actor'] +
+                                    '\nStart: ' + moment(Number(sampleTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ')
+                            }
+                        ]
+                    }
+
+                    // If there is a end time, calculate how long it took
+                    var timeDiffInMinutes = null;
+                    if (sourceSample['endts']) {
+                        try {
+                            timeDiffInMinutes = Math.trunc((Number(sourceSample['endts']) - Number(sampleTimestamps[i])) / 60000);
+                            slackMessage['attachments'][0]['text'] += '\nEnd: ' + moment(Number(sourceSample['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ');
+                            slackMessage['attachments'][0]['text'] += '\nTook ' + timeDiffInMinutes + ' minutes';
+                        } catch (err) {
+                            logger.warn('Error trying to calculate how long a sample took');
+                            logger.warn(sourceSample);
+                            logger.warn(err);
+                        }
+                    }
+
+                    // Add the target volume
+                    slackMessage['attachments'][0]['text'] += '\nTarget Volume: ' + sourceSample['targetVolume'] + ' ml';
+
+                    // If there is a target and actual volume, calculate the difference
+                    var volDiff = null;
+                    if (sourceSample['targetVolume'] && sourceSample['actualVolume']) {
+                        try {
+                            volDiff = Number(sourceSample['targetVolume']) - Number(sourceSample['actualVolume']);
+                            slackMessage['attachments'][0]['text'] += '\nActual Volume = ' + sourceSample['actualVolume'] + ' ml';
+                            slackMessage['attachments'][0]['text'] += '\nVolume Diff = ' + volDiff + ' ml';
+                            if (volDiff > 0) {
+                                slackMessage['attachments'][0]['color'] = 'warning'
+                            }
+                        } catch (err) {
+                            logger.warn('Error caught trying to calculate difference between ' +
+                                'target and actual volume for sample');
+                            logger.warn(sourceSample);
+                            logger.warn(err);
+                        }
+                    }
+
+                    // Check to see if the sample timestamp is already in the target
+                    if (Object.keys(target['samples']).indexOf(sampleTimestamps[i]) < 0) {
+
+                        // It's not there, so add it to the target
+                        target['samples'][sampleTimestamps[i]] = sourceSample;
+                        messageSlackWorthy = true;
+
+                        // Now the message depends on if there is an end timestamp or not.  If there is not
+                        // an end timestamp, it means it has started, but not completed
+                        if (!sourceSample['endts']) {
+                            // Create the sample started text message
+                            slackMessage['text'] += '\n*Sample Started*';
+                        } else {
+                            // This means the entire sample is being added after it's completed
+                            slackMessage['text'] += '\n*Sample Taken*';
+                        }
+                    } else {
+                        // Now check to see if the actual volume and end timestamp need to be updated
+                        if (sourceSample['endts'] && !target['samples'][sampleTimestamps[i]]['endts']) {
+                            slackMessage['text'] += '\n*Sample Completed*';
+                            messageSlackWorthy = true;
+                        }
+
+                        // Set the target fields using source values
+                        target['samples'][sampleTimestamps[i]]['actor'] = sourceSample['actor'];
+                        target['samples'][sampleTimestamps[i]]['targetVolume'] = sourceSample['targetVolume'];
+                        target['samples'][sampleTimestamps[i]]['endts'] = sourceSample['endts'];
+                        target['samples'][sampleTimestamps[i]]['actualVolume'] = sourceSample['actualVolume'];
+                    }
+
+                    // Check to see if slack message should be sent
+                    if (messageSlackWorthy && target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
+                        // Add it to the slack queue
+                        me.slackQueue.push(slackMessage);
+                    }
+                }
+            }
+
+            // Now let's sync the images. Check if the source has some images attached
+            if (source['images'] && Object.keys(source['images']).length > 0) {
+                // Make sure target has a place to hang images
+                if (!target['images']) {
+                    target['images'] = {};
+                }
+
+                // Grab all the image timestamps from the source
+                var imageTimestamps = Object.keys(source['images']);
+
+                // Loop over the timestamps
+                for (var i = 0; i < imageTimestamps.length; i++) {
+                    // Check to see if the timestamp exists in the target and if not
+                    if (!target['images'][imageTimestamps[i]]) {
+                        // Add it
+                        target['images'][imageTimestamps[i]] = source['images'][imageTimestamps[i]];
+
+                        // Now check to see if a slack message needs to be sent
+                        if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
+                            // logger.debug("Message was an image processed event");
+
+                            // // We need to build the attachment first
+                            // var textToSend;
+                            // if (message.image.downloaded) {
+                            //     textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
+                            //         " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
+                            //         message.image.yPixels + "px)\n" +
+                            //         "<" + encodeURI(me.hostBaseUrl + message.image.imageUrl) + ">"
+                            // } else {
+                            //     textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
+                            //         " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
+                            //         message.image.yPixels + "px)"
+                            // }
+
+                            // // Create the message to send
+                            // var messageToSend = {
+                            //     text: textToSend,
+                            //     channel: channel,
+                            //     username: "esps"
+                            // };
+
+                            // // Add it to the slack queue
+                            // me.slackQueue.push(messageToSend);
+                        }
+                    }
+                }
+            }
+
+        } else {
+            logger.warn('mergeDeployments called but one of the arguments was empty');
+            logger.warn('Source');
+            logger.warn(source);
+            logger.warn('Target: ');
+            logger.warn(target);
+        } // End else one of the arguments was empty
+    }
+
+    // ***********************************************************
     // This function will persist a given deployment
     // ***********************************************************
     this.persistDeployment = function (deployment, callback) {
 
-        logger.info("PersistDeployment called on deployment " + deployment.name);
-        logger.info("Deployment ID Before " + deployment._id);
-        logger.info("Deployment Rev Before " + deployment._rev);
-        // Call the method to save the deployment to the datastore
-        this.couchDBConn.save(deployment, function (err, res) {
-            // Check for errors
-            if (err) {
-                // Log the error
-                logger.warn('Error trying to save deployment ' + deployment.name + '(id=' + deployment._id + ',rev=' + deployment._rev);
-                logger.warn(err);
+        logger.debug("PersistDeployment called on deployment named " + deployment.name);
 
-                // Send error to the caller
+        // First let's see if we can find an equivalent deployment in CouchDB
+        this.getPersistentDeployment(deployment, function (err, result) {
+            // First look for an error
+            if (err) {
+                logger.error('Error caught trying to find persistent deployment matching');
+                logger.error(deployment);
                 if (callback)
                     callback(err);
             } else {
-                // Assign the ID and rev
-                if (res.ok) {
-                    logger.info('Deployment ' + deployment.name + ' updated successfully');
-                    // Assign the ID and revision
-                    deployment._id = res.id;
-                    deployment._rev = res.rev;
-                    logger.info("Deployment ID After " + deployment._id);
-                    logger.info("Deployment Rev After " + deployment._rev);
+                // Create an empty JSON object to represent the deployment that will be persisted
+                var deploymentToPersist = {};
 
-                    // Send the updated deployment back to the caller
-                    if (callback)
-                        callback(null, deployment);
+                // Check to see if there is a matching deployment that was returned from CouchDB
+                if (result) {
+                    logger.debug('Found an existing deployment, will update it');
+                    logger.debug(result);
+                    deploymentToPersist = result;
+                } else {
+                    logger.debug('No matching deployment found, will insert a new Deployment');
                 }
+
+                // Make sure it's tagged as a Deployment resource
+                deploymentToPersist['resource'] = 'Deployment';
+
+                // Copy over the information from the incoming deployment
+                me.mergeDeployments(deployment, deploymentToPersist);
+
+                // Call the method to save the deployment to the datastore
+                me.couchDBConn.save(deploymentToPersist, function (err, res) {
+
+                    // Check for errors
+                    if (err) {
+                        // Log the error
+                        logger.warn('Error trying to save deployment ' +
+                            deployment['name'] + '(id=' + deployment['_id'] + ',rev=' +
+                            deployment['_rev'] + ')');
+                        logger.warn(err);
+
+                        // Send error to the caller
+                        if (callback)
+                            callback(err);
+                    } else {
+                        // Assign the ID and rev
+                        if (res.ok) {
+                            logger.info('Deployment ' + deployment['name'] +
+                                ' persisted successfully');
+                            // Assign the ID and revision
+                            deployment._id = res.id;
+                            deployment._rev = res.rev;
+                            logger.info("Deployment ID After " + deployment._id);
+                            logger.info("Deployment Rev After " + deployment._rev);
+
+                            // Send the updated deployment back to the caller
+                            if (callback)
+                                callback(null, deployment);
+                        }
+                    }
+                });
             }
         });
+    }
+
+    /**
+     * This method takes in a JSON object which should contain a deployment object.  It will use the ID
+     * from the incoming JSON object to look up the existing deployment in the data store, it will then
+     * look through both objects and update the persistent one with any information coming in on the
+     * submitted object.  This is an additive process, nothing is removed from the persisten object.
+     *
+     * @param deploymentJSON
+     * @param callback
+     */
+    this.updateDeploymentByJSON = function (deploymentJSON, callback) {
+        // First make sure we have an deployment ID on the incoming object
+        if (deploymentJSON && deploymentJSON['id']) {
+
+            // Next try to find a deployment with the given ID
+            this.couchDBConn.get(deploymentJSON['id'], function (err, deployment) {
+                // If an error occurred, send it back
+                if (err) {
+                    logger.error("Error caught trying to find deployment with ID: " + deploymentJSON['id']);
+                    if (callback)
+                        callback(err);
+                } else {
+                    // Make sure there is a deployment
+                    if (deployment) {
+                        // // Now examine each of the parameters coming in and if they are specified, update the
+                        // // properties on the deployment
+
+                        // // TODO kgomes, I should make sure to only update the document if something has changed.
+
+                        // // The name of the deployment
+                        // if (name) deployment.name = name;
+
+                        // // The description of the deployment
+                        // if (description) deployment.description = description;
+
+                        // // The start date
+                        // if (startDate) deployment.startDate = startDate;
+
+                        // // The end date
+                        // if (endDate) deployment.endDate = endDate;
+
+                        // // The esp information
+                        // if (esp) {
+                        //     // Make sure the deployment has an ESP object
+                        //     if (!deployment.esp) deployment.esp = {};
+
+                        //     // Now check the properties of the esp
+                        //     if (esp.name) deployment.esp.name = esp.name;
+                        //     if (esp.ftpHost) deployment.esp.ftpHost = esp.ftpHost;
+                        //     if (esp.ftpPort) deployment.esp.ftpPort = esp.ftpPort;
+                        //     if (esp.ftpUsername) deployment.esp.ftpUsername = esp.ftpUsername;
+                        //     if (esp.ftpPassword) deployment.esp.ftpPassword = esp.ftpPassword;
+                        //     if (esp.ftpWorkingDir) deployment.esp.ftpWorkingDir = esp.ftpWorkingDir;
+                        //     if (esp.logFile) deployment.esp.logFile = esp.logFile;
+                        //     if (esp.mode) deployment.esp.mode = esp.mode;
+                        //     if (esp.path) deployment.esp.path = esp.path;
+                        //     if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
+                        // }
+
+                        // // If ancillary data stats
+                        // if (ancillaryData)
+                        //     deployment.ancillaryData = ancillaryData;
+
+                        // // Now any errors
+                        // if (errors) {
+                        //     if (!deployment.errors)
+                        //         deployment.errors = {};
+
+                        //     for (var timestamp in errors) {
+                        //         deployment.errors[timestamp] = errors[timestamp];
+                        //     }
+                        // }
+
+                        // // Now samples
+                        // if (samples) {
+                        //     if (!deployment.samples)
+                        //         deployment.samples = {};
+
+                        //     for (var timestamp in samples) {
+                        //         deployment.samples[timestamp] = samples[timestamp];
+                        //     }
+                        // }
+
+                        // // Now protocolRuns
+                        // if (protocolRuns) {
+                        //     if (!deployment.protocolRuns)
+                        //         deployment.protocolRuns = {};
+
+                        //     for (var timestamp in protocolRuns) {
+                        //         deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
+                        //     }
+                        // }
+
+                        // // Now images
+                        // if (images) {
+                        //     if (!deployment.images)
+                        //         deployment.images = {};
+
+                        //     for (var timestamp in images) {
+                        //         deployment.images[timestamp] = images[timestamp];
+                        //     }
+                        // }
+
+                        // // Now pcrs
+                        // if (pcrDataArray) {
+                        //     for (var i = 0; i < pcrDataArray.length; i++) {
+                        //         // Grab the data
+                        //         var pcrData = pcrDataArray[i];
+
+                        //         // It will be an object that has pcr types as keys, so we need to
+                        //         // loop over the pcrTypes first
+                        //         for (var pcrType in pcrData) {
+                        //             // Now next item will be the PCR run name
+                        //             for (var pcrRunName in pcrData[pcrType]) {
+                        //                 // Now the item will be the timestamp of the file that was processed
+                        //                 for (var timestamp in pcrData[pcrType][pcrRunName]) {
+                        //                     // Add (or replace the entry on the deployment with this information
+                        //                     if (!deployment.pcrs)
+                        //                         deployment.pcrs = {};
+                        //                     if (!deployment.pcrs[pcrType])
+                        //                         deployment.pcrs[pcrType] = {};
+                        //                     if (!deployment.pcrs[pcrType][pcrRunName])
+                        //                         deployment.pcrs[pcrType][pcrRunName] = {};
+                        //                     if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
+                        //                         deployment.pcrs[pcrType][pcrRunName][timestamp] =
+                        //                             pcrData[pcrType][pcrRunName][timestamp];
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+
+                        // }
+
+                        // // Now last line parsed in log file
+                        // if (lastLineParsedFromLogFile) deployment.lastLineParsedFromLogFile = lastLineParsedFromLogFile;
+
+                        // Now try to save the deployment
+                        me.couchDBConn.save(deployment, function (err, res) {
+                            // First check for error
+                            if (err) {
+                                // Make sure the error is a conflict error before recursing
+                                if (err.error === 'conflict') {
+                                    logger.warn("Conflict trapped trying to save deployment with updates " +
+                                        "added, will try again", err);
+                                    me.updateDeployment(deploymentID, name, description, startDate, endDate, esp,
+                                        errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback);
+                                } else {
+                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    // Since the error is not a conflict error, bail out
+                                    if (callback)
+                                        callback(err);
+                                }
+                            } else {
+                                // Send null back to the caller.
+                                if (callback)
+                                    callback(null);
+                            }
+                        });
+
+                    } else {
+                        logger.error("No deployment found matching ID " + deploymentID);
+                        if (callback)
+                            callback(new Error("No deployment matching ID " + deploymentID + " found."));
+                    }
+                }
+            });
+        } else {
+            // Send an error to the callback
+            if (callback)
+                callback(new Error("No deployment ID was specified."));
+        }
     }
 
     /**
@@ -2213,149 +2966,149 @@ function DataAccess(opts, logDir) {
                 // The first thing to do is try to look up the sourceID in the local cache
                 me.getAncillaryDataSourceIDFromCache(deploymentID, espName, sourceName, logUnits, function (err, sourceID) {
 
-                        // If there is an error send it back
-                        if (err) {
+                    // If there is an error send it back
+                    if (err) {
+                        if (callback)
+                            callback(err);
+                    } else {
+                        // OK, check if there was there a sourceID in the cache
+                        if (sourceID) {
+                            logger.trace("Found ID " + sourceID + " in the local cache");
+                            // Send it to the callback
                             if (callback)
-                                callback(err);
+                                callback(null, sourceID);
                         } else {
-                            // OK, check if there was there a sourceID in the cache
-                            if (sourceID) {
-                                logger.trace("Found ID " + sourceID + " in the local cache");
-                                // Send it to the callback
-                                if (callback)
-                                    callback(null, sourceID);
-                            } else {
-                                // So there was nothing in the local cache, we need to look it up from the DB, but
-                                // I need to first see if another request has already been queued for this same
-                                // information
+                            // So there was nothing in the local cache, we need to look it up from the DB, but
+                            // I need to first see if another request has already been queued for this same
+                            // information
 
-                                // A boolean to track if the request exists already
-                                var requestExists = false;
+                            // A boolean to track if the request exists already
+                            var requestExists = false;
 
-                                // Check the local queue
-                                if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] &&
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName] &&
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName] &&
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] &&
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length > 0) {
-                                    // Set the flag to true
-                                    requestExists = true;
-                                }
+                            // Check the local queue
+                            if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] &&
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName] &&
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName] &&
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] &&
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length > 0) {
+                                // Set the flag to true
+                                requestExists = true;
+                            }
 
-                                // OK, we checked and have our answer, the next thing to do is put the incoming callback
-                                // into the queue for processing (while making sure the object tree exists)
-                                if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID])
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] = {};
-                                if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName])
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName] = {};
-                                if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName])
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName] = {};
-                                if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits])
-                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
-                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].push(callback);
+                            // OK, we checked and have our answer, the next thing to do is put the incoming callback
+                            // into the queue for processing (while making sure the object tree exists)
+                            if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID])
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID] = {};
+                            if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName])
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName] = {};
+                            if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName])
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName] = {};
+                            if (!me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits])
+                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
+                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].push(callback);
 
-                                // Nothing was found in the cache and there is no pending callback, we will need to
-                                // search the database to see if one was already created but is not in the cache.
-                                if (!requestExists) {
+                            // Nothing was found in the cache and there is no pending callback, we will need to
+                            // search the database to see if one was already created but is not in the cache.
+                            if (!requestExists) {
 
-                                    // Build the query string
-                                    const queryString = 'SELECT id from ancillary_sources where ' +
-                                        'deployment_id_fk = $1 and esp_name = $2 and instrument_type = $3 ' +
-                                        'and log_units = $4';
+                                // Build the query string
+                                const queryString = 'SELECT id from ancillary_sources where ' +
+                                    'deployment_id_fk = $1 and esp_name = $2 and instrument_type = $3 ' +
+                                    'and log_units = $4';
 
-                                    // Build the values to insert into the query
-                                    const queryValues = [deploymentID, espName, sourceName, logUnits];
+                                // Build the values to insert into the query
+                                const queryValues = [deploymentID, espName, sourceName, logUnits];
 
-                                    // Run the query against the connection pool
-                                    me.pgPool.query(queryString, queryValues, function (err, result) {
-                                        // Check for an error
-                                        if (err) {
-                                            // Log the error
-                                            logger.error('Error connecting to Postgres in getAncillaryDataSourceID');
-                                            logger.error(err);
+                                // Run the query against the connection pool
+                                me.pgPool.query(queryString, queryValues, function (err, result) {
+                                    // Check for an error
+                                    if (err) {
+                                        // Log the error
+                                        logger.error('Error connecting to Postgres in getAncillaryDataSourceID');
+                                        logger.error(err);
 
-                                            // Send the error to callback
-                                            if (callback)
-                                                callback(err);
-                                        } else {
-                                            // The query for the ancillary source executed OK, we now need to check to
-                                            // see if the ancillary source query returned anything
-                                            if (result && result.rows && result.rows.length > 0) {
-                                                // It appears a sourceID already exists, so stuff it in the local cache
-                                                me.putAncillaryDataSourceIDInCache(deploymentID, espName, sourceName,
-                                                    logUnits, result.rows[0].id, function (err) {
-                                                        logger.error("Error while pushing source ID " +
-                                                            result.rows[0].id + " into the local cache");
-                                                    });
+                                        // Send the error to callback
+                                        if (callback)
+                                            callback(err);
+                                    } else {
+                                        // The query for the ancillary source executed OK, we now need to check to
+                                        // see if the ancillary source query returned anything
+                                        if (result && result.rows && result.rows.length > 0) {
+                                            // It appears a sourceID already exists, so stuff it in the local cache
+                                            me.putAncillaryDataSourceIDInCache(deploymentID, espName, sourceName,
+                                                logUnits, result.rows[0].id, function (err) {
+                                                    logger.error("Error while pushing source ID " +
+                                                        result.rows[0].id + " into the local cache");
+                                                });
 
-                                                // Loop over the callback cache and return the results
-                                                for (var i = 0;
-                                                     i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
-                                                    // Return the ID to the caller
-                                                    if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                        me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
+                                            // Loop over the callback cache and return the results
+                                            for (var i = 0;
+                                                i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
+                                                // Return the ID to the caller
+                                                if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
+                                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
                                                         (null, result.rows[0].id, deploymentID, espName,
                                                             sourceName, varName, varLongName, varUnits,
                                                             logUnits, timestamp, data);
-                                                }
+                                            }
 
-                                                // Now clear the cached callbacks
-                                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
-                                            } else {
-                                                // Nothing is in the database yet, we need to insert one
+                                            // Now clear the cached callbacks
+                                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
+                                        } else {
+                                            // Nothing is in the database yet, we need to insert one
 
-                                                // Build the query string
-                                                const queryString = 'INSERT INTO ancillary_sources(' +
-                                                    'deployment_id_fk, esp_name, instrument_type, ' +
-                                                    'var_name, var_long_name, log_units, units) values ' +
-                                                    '($1,$2,$3,$4,$5,$6,$7) RETURNING id';
+                                            // Build the query string
+                                            const queryString = 'INSERT INTO ancillary_sources(' +
+                                                'deployment_id_fk, esp_name, instrument_type, ' +
+                                                'var_name, var_long_name, log_units, units) values ' +
+                                                '($1,$2,$3,$4,$5,$6,$7) RETURNING id';
 
-                                                // And the query values array
-                                                const queryValues = [deploymentID, espName, sourceName, varName,
-                                                    varLongName, logUnits, varUnits];
+                                            // And the query values array
+                                            const queryValues = [deploymentID, espName, sourceName, varName,
+                                                varLongName, logUnits, varUnits];
 
-                                                // Run the query against the connection pool
-                                                me.pgPool.query(queryString, queryValues, function (err, result) {
-                                                    // Check for errors
-                                                    if (err) {
-                                                        // Log the error
-                                                        logger.warn('Error trying to insert a new ancillary data source');
-                                                        logger.warn(err);
+                                            // Run the query against the connection pool
+                                            me.pgPool.query(queryString, queryValues, function (err, result) {
+                                                // Check for errors
+                                                if (err) {
+                                                    // Log the error
+                                                    logger.warn('Error trying to insert a new ancillary data source');
+                                                    logger.warn(err);
 
-                                                        // Send the error it back to the caller
-                                                        if (callback)
-                                                            callback(err);
-                                                    } else {
-                                                        // It appears a sourceID already exists stuff it in the local cache
-                                                        me.putAncillaryDataSourceIDInCache(deploymentID, espName,
-                                                            sourceName, logUnits, result.rows[0].id,
-                                                            function (err) {
-                                                                logger.error("Error while pushing source ID " +
-                                                                    result.rows[0].id + " into the cache");
-                                                            });
+                                                    // Send the error it back to the caller
+                                                    if (callback)
+                                                        callback(err);
+                                                } else {
+                                                    // It appears a sourceID already exists stuff it in the local cache
+                                                    me.putAncillaryDataSourceIDInCache(deploymentID, espName,
+                                                        sourceName, logUnits, result.rows[0].id,
+                                                        function (err) {
+                                                            logger.error("Error while pushing source ID " +
+                                                                result.rows[0].id + " into the cache");
+                                                        });
 
-                                                        // Loop over the callback cache and return the results
-                                                        for (var i = 0;
-                                                             i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
-                                                            // Return the ID to the caller
-                                                            if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                                me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
+                                                    // Loop over the callback cache and return the results
+                                                    for (var i = 0;
+                                                        i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
+                                                        // Return the ID to the caller
+                                                        if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
+                                                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
                                                                 (null, result.rows[0].id, deploymentID, espName,
                                                                     sourceName, varName, varLongName, varUnits,
                                                                     logUnits, timestamp, data);
-                                                        }
-
-                                                        // Now clear the cached callbacks
-                                                        me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
                                                     }
-                                                });
-                                            }
+
+                                                    // Now clear the cached callbacks
+                                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits] = [];
+                                                }
+                                            });
                                         }
-                                    });
-                                }
+                                    }
+                                });
                             }
                         }
                     }
+                }
                 );
             }
         }
@@ -2615,7 +3368,7 @@ function DataAccess(opts, logDir) {
                                 logger.error("No source ID found for deployment ID " + deploymentID +
                                     " of esp " + espName + " with source:(name = " + sourceName + ", varName = " +
                                     varName + ", varLongName = " + varLongName) + ", varUnits = " + varUnits +
-                                ", logUnits = " + logUnits;
+                                    ", logUnits = " + logUnits;
                             }
                         }
 
@@ -2629,22 +3382,22 @@ function DataAccess(opts, logDir) {
                             me.pgPool.query('INSERT INTO ancillary_data(ancillary_source_id_fk, ' +
                                 'timestamp_utc, value) values ' + valueText, function (err, result) {
 
-                                // If the insert failed
-                                if (err) {
-                                    logger.error('Error inserting bulk rows');
-                                    logger.error(err);
+                                    // If the insert failed
+                                    if (err) {
+                                        logger.error('Error inserting bulk rows');
+                                        logger.error(err);
 
-                                    // Send the error to the callback
-                                    if (callback)
-                                        callback(err);
-                                } else {
-                                    logger.trace("Bulk insert complete. Result: ", result);
+                                        // Send the error to the callback
+                                        if (callback)
+                                            callback(err);
+                                    } else {
+                                        logger.trace("Bulk insert complete. Result: ", result);
 
-                                    // Looks like it worked, call the callback with the number of records inserted
-                                    if (callback)
-                                        callback(null, numberOfRecordsProcessed);
-                                }
-                            });
+                                        // Looks like it worked, call the callback with the number of records inserted
+                                        if (callback)
+                                            callback(null, numberOfRecordsProcessed);
+                                    }
+                                });
                         }
                     });
             }
@@ -2672,15 +3425,15 @@ function DataAccess(opts, logDir) {
      */
     this.getAncillaryDataInsertText = function (deploymentID, espName, sourceName, varName, varLongName, varUnits, logUnits, timestamp, data, callback) {
         // First let's make sure we have all the information we need
-        if (typeof(deploymentID) !== 'undefined' && deploymentID != null &&
-            typeof(espName) !== 'undefined' && espName != null &&
-            typeof(sourceName) !== 'undefined' && sourceName != null &&
-            typeof(varName) !== 'undefined' && varName != null &&
-            typeof(varLongName) !== 'undefined' && varLongName != null &&
-            typeof(varUnits) !== 'undefined' && varUnits != null &&
-            typeof(logUnits) !== 'undefined' && logUnits != null &&
-            typeof(timestamp) !== 'undefined' && timestamp != null &&
-            typeof(data) !== 'undefined' && data != null) {
+        if (typeof (deploymentID) !== 'undefined' && deploymentID != null &&
+            typeof (espName) !== 'undefined' && espName != null &&
+            typeof (sourceName) !== 'undefined' && sourceName != null &&
+            typeof (varName) !== 'undefined' && varName != null &&
+            typeof (varLongName) !== 'undefined' && varLongName != null &&
+            typeof (varUnits) !== 'undefined' && varUnits != null &&
+            typeof (logUnits) !== 'undefined' && logUnits != null &&
+            typeof (timestamp) !== 'undefined' && timestamp != null &&
+            typeof (data) !== 'undefined' && data != null) {
 
             // Look up the ancillary source ID from the deployment
             me.getAncillaryDataSourceID(deploymentID, espName, sourceName, varName, varLongName, varUnits,
@@ -3088,7 +3841,7 @@ function DataAccess(opts, logDir) {
          */
         function writeHeader(deployment, source, filePath, callback) {
             // Now create a stream writer
-            var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
+            var sourceStream = fs.createWriteStream(filePath, { 'flags': 'a' });
 
             // Add the event handler to send the call back when the stream finished
             sourceStream.on('finish', function () {
@@ -3138,7 +3891,7 @@ function DataAccess(opts, logDir) {
         function writeAncillaryData(filePath, query, callback) {
             // Grab reference
             // Now create a stream writer
-            var sourceStream = fs.createWriteStream(filePath, {'flags': 'a'});
+            var sourceStream = fs.createWriteStream(filePath, { 'flags': 'a' });
 
             // When the finish event occurs, send the callback
             sourceStream.on('finish', function () {
@@ -3219,6 +3972,26 @@ function DataAccess(opts, logDir) {
             });
         }
     }
+
+    // Now set up a time to send any messages from the slack queue every 5 seconds
+    setInterval(function () {
+        // Check to see if there is a message in the slack queue
+        if (me.slackQueue.length > 0) {
+            // Pop the next message
+            var messageToSend = me.slackQueue.shift();
+            logger.debug("Will send message to slack", messageToSend);
+
+            // Send the message
+            me.slack.notify(messageToSend, function (err, result) {
+                if (err) {
+                    logger.error("Error trying to send to slack: ", err);
+                } else {
+                    logger.debug("Send to slack looks OK", result);
+                }
+            });
+        }
+
+    }, 1000 * 5);
 }
 
 // Export the factory method
