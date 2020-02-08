@@ -264,6 +264,13 @@ module.exports = {
                 }
             }
         },
+        byNameAndESPName: {
+            map: function(doc) {
+                if (doc['resource'] == 'Deployment') {
+                    emit([doc.name, doc.esp.name], doc);
+                }
+            }
+        },
         errors: {
             map: function(doc) {
                 // Make sure document is a deployment first
