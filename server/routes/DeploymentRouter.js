@@ -8,6 +8,9 @@ var logger = log4js.getLogger('DeploymentRouter');
 // The moment library
 var moment = require('moment');
 
+// Grab the model objects
+var Deployment = require('../models/Deployment');
+
 // The constructor function
 function DeploymentRouter(dataAccess, opts, logDir) {
     // If the options specify a logger level, set it
@@ -555,6 +558,30 @@ function DeploymentRouter(dataAccess, opts, logDir) {
         } else {
             logger.warn("Not all parameters specified in getDeploymentPCRDataRecords");
         }
+    }
+
+    // This method handles creation of new deployments using JSON that was submitted
+    // by the caller
+    this.insertDeployment = function (req, res) {
+        // The incoming body should be a JSON representation of a Deployment
+        logger.debug('insertDeployment: incoming request body: ');
+        logger.debug(req.body);
+
+        // Create a Deployment object and deserialize the JSON data into that object
+        // var newDeployment = new Deployment();
+        // newDeployment.deserialize(req.body);
+        // logger.debug('After converting to Deployment model object');
+        // logger.debug(newDeployment);
+
+        me.dataAccess.persistDeployment(req.body, function (err, result) {
+            res.send('INSERT ME BABY!');
+        });
+    }
+
+    // This method handles patch requests
+    this.updateDeployment = function (req, res) {
+        me.dataAccess.updateDeploymentByJSON(req.body);
+        res.send('PATCH ME BABY!');
     }
 }
 
