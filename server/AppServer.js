@@ -1,6 +1,7 @@
 // Load any dependencies
 var express = require('express');
 var csv = require('express-csv');
+const body_parser = require('body-parser');
 
 // Configure logging
 var log4js = require('log4js');
@@ -57,9 +58,18 @@ function AppServer(dataAccess, dataDir, opts, logDir) {
         next();
     });
 
+    // Use a body parser
+    this.server.use(body_parser.json());
+
     // **********************************************
     // Define all the routes
     // **********************************************
+
+    // The route to post a new deployment to the data store
+    this.server.post('/deployments', this.deploymentRouter.insertDeployment);
+
+    // And a route to patch (update) and existing one
+    this.server.patch('/deployments/:id', this.deploymentRouter.updateDeployment);
 
     // A route for returning the list of deployments
     this.server.get('/deployments', this.deploymentRouter.getDeployments);
