@@ -36,6 +36,12 @@ function setLogDirectory(directory) {
     logger.info('Log directory set to ' + directory);
 }
 
+// Set the level for logging purposes. Order or precedence is:
+// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF
+function setLogLevel(level) {
+    logger.setLevel(level);
+}
+
 // This is a function that takes in a line and the previous date and returns the updated date from
 // the line entry
 function updateTimestamp(line, timestamp) {
@@ -91,8 +97,8 @@ function updateTimestamp(line, timestamp) {
                         dateToReturn.set('second', parseInt(ts2Matches[3]))
                         dateToReturn.set('ms', parseInt(ts2Matches[4] + '0'))
                     } catch (error) {
-                        //logger.error('Error caught trying to update cloned timestamp with ' + timeIndicator);
-                        //logger.error(error);
+                        logger.error('Error caught trying to update cloned timestamp with ' + timeIndicator);
+                        logger.error(error);
                     }
                 }
             }
@@ -106,6 +112,7 @@ function updateTimestamp(line, timestamp) {
 // This is a function that looks for an error message in the given line and will return an object with
 // a 'message' property and a 'subject' property if an error is found.  It will return nothing if no
 // error was found
+// TODO kgomes WHAT ABOUT ACTORS!!!!!
 function lookForError(line, timestamp) {
     // The handle that will be returned (defaults to nothing)
     var errorToReturn;
@@ -116,7 +123,7 @@ function lookForError(line, timestamp) {
     // Try to pattern match for the error
     var errorMatches = line.match(errorPattern);
     if (errorMatches && errorMatches.length > 0) {
-        //logger.debug('Found error in line: ' + line);
+        logger.debug('Found error in line: ' + line);
         errorToReturn = {
             'timestamp': timestamp.valueOf(),
             'subject': errorMatches[2],
@@ -211,7 +218,7 @@ function parseCanAncillaryDataFromLine(line, timestamp) {
 
     // Check to see if a match occurred
     if (canEmailDataMatcher && canEmailDataMatcher.length > 0) {
-        //logger.debug('Found ancillary can data in email line: ' + line);
+        logger.debug('Found ancillary can data in email line: ' + line);
 
         // Using the extracted timestamp from the Can sensor and the payload, call a method to
         // construct a data object to return
@@ -259,7 +266,7 @@ function parseCTDAncillaryDataFromLine(line, timestamp) {
 
     // Check to see if a match occurred
     if (ctdEmailDataMatcher && ctdEmailDataMatcher.length > 0) {
-        //logger.debug('Found ancillary CTD data in email line: ' + line);
+        logger.debug('Found ancillary CTD data in email line: ' + line);
 
         // Using the extracted timestamp from the CTD and the payload, call a method to
         // construct a data object to return
@@ -276,7 +283,7 @@ function parseCTDAncillaryDataFromLine(line, timestamp) {
 
         // Check for successful match
         if (ctdDataMatcher && ctdDataMatcher.length > 0) {
-            //logger.debug('Found ancillary CTD data in non-email line: ' + line);
+            logger.debug('Found ancillary CTD data in non-email line: ' + line);
 
             // Call the method to parse the timstampe and payload into a data point        
             ctdData = parseAncillaryDataPayload(timestamp, 'CTD', ctdDataMatcher[1], ctdDataMatcher[2],
@@ -349,8 +356,8 @@ function lookForProtocolRunStart(line, timestamp) {
     var protocolRunStart;
 
     if (line.indexOf('sampling at most') >= 0) {
-        //logger.debug('Possible protocol start line:');
-        //logger.debug(line);
+        logger.debug('Possible protocol start line:');
+        logger.debug(line);
     }
     // This is the regular expression we will use to look a protocol runs
     var protocolRunStartPattern = new RegExp(/^\S+\s+(.*)\s+sampling at most (\d+\.*\d*)ml(.*)/);
@@ -379,7 +386,7 @@ function lookForProtocolRunStart(line, timestamp) {
             protocolRunStart = {
                 'timestamp': timestamp.valueOf(),
                 'name': 'wcr',
-                'targetVol': Number(protocolRunStartMatch[2])
+                'targetVol': Number(wcrRunMatch[2])
             };
         }
     }
@@ -542,6 +549,7 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
                                 var latestSample = parsedObject['samples'][lastestSampleTimestamp];
                                 if (latestSample && !latestSample['actualVol']) {
                                     parsedObject['samples'][lastestSampleTimestamp]['actualVol'] = sampleEnd['actualVol'];
+                                    parsedObject['samples'][lastestSampleTimestamp]['endts'] = Number(sampleEnd['timestamp']);
                                 } else {
                                     //logger.error('Either could not find latest sample or it already has actualVol!');
                                 }
@@ -630,7 +638,7 @@ async function parseFile(outFile, callback) {
 
         // Call the callback
         if (callback) {
-            callback(parsedObject, err)
+            callback(err, parsedObject)
         }
     });
 
@@ -638,7 +646,7 @@ async function parseFile(outFile, callback) {
     for await (const line of rl) {
         // Bump the line number
         lineNumber++;
-        //logger.debug(`Line ${lineNumber}: ${line}`);
+        logger.trace(`Line ${lineNumber}: ${line}`);
 
         // The first thing we need to do, is decide if this is a new line or 
         // a continuation of a previous line.  All new line entries should start
@@ -661,5 +669,6 @@ async function parseFile(outFile, callback) {
 // Export an object that represents the OutParser 'instance'
 module.exports = {
     setLogDirectory: setLogDirectory,
+    setLogLevel: setLogLevel,
     parseFile: parseFile
 }
