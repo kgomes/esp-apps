@@ -8,6 +8,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.3",
     "cradle": "^0.7.1",
@@ -19,6 +20,7 @@
     "lazy": "1.0.11",
     "log4js": "0.6.4",
     "moment": "^2.22.2",
+    "n-readlines": "^1.0.0",
     "node-slackr": "^0.1.0",
     "pg": "^7.4.3",
     "supervisor": "0.5.3"
