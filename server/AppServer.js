@@ -52,14 +52,16 @@ function AppServer(dataAccess, dataDir, opts, logDir) {
     this.server.use('/data', express.static(dataDir));
 
     // Set up the middleware to allow CORS
-    this.server.use(function(req, res, next) {
+    this.server.use(function (req, res, next) {
         res.header("Access-Control-Allow-Origin", "*");
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     });
 
     // Use a body parser
-    this.server.use(body_parser.json());
+    this.server.use(body_parser.json({
+        limit: '500mb'
+    }));
 
     // **********************************************
     // Define all the routes
