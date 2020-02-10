@@ -13,6 +13,166 @@ module.exports = {
     // The web hood URL for Slack
     slackWebHookURL: '',
 
+    // The base URL of the web portal
+    hostBaseUrl: 'http://localhost',
+
+    // The port of the web portal
+    port: 8081,
+
+    // The object which contains the lookup for mapping a ancillary data sources and units
+    ancillaryDataLookup: {
+        CTD: {
+            'C': {
+                varName: 'Temp',
+                varLongName: 'Temperature',
+                units: 'Degrees C'
+            },
+            'm': {
+                varName: 'Depth',
+                varLongName: 'Depth',
+                units: 'meters'
+            },
+            'psu': {
+                varName: 'Sal',
+                varLongName: 'Salinity',
+                units: 'psu'
+            },
+            'mg/m^3': {
+                varName: 'Chl',
+                varLongName: 'Chlorophyll',
+                units: 'mg/m^3'
+            },
+            '%': {
+                varName: 'Light Tx',
+                varLongName: 'Light Transmission',
+                units: '%'
+            },
+            'ml/L': {
+                varName: 'Diss O2',
+                varLongName: 'Computed Dissolved Oxygen',
+                units: 'ml/L'
+            },
+            'decibars': {
+                varName: 'Press',
+                varLongName: 'Pressure',
+                units: 'decibars'
+            },
+            'S/m': {
+                varName: 'Cond',
+                varLongName: 'Conductivity',
+                units: 'S/m'
+            }
+        },
+        Can: {
+            'C': {
+                varName: 'Temp',
+                varLongName: 'Temperature',
+                units: 'Degrees C'
+            },
+            '% Wet!': {
+                varName: '% Wet!',
+                varLongName: 'Percent Wet',
+                units: '%'
+            },
+            '% humidity': {
+                varName: '% Humidity',
+                varLongName: 'Percent Humidity',
+                units: '%'
+            },
+            'psia': {
+                varName: 'Press',
+                varLongName: 'Pressure',
+                units: 'psia'
+            },
+            'V': {
+                varName: 'Volt',
+                varLongName: 'Battery Voltage',
+                units: 'V'
+            },
+            'A': {
+                varName: 'Inst Curr',
+                varLongName: 'Instantaneous Current',
+                units: 'A'
+            },
+            'A avg': {
+                varName: 'Avg Curr',
+                varLongName: 'Average Current',
+                units: 'A'
+            },
+            'W': {
+                varName: 'Power',
+                varLongName: 'Power',
+                units: 'W'
+            },
+            '% flow': {
+                varName: '% Flow',
+                varLongName: 'Percent Flow',
+                units: '%'
+            }
+        },
+        ISUS: {
+            'uM/L no^3': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM/L no^3'
+            },
+            'uM/L no3': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM/L no3'
+            },
+            'uM no^3': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM no^3'
+            },
+            'uM no3': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM no3'
+            },
+            'uM/L hs': {
+                varName: 'Nitrate 2',
+                varLongName: 'Nitrate 2',
+                units: 'uM/L hs'
+            },
+            'uM hs': {
+                varName: 'Nitrate 2',
+                varLongName: 'Nitrate 2',
+                units: 'uM hs'
+            },
+            'psu': {
+                varName: 'PSU',
+                varLongName: 'PSU',
+                units: 'psu'
+            }
+        },
+        SatlanticISUS: {
+            'uM/L': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM/L'
+            },
+            'psu': {
+                varName: 'PSU',
+                varLongName: 'PSU',
+                units: 'psu'
+            }
+        },
+        SUNA: {
+            'uM': {
+                varName: 'Nitrate',
+                varLongName: 'Nitrate',
+                units: 'uM'
+            },
+            'psu': {
+                varName: 'Salinity',
+                varLongName: 'Salinity',
+                units: ''
+            }
+        }
+    },
+
     // Options for the data crawling service
     crawlerOptions: {
         ftpSyncIntervalMillis: 60000,
@@ -26,8 +186,6 @@ module.exports = {
 
     // Application server options
     appServerOptions: {
-        hostBaseUrl: 'http://localhost',
-        port: 8081,
         loggerLevel: 'info',
         // The UserRouter options
         userRouterOptions: {
@@ -76,7 +234,6 @@ module.exports = {
         loggerLevel: 'info',
         useAncillaryTimestamps: true,
         numberOfTicksPerSecond: 100,
-        tempDir: './data/tmp',
         numberOfAncillaryRecordsToBatch: 1000,
         // The timezone lookup table
         timezoneLookup: {
@@ -114,164 +271,17 @@ module.exports = {
             }
         },
         // The ancillary data lookup table
-        ancillaryLookup: {
-            CTD: {
-                'C': {
-                    varName: 'Temp',
-                    varLongName: 'Temperature',
-                    units: 'Degrees C'
-                },
-                'm': {
-                    varName: 'Depth',
-                    varLongName: 'Depth',
-                    units: 'meters'
-                },
-                'psu': {
-                    varName: 'Sal',
-                    varLongName: 'Salinity',
-                    units: 'psu'
-                },
-                'mg/m^3': {
-                    varName: 'Chl',
-                    varLongName: 'Chlorophyll',
-                    units: 'mg/m^3'
-                },
-                '%': {
-                    varName: 'Light Tx',
-                    varLongName: 'Light Transmission',
-                    units: '%'
-                },
-                'ml/L': {
-                    varName: 'Diss O2',
-                    varLongName: 'Computed Dissolved Oxygen',
-                    units: 'ml/L'
-                },
-                'decibars': {
-                    varName: 'Press',
-                    varLongName: 'Pressure',
-                    units: 'decibars'
-                },
-                'S/m': {
-                    varName: 'Cond',
-                    varLongName: 'Conductivity',
-                    units: 'S/m'
-                }
-            },
-            Can: {
-                'C': {
-                    varName: 'Temp',
-                    varLongName: 'Temperature',
-                    units: 'Degrees C'
-                },
-                '% Wet!': {
-                    varName: '% Wet!',
-                    varLongName: 'Percent Wet',
-                    units: '%'
-                },
-                '% humidity': {
-                    varName: '% Humidity',
-                    varLongName: 'Percent Humidity',
-                    units: '%'
-                },
-                'psia': {
-                    varName: 'Press',
-                    varLongName: 'Pressure',
-                    units: 'psia'
-                },
-                'V': {
-                    varName: 'Volt',
-                    varLongName: 'Battery Voltage',
-                    units: 'V'
-                },
-                'A': {
-                    varName: 'Inst Curr',
-                    varLongName: 'Instantaneous Current',
-                    units: 'A'
-                },
-                'A avg': {
-                    varName: 'Avg Curr',
-                    varLongName: 'Average Current',
-                    units: 'A'
-                },
-                'W': {
-                    varName: 'Power',
-                    varLongName: 'Power',
-                    units: 'W'
-                },
-                '% flow': {
-                    varName: '% Flow',
-                    varLongName: 'Percent Flow',
-                    units: '%'
-                }
-            },
-            ISUS: {
-                'uM/L no^3': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM/L no^3'
-                },
-                'uM/L no3': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM/L no3'
-                },
-                'uM no^3': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM no^3'
-                },
-                'uM no3': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM no3'
-                },
-                'uM/L hs': {
-                    varName: 'Nitrate 2',
-                    varLongName: 'Nitrate 2',
-                    units: 'uM/L hs'
-                },
-                'uM hs': {
-                    varName: 'Nitrate 2',
-                    varLongName: 'Nitrate 2',
-                    units: 'uM hs'
-                },
-                'psu': {
-                    varName: 'PSU',
-                    varLongName: 'PSU',
-                    units: 'psu'
-                }
-            },
-            SatlanticISUS: {
-                'uM/L': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM/L'
-                },
-                'psu': {
-                    varName: 'PSU',
-                    varLongName: 'PSU',
-                    units: 'psu'
-                }
-            },
-            SUNA: {
-                'uM': {
-                    varName: 'Nitrate',
-                    varLongName: 'Nitrate',
-                    units: 'uM'
-                },
-                'psu': {
-                    varName: 'Salinity',
-                    varLongName: 'Salinity',
-                    units: ''
-                }
-            }
-        }
+        ancillaryLookup: {}
     },
 
     // The EventHandler options
     eventHandlerOptions: {
-        loggerLevel: 'info',
-        hostBaseUrl: 'http://localhost'
+        loggerLevel: 'info'
+    },
+
+    // The parseDeployment options
+    parseDeploymentOptions: {
+        loggerLevel: 'debug'
     },
 
     // The function to setup files paths and check for environmental overrides
@@ -279,7 +289,6 @@ module.exports = {
         // First see if the ESP base directory was defined in the environment
         if (process.env['ESP_APPS_BASEDIR']) {
             this.dataDir = process.env['ESP_APPS_BASEDIR'] + '/data';
-            this.logParserOptions.tempDir = process.env['ESP_APPS_BASEDIR'] + '/data/tmp';
             this.logDir = process.env['ESP_APPS_BASEDIR'] + '/logs/server';
         }
 
@@ -293,36 +302,12 @@ module.exports = {
             this.slackWebHookURL = process.env['ESP_APPS_SLACK_WEBHOOK_URL'];
         }
 
-        // Before we start, we should look to make sure the paths for data and logs exist and if not, create them
-        if (!fs.existsSync(this.dataDir)) {
-            console.log("Data directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.dataDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
+        // And the URL and port
+        if (process.env['ESP_APPS_HOST_BASE_URL']) {
+            this.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
         }
-        if (!fs.existsSync(this.logParserOptions.tempDir)) {
-            console.log("Temp directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.logParserOptions.tempDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
-        }
-        if (!fs.existsSync(this.logDir)) {
-            console.log("Log directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.logDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
+        if (process.env['ESP_APPS_PORT']) {
+            this.port = process.env['ESP_APPS_PORT'];
         }
 
         // Now check for crawlerOptions overrides
@@ -339,12 +324,6 @@ module.exports = {
         }
 
         // Now check for appServerOption overrides
-        if (process.env['ESP_APPS_HOST_BASE_URL']) {
-            this.appServerOptions.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
-        }
-        if (process.env['ESP_APPS_PORT']) {
-            this.appServerOptions.port = parseInt(process.env['ESP_APPS_PORT']);
-        }
         if (process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL']) {
             this.appServerOptions.loggerLevel = process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL'];
         }
@@ -360,6 +339,10 @@ module.exports = {
         if (process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL']) {
             this.appServerOptions.ancillaryDataRouterOptions = process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL'];
         }
+
+        // Set the hostBaseUrl and port on the app server options
+        this.appServerOptions['hostBaseUrl'] = this.hostBaseUrl;
+        this.appServerOptions['port'] = this.port;
 
         // Now check for dataStoreOption overrides        
         if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']) {
@@ -425,16 +408,51 @@ module.exports = {
         if (process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']) {
             this.logParserOptions.numberOfAncillaryRecordsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH'])
         }
+        this.logParserOptions.ancillaryLookup = this.ancillaryDataLookup;
+        this.logParserOptions.tempDir = this.dataDir + '/tmp';
 
         // Now look for eventHandler overrides
         if (process.env['ESP_APPS_EVENT_HANDLER_LOGGER_LEVEL']) {
             this.eventHandlerOptions.loggerLevel = process.env[''];
         }
-        if (process.env['ESP_APPS_HOST_BASE_URL']) {
-            this.eventHandlerOptions.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
-        }
+        // Add the host base URL
+        this.eventHandlerOptions['hostBaseUrl'] = this.hostBaseUrl;
+
         // Add the Slack web hook URL
         this.eventHandlerOptions['slackWebHookURL'] = this.slackWebHookURL;
+
+        // Before we start, we should look to make sure the paths for data and logs exist and if not, create them
+        if (!fs.existsSync(this.dataDir)) {
+            console.log("Data directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.dataDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+        if (!fs.existsSync(this.logParserOptions.tempDir)) {
+            console.log("Temp directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.logParserOptions.tempDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+        if (!fs.existsSync(this.logDir)) {
+            console.log("Log directory does not exist, will try to create it");
+            var dirName = "";
+            var filePathSplit = this.logDir.split('/');
+            for (var index = 0; index < filePathSplit.length; index++) {
+                dirName += filePathSplit[index] + '/';
+                if (!fs.existsSync(dirName))
+                    fs.mkdirSync(dirName);
+            }
+        }
+
 
     }
 };
