@@ -15,11 +15,17 @@ const path = require('path');
 // Import the readline module
 const readline = require('readline');
 
+// Create line by line reader
+const lineByLine = require('n-readlines');
+
 // The moment module
 const moment = require('moment');
 
 // Import the time zone lookup
 const timezoneLookup = require('./TimeZoneLookup');
+
+// A placeholder for the ancillary data lookup object
+var ancillaryDataLookup = {};
 
 // Import the log4js module and add the file appender        
 const log4js = require('log4js');
@@ -40,6 +46,13 @@ function setLogDirectory(directory) {
 // ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < MARK < OFF
 function setLogLevel(level) {
     logger.setLevel(level);
+}
+
+// A function to set the lookup object for ancillary data
+function setAncillaryDataLookup(ancillaryDataLookupParam) {
+    ancillaryDataLookup = ancillaryDataLookupParam;
+    logger.debug('Setting ancillaryDataLookup to ');
+    logger.debug(JSON.stringify(ancillaryDataLookup, null, 2));
 }
 
 // This is a function that takes in a line and the previous date and returns the updated date from
@@ -189,7 +202,10 @@ function parseAncillaryDataPayload(timestamp, source, hour, minute, second, payl
             // Try to match the payload item to extract values and units
             var variableMatcher = variableEntry.match(ancDataVariablePattern);
             if (variableMatcher && variableMatcher.length > 0) {
-                parseResults['data'][variableMatcher[2]] = Number(variableMatcher[1]);
+                var units = variableMatcher[2];
+                // Remove any quotes from units
+                units = units.replace('"', '');
+                parseResults['data'][units] = Number(variableMatcher[1]);
             }
         }
     }
@@ -318,11 +334,10 @@ function parseAncillaryDataFromLine(line, timestamp) {
 // This function looks for ancillary data to return, since a single line can contain
 // ancillary data from more than one source (i.e. Can and/or CTD), this functions
 // returns an array of JSON objects containing ancillary data.
-function lookForAncillaryData(line, timestamp) {
+function lookForAncillaryDataPoints(line, timestamp) {
 
     // The handle that will be returned (defaults to nothing)
     var ancillaryDataToReturn = [];
-
 
     // The first thing we need to do is figure out if the line is actually made up
     // of multiple lines separated by \n.
@@ -485,7 +500,7 @@ function lookForImage(line, timestamp) {
 }
 
 // This method takes in a line and parses for information and attaches to the parsedObject if found
-function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
+function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentActor) {
     // First update the timestamp for the most recent line
     var newTimestamp = updateTimestamp(line, previousTimestamp);
 
@@ -497,24 +512,51 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
         if (error) {
             // Add the timestamp and add to the parsed object
             parsedObject['errors'][error['timestamp']] = {
+                'actor': currentActor,
                 'subject': error['subject'],
                 'message': error['message']
             }
         } else {
             // Look for ancillary data (can be more than one entry in a line so we get back an array)
-            var ancillaryData = lookForAncillaryData(line, newTimestamp);
-            if (ancillaryData && ancillaryData.length > 0) {
-                // Loop over the array and attach
-                for (var i = 0; i < ancillaryData.length; i++) {
+            var ancillaryDataPoints = lookForAncillaryDataPoints(line, newTimestamp);
+            if (ancillaryDataPoints && ancillaryDataPoints.length > 0) {
+                // Loop over the array of ancillary data points
+                for (var i = 0; i < ancillaryDataPoints.length; i++) {
+                    // Grab the data point
+                    var dataPoint = ancillaryDataPoints[i];
+
+                    // We need to look at each entry of the data point and make sure we register
+                    // that there is this type of data for each point on the parsed object.
+                    var dataPointSource = dataPoint['source'];
+                    logger.debug('dataPointSource = ' + dataPointSource);
+
+                    // Grab the keys of the data object which are the units of each data point
+                    var unitKeys = Object.keys(dataPoint['data']);
+
+                    // Now loop over those unit keys
+                    for (var j = 0; j < unitKeys.length; j++) {
+                        logger.debug('unitKey = ' + unitKeys[j]);
+                        // Check to see if the ancillary data lookup on the parsed object
+                        // contains an entry for this source-unit combination
+                        if (parsedObject['ancillaryData'] &&
+                            parsedObject['ancillaryData'][dataPointSource] &&
+                            parsedObject['ancillaryData'][dataPointSource][unitKeys[j]]) {
+                            logger.debug('Entry for ' + dataPointSource + '->' + unitKeys[j] + ' is already on parsed object');
+                        } else {
+                            // Need to add it from the lookup
+                            if (!parsedObject['ancillaryData'][dataPointSource]) parsedObject['ancillaryData'][dataPointSource] = {};
+                            parsedObject['ancillaryData'][dataPointSource][unitKeys[j]] = ancillaryDataLookup[dataPointSource][unitKeys[j]];
+                        }
+                    }
                     // Make sure there is an object for the source
-                    if (!parsedObject['ancillaryData'][ancillaryData[i]['source']]) {
-                        parsedObject['ancillaryData'][ancillaryData[i]['source']] = {};
+                    if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']]) {
+                        parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']] = {};
                     }
                     // Now add the data using timestamp as key (if it's not there already)
-                    if (!parsedObject['ancillaryData'][ancillaryData[i]['source']][ancillaryData[i]['timestamp']]) {
-                        parsedObject['ancillaryData'][ancillaryData[i]['source']][ancillaryData[i]['timestamp']] = ancillaryData[i]['data'];
+                    if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']]) {
+                        parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']] = ancillaryDataPoints[i]['data'];
                     } else {
-                        logger.debug('Line ' + lineNumber + ': ' + ancillaryData[i]['source'] + ' data at ' + moment.unix(ancillaryData[i]['timestamp'] / 1000).format() + ' already parsed, will skip');
+                        logger.debug('Line ' + lineNumber + ': ' + ancillaryDataPoints[i]['source'] + ' data at ' + moment.unix(ancillaryDataPoints[i]['timestamp'] / 1000).format() + ' already parsed, will skip');
                     }
                 }
             } else {
@@ -523,6 +565,7 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
                 if (protocolRunStart) {
                     // // Add the protocol run start to the list of protocol runs
                     parsedObject['protocolRuns'][protocolRunStart['timestamp']] = {
+                        'actor': currentActor,
                         'name': protocolRunStart['name'],
                         'targetVol': protocolRunStart['targetVol']
                     };
@@ -532,6 +575,7 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
                     if (sampleStart) {
                         // Add a sample indexed by start time
                         parsedObject['samples'][sampleStart['timestamp']] = {
+                            'actor': currentActor,
                             'targetVol': sampleStart['targetVol']
                         }
                     } else {
@@ -561,6 +605,7 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
                             var image = lookForImage(line, newTimestamp);
                             if (image) {
                                 parsedObject['images'][image['timestamp']] = {
+                                    'actor': currentActor,
                                     'width': image['width'],
                                     'height': image['height'],
                                     'bit': image['bit'],
@@ -578,6 +623,70 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber) {
 
     // Now return the timestamp
     return newTimestamp
+}
+
+// This function parses a .out file synchronously and returns a JSON
+// object with all the parsed data attached
+function parseFileSync(outFile) {
+    // This is an object where the parsed data will be stored
+    var parsedObject = {
+        protocolRuns: {},
+        samples: {},
+        images: {},
+        errors: {},
+        ancillaryData: {},
+        ancillaryDataPoints: {}
+    }
+
+    // Let's make sure the file exists first
+    if (fs.existsSync(outFile)) {
+        logger.debug('Will parse out file ' + outFile);
+
+        // Create line reader
+        const liner = new lineByLine(outFile);
+
+        // A couple of variables to keep track of things
+        var previousLine;
+        var previousLineTimestamp;
+        var line;
+        var lineNumber = 0;
+        var currentActor = '';
+        var currentActorPattern = new RegExp(/<(\S+)>/);
+
+        // Loop over file line by line
+        while (line = liner.next()) {
+            // Bump the line number
+            lineNumber++;
+            logger.debug('Line ' + lineNumber + ': ' + line.toString('ascii'));
+
+            // Check to see if we have reached the end of the file or it's a new line
+            if (!line || line.toString('ascii').startsWith('@')) {
+
+                // Look for a change in current actor
+                var currentActorMatch = line.toString('ascii').match(currentActorPattern);
+                if (currentActorMatch && currentActorMatch.length > 0) {
+                    currentActor = currentActorMatch[1];
+                    logger.debug('Actor set to ' + currentActor);
+                }
+
+                // Call the method to parse the line and get back the updated timestamp of the line
+                if (previousLine) {
+                    previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber, currentActor);
+                }
+
+                // Now assign the new line to the placeholder
+                previousLine = line.toString('ascii');
+            } else {
+                previousLine += '\n' + line.toString('ascii');
+            }
+
+        }
+    } else {
+        logger.warn('File submitted (' + outFile + ') does not exist');
+    }
+
+    // Now return the parsed object
+    return parsedObject;
 }
 
 // This method takes in a path to a file that should be in the .out format and returns and object
@@ -642,8 +751,7 @@ async function parseFile(outFile, callback) {
         }
     });
 
-    // This is the main method process each line out of the file
-    for await (const line of rl) {
+    rl.on('line', function (line) {
         // Bump the line number
         lineNumber++;
         logger.trace(`Line ${lineNumber}: ${line}`);
@@ -663,12 +771,14 @@ async function parseFile(outFile, callback) {
         } else {
             previousLine += '\n' + line;
         }
-    }
+    });
 }
 
 // Export an object that represents the OutParser 'instance'
 module.exports = {
     setLogDirectory: setLogDirectory,
     setLogLevel: setLogLevel,
-    parseFile: parseFile
+    setAncillaryDataLookup: setAncillaryDataLookup,
+    parseFile: parseFile,
+    parseFileSync: parseFileSync
 }
