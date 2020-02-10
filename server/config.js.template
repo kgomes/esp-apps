@@ -452,7 +452,5 @@ module.exports = {
                     fs.mkdirSync(dirName);
             }
         }
-
-
     }
 };
