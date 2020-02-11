@@ -53,7 +53,6 @@ function mergeDeployments(source, target) {
             (!target['notifySlack'] ||
                 source['notifySlack'] != target['notifySlack'])) {
 
-
             // Make sure timestamp is unique
             var ts = Number(moment().format('x'));
             if (ts <= lastts) ts = lastts + 1;
@@ -165,6 +164,11 @@ function mergeDeployments(source, target) {
                     espChanged = true;
                     target['esp']['name'] = source['esp']['name'];
                 }
+                if (source['esp']['dataDirectory'] &&
+                    (!target['esp']['dataDirectory'] || source['esp']['dataDirectory'] != target['esp']['dataDirectory'])) {
+                    espChanged = true;
+                    target['esp']['dataDirectory'] = source['esp']['dataDirectory'];
+                }
                 if (source['esp']['ftpHost'] &&
                     (!target['esp']['ftpHost'] || source['esp']['ftpHost'] != target['esp']['ftpHost'])) {
                     espChanged = true;
@@ -270,42 +274,6 @@ function mergeDeployments(source, target) {
                 new: source['endDate']
             }
 
-            // This could be slack worthy.  If the target end date is not
-            // defined and it's now being set, the portal will stop parsing
-            // the deployment so this will end log parsing
-            // if (target['notifySlack'] && target['notifySlack'] == true) {
-            //     // Now check to see if the target end date is not set yet
-            //     if (!target['endDate'] || target['endDate'] == '') {
-
-            //         // Start the message
-            //         var text = 'Deployment "' + target['name'] + '"';
-            //         // If there is an ESP attached, add the name to the message
-            //         if (target['esp'] && target['esp']['name']) text += ' of ESP ' + target['esp']['name'];
-            //         // Finish message
-            //         text += ' was marked as ended';
-
-            //         // Now try to parse the end date
-            //         var parsedEndDate = null;
-            //         try {
-            //             parsedEndDate = moment(source['endDate'], 'YYYY-MM-DDTHH:mm:ssZZZ');
-            //         } catch (err) {
-            //             logger.warn('Could not parse end date of deployment ' + target['name']);
-            //             logger.warn(err);
-            //         }
-            //         if (parsedEndDate) {
-            //             text += ' at ' + parsedEndDate.format('YYYY-MM-DD HH:mm:ss ZZ');
-            //         }
-            //         text += ', it will no longer be monitored in the portal.'
-
-            //         // Send out a message that the deployment was marked as complete
-            //         this.slackQueue.push({
-            //             'text': text,
-            //             channel: target['slackChannel'],
-            //             username: me.slackUsername
-            //         });
-            //     }
-            // }
-
             // Update the target end date
             target['endDate'] = source['endDate'];
         }
@@ -336,236 +304,216 @@ function mergeDeployments(source, target) {
                     messages[errorTimestamps[i]] = {
                         event: 'ERROR_OCCURRED',
                         message: 'Error occurred at ' + moment(Number(errorTimestamps[i])).format("YYYY-MM-DD HH:mm:ss Z"),
-                        new: errorToAdd
+                        new: JSON.parse(JSON.stringify(errorToAdd))
                     }
-        
+
                     // Add it
-                    target['errors'][errorTimestamps[i]] = errorToAdd;
-
-                    // Now check to see if we need to send a message to Slack
-                    // if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
-                    //     logger.debug('Slack message will be queued');
-
-                    //     // Create the message
-                    //     var messageToSend = {
-                    //         text: "_" + moment(Number(errorTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                    //             "_\n*ERROR*: " + errorToAdd.subject,
-                    //         channel: target['slackChannel'],
-                    //         username: me.slackUsername,
-                    //         attachments: [
-                    //             {
-                    //                 fallback: "ERROR Occurred",
-                    //                 color: "danger",
-                    //                 text: "Actor: " + errorToAdd.actor + "\n" +
-                    //                     "Message: " + errorToAdd.message
-                    //             }
-                    //         ]
-                    //     };
-                    //     this.slackQueue.push(messageToSend);
-                    // }
+                    target['errors'][errorTimestamps[i]] = JSON.parse(JSON.stringify(errorToAdd));
                 }
             }
         }
 
         // Now, let's look at the protocol runs coming in on the source
-        // if (source['protocolRuns'] && Object.keys(source['protocolRuns']).length > 0) {
+        if (source['protocolRuns'] && Object.keys(source['protocolRuns']).length > 0) {
 
-        //     // Grab all the timestamps for the protocol runs
-        //     var protocolRunTimestamps = Object.keys(source['protocolRuns']);
+            // Grab all the timestamps for the protocol runs
+            var protocolRunTimestamps = Object.keys(source['protocolRuns']);
 
-        //     // Make sure the target at least has an object to store protocol runs in
-        //     if (!target['protocolRuns']) {
-        //         target['protocolRuns'] = {};
-        //     }
+            // Make sure the target at least has an object to store protocol runs in
+            if (!target['protocolRuns']) {
+                target['protocolRuns'] = {};
+            }
 
-        //     // Now let's iterate over the source protocol run timestamps
-        //     for (var i = 0; i < protocolRunTimestamps.length; i++) {
-        //         // Check to see if the protocol run timestamp is already in the target
-        //         if (Object.keys(target['protocolRuns']).indexOf(protocolRunTimestamps[i]) < 0) {
-        //             // It needs to be added, so grab it from the source
-        //             var protocolRunToAdd = source['protocolRuns'][protocolRunTimestamps[i]];
+            // Now let's iterate over the source protocol run timestamps
+            for (var i = 0; i < protocolRunTimestamps.length; i++) {
 
-        //             // Add it to the target
-        //             target['protocolRuns'][protocolRunTimestamps[i]] = protocolRunToAdd;
+                // Check to see if the protocol run timestamp is already in the target
+                if (Object.keys(target['protocolRuns']).indexOf(protocolRunTimestamps[i]) < 0) {
 
-        //             // Now check slack to see if it needs to be sent out
-        //             // if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
-        //             //     var messageToSend = {
-        //             //         text: "_" + moment(Number(protocolRunTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-        //             //             "_\n*Protocol Run Started*: " + protocolRunToAdd['name'],
-        //             //         channel: target['slackChannel'],
-        //             //         username: me.slackUsername,
-        //             //         attachments: [
-        //             //             {
-        //             //                 fallback: "Protocol Run Started",
-        //             //                 color: "good",
-        //             //                 text: "Actor: " + protocolRunToAdd['actor'] + "\n" +
-        //             //                     "Target Volume: " + protocolRunToAdd['targetVol']
-        //             //             }
-        //             //         ]
-        //             //     };
-        //             //     // Add it to the slack queue
-        //             //     me.slackQueue.push(messageToSend);
-        //             // }
-        //         }
-        //     }
-        // }
+                    // It needs to be added, so grab it from the source
+                    var protocolRunToAdd = source['protocolRuns'][protocolRunTimestamps[i]];
+
+                    messages[protocolRunTimestamps[i]] = {
+                        event: 'PROTOCOL_RUN_STARTED',
+                        message: 'ProtocolRun started at ' + moment(Number(protocolRunTimestamps[i])).format("YYYY-MM-DD HH:mm:ss Z"),
+                        new: JSON.parse(JSON.stringify(protocolRunToAdd))
+                    }
+
+                    // Add it to the target
+                    target['protocolRuns'][protocolRunTimestamps[i]] = JSON.parse(JSON.stringify(protocolRunToAdd));
+                }
+            }
+        }
 
         // Now, look at samples
-        // if (source['samples'] && Object.keys(source['samples']).length > 0) {
+        if (source['samples'] && Object.keys(source['samples']).length > 0) {
 
-        //     // Grab all the timestamps for the samples
-        //     var sampleTimestamps = Object.keys(source['samples']);
+            // Grab all the timestamps for the samples
+            var sampleTimestamps = Object.keys(source['samples']);
 
-        //     // Make sure the target at least has an object to store samples in
-        //     if (!target['samples']) {
-        //         target['samples'] = {};
-        //     }
+            // Make sure the target at least has an object to store samples in
+            if (!target['samples']) {
+                target['samples'] = {};
+            }
 
-        //     // Now let's iterate over the source sample timestamps
-        //     for (var i = 0; i < sampleTimestamps.length; i++) {
+            // Now let's iterate over the source sample timestamps
+            for (var i = 0; i < sampleTimestamps.length; i++) {
 
-        //         // Grab the sample from the source
-        //         var sourceSample = source['samples'][sampleTimestamps[i]];
+                // Grab the sample from the source
+                var sourceSample = source['samples'][sampleTimestamps[i]];
 
-        //         // A flag that indicates a message should be sent
-        //         var messageSlackWorthy = false;
+                // If no durationInMinutes, calculate how long it took
+                if (sourceSample['endts'] && !sourceSample['durationInMinutes']) {
+                    try {
+                        sourceSample['durationInMinutes'] =
+                            Math.trunc((Number(sourceSample['endts']) - Number(sampleTimestamps[i])) / 60000);
+                    } catch (err) {
+                        logger.warn('Error trying to calculate how long a sample took');
+                        logger.warn(sourceSample);
+                        logger.warn(err);
+                    }
+                }
 
-        //         // Let's start a message in case we need to post it to slack
-        //         var slackMessage = {
-        //             text: "_" + moment(Number(sampleTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_',
-        //             channel: target['slackChannel'],
-        //             username: me.slackUsername,
-        //             attachments: [
-        //                 {
-        //                     fallback: '',
-        //                     color: 'good',
-        //                     text: 'Actor: ' + sourceSample['actor'] +
-        //                         '\nStart: ' + moment(Number(sampleTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ')
-        //                 }
-        //             ]
-        //         }
+                // If there is a target and actual volume, calculate the difference
+                if (sourceSample['targetVol'] && sourceSample['actualVol'] && !sourceSample['volDiff']) {
+                    try {
+                        sourceSample['volDiff'] = (Number(sourceSample['targetVol']) - Number(sourceSample['actualVol'])).toFixed(2);
+                    } catch (err) {
+                        logger.warn('Error caught trying to calculate difference between ' +
+                            'target and actual volume for sample');
+                        logger.warn(sourceSample);
+                        logger.warn(err);
+                    }
+                }
 
-        //         // If there is a end time, calculate how long it took
-        //         var timeDiffInMinutes = null;
-        //         if (sourceSample['endts']) {
-        //             try {
-        //                 timeDiffInMinutes = Math.trunc((Number(sourceSample['endts']) - Number(sampleTimestamps[i])) / 60000);
-        //                 slackMessage['attachments'][0]['text'] += '\nEnd: ' + moment(Number(sourceSample['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ');
-        //                 slackMessage['attachments'][0]['text'] += '\nTook ' + timeDiffInMinutes + ' minutes';
-        //             } catch (err) {
-        //                 logger.warn('Error trying to calculate how long a sample took');
-        //                 logger.warn(sourceSample);
-        //                 logger.warn(err);
-        //             }
-        //         }
+                // Check to see if the sample timestamp is already in the target
+                if (Object.keys(target['samples']).indexOf(sampleTimestamps[i]) < 0) {
 
-        //         // Add the target volume
-        //         slackMessage['attachments'][0]['text'] += '\nTarget Volume: ' + sourceSample['targetVolume'] + ' ml';
+                    // It's not there, so add it to the target
+                    target['samples'][sampleTimestamps[i]] = sourceSample;
 
-        //         // If there is a target and actual volume, calculate the difference
-        //         var volDiff = null;
-        //         if (sourceSample['targetVolume'] && sourceSample['actualVolume']) {
-        //             try {
-        //                 volDiff = Number(sourceSample['targetVolume']) - Number(sourceSample['actualVolume']);
-        //                 slackMessage['attachments'][0]['text'] += '\nActual Volume = ' + sourceSample['actualVolume'] + ' ml';
-        //                 slackMessage['attachments'][0]['text'] += '\nVolume Diff = ' + volDiff + ' ml';
-        //                 if (volDiff > 0) {
-        //                     slackMessage['attachments'][0]['color'] = 'warning'
-        //                 }
-        //             } catch (err) {
-        //                 logger.warn('Error caught trying to calculate difference between ' +
-        //                     'target and actual volume for sample');
-        //                 logger.warn(sourceSample);
-        //                 logger.warn(err);
-        //             }
-        //         }
+                    // Now the message depends on if there is an end timestamp or not.  If there is not
+                    // an end timestamp, it means it has started, but not completed
+                    if (!sourceSample['endts']) {
+                        // Create the sample started text message
+                        messages[sampleTimestamps[i]] = {
+                            event: 'SAMPLE_STARTED',
+                            message: 'Sample started at ' + moment(Number(sampleTimestamps[i])).format("YYYY-MM-DD HH:mm:ss Z"),
+                            new: JSON.parse(JSON.stringify(sourceSample))
+                        }
+                    } else {
+                        // This means the entire sample is being added after it's completed
+                        messages[sampleTimestamps[i]] = {
+                            event: 'SAMPLE_TAKEN',
+                            message: 'Sample taken and finished at ' + moment(Number(sourceSample['endts'])).format("YYYY-MM-DD HH:mm:ss Z"),
+                            new: JSON.parse(JSON.stringify(sourceSample))
+                        }
+                    }
+                } else {
+                    // Now check to see if the actual volume and end timestamp need to be updated
+                    if (sourceSample['endts'] && !target['samples'][sampleTimestamps[i]]['endts']) {
+                        messages[sampleTimestamps[i]] = {
+                            event: 'SAMPLE_FINISHED',
+                            message: 'Sample finished at ' + moment(Number(sourceSample['endts'])).format("YYYY-MM-DD HH:mm:ss Z"),
+                            new: JSON.parse(JSON.stringify(sourceSample))
+                        }
+                    }
 
-        //         // Check to see if the sample timestamp is already in the target
-        //         if (Object.keys(target['samples']).indexOf(sampleTimestamps[i]) < 0) {
-
-        //             // It's not there, so add it to the target
-        //             target['samples'][sampleTimestamps[i]] = sourceSample;
-        //             messageSlackWorthy = true;
-
-        //             // Now the message depends on if there is an end timestamp or not.  If there is not
-        //             // an end timestamp, it means it has started, but not completed
-        //             if (!sourceSample['endts']) {
-        //                 // Create the sample started text message
-        //                 slackMessage['text'] += '\n*Sample Started*';
-        //             } else {
-        //                 // This means the entire sample is being added after it's completed
-        //                 slackMessage['text'] += '\n*Sample Taken*';
-        //             }
-        //         } else {
-        //             // Now check to see if the actual volume and end timestamp need to be updated
-        //             if (sourceSample['endts'] && !target['samples'][sampleTimestamps[i]]['endts']) {
-        //                 slackMessage['text'] += '\n*Sample Completed*';
-        //                 messageSlackWorthy = true;
-        //             }
-
-        //             // Set the target fields using source values
-        //             target['samples'][sampleTimestamps[i]]['actor'] = sourceSample['actor'];
-        //             target['samples'][sampleTimestamps[i]]['targetVolume'] = sourceSample['targetVolume'];
-        //             target['samples'][sampleTimestamps[i]]['endts'] = sourceSample['endts'];
-        //             target['samples'][sampleTimestamps[i]]['actualVolume'] = sourceSample['actualVolume'];
-        //         }
-
-        //         // Check to see if slack message should be sent
-        //         if (messageSlackWorthy && target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
-        //             // Add it to the slack queue
-        //             me.slackQueue.push(slackMessage);
-        //         }
-        //     }
-        // }
+                    // Set the target fields using source values
+                    target['samples'][sampleTimestamps[i]]['actor'] = sourceSample['actor'];
+                    target['samples'][sampleTimestamps[i]]['targetVolume'] = sourceSample['targetVolume'];
+                    target['samples'][sampleTimestamps[i]]['endts'] = sourceSample['endts'];
+                    target['samples'][sampleTimestamps[i]]['actualVolume'] = sourceSample['actualVolume'];
+                    target['samples'][sampleTimestamps[i]]['durationInMinutes'] = sourceSample['durationInMinutes'];
+                    target['samples'][sampleTimestamps[i]]['volDiff'] = sourceSample['volDiff'];
+                }
+            }
+        }
 
         // Now let's sync the images. Check if the source has some images attached
-        // if (source['images'] && Object.keys(source['images']).length > 0) {
-        //     // Make sure target has a place to hang images
-        //     if (!target['images']) {
-        //         target['images'] = {};
-        //     }
+        if (source['images'] && Object.keys(source['images']).length > 0) {
+            // Make sure target has a place to hang images
+            if (!target['images']) {
+                target['images'] = {};
+            }
 
-        //     // Grab all the image timestamps from the source
-        //     var imageTimestamps = Object.keys(source['images']);
+            // Grab all the image timestamps from the source
+            var imageTimestamps = Object.keys(source['images']);
 
-        //     // Loop over the timestamps
-        //     for (var i = 0; i < imageTimestamps.length; i++) {
-        //         // Check to see if the timestamp exists in the target and if not
-        //         if (!target['images'][imageTimestamps[i]]) {
-        //             // Add it
-        //             target['images'][imageTimestamps[i]] = source['images'][imageTimestamps[i]];
+            // Loop over the timestamps
+            for (var i = 0; i < imageTimestamps.length; i++) {
+                // Check to see if the timestamp exists in the target and if not
+                if (!target['images'][imageTimestamps[i]]) {
+                    // Add it
+                    target['images'][imageTimestamps[i]] = source['images'][imageTimestamps[i]];
 
-        //             // Now check to see if a slack message needs to be sent
-        //             if (target['notifySlack'] && target['notifySlack'] === true && target['slackChannel']) {
-        // logger.debug("Message was an image processed event");
-
-        // // We need to build the attachment first
-        // var textToSend;
-        // if (message.image.downloaded) {
-        //     textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
-        //         " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
-        //         message.image.yPixels + "px)\n" +
-        //         "<" + encodeURI(me.hostBaseUrl + message.image.imageUrl) + ">"
-        // } else {
-        //     textToSend = "_" + humanReadableDate + "_\n*Image Taken*: " + message.image.imageFilename +
-        //         " (" + message.image.exposure + "s - " + message.image.xPixels + "px X " +
-        //         message.image.yPixels + "px)"
-        // }
-
-        // // Create the message to send
-        // var messageToSend = {
-        //     text: textToSend,
-        //     channel: channel,
-        //     username: "esps"
-        // };
-
-        // // Add it to the slack queue
-        // me.slackQueue.push(messageToSend);
-        //             }
-        //         }
-        //     }
-        // }
+                    messages[imageTimestamps[i]] = {
+                        event: 'IMAGE_TAKEN',
+                        message: 'Image taken at ' + moment(Number(imageTimestamps[i])).format("YYYY-MM-DD HH:mm:ss Z"),
+                        new: JSON.parse(JSON.stringify(target['images'][imageTimestamps[i]]))
+                    }
+                    logger.debug('Adding image');
+                    logger.debug()
+                } else {
+                    // Should do a merge on the properties of the source to target image
+                    if (source['images'][imageTimestamps[i]]['xPixels']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['xPixels'] != target['images'][imageTimestamps[i]]['xPixels'])) {
+                        target['images'][imageTimestamps[i]]['xPixels'] = source['images'][imageTimestamps[i]]['xPixels'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['yPixels']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['yPixels'] != target['images'][imageTimestamps[i]]['yPixels'])) {
+                        target['images'][imageTimestamps[i]]['yPixels'] = source['images'][imageTimestamps[i]]['yPixels'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['bits']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['bits'] != target['images'][imageTimestamps[i]]['bits'])) {
+                        target['images'][imageTimestamps[i]]['bits'] = source['images'][imageTimestamps[i]]['bits'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['exposure']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['exposure'] != target['images'][imageTimestamps[i]]['exposure'])) {
+                        target['images'][imageTimestamps[i]]['exposure'] = source['images'][imageTimestamps[i]]['exposure'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['imageFilename']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['imageFilename'] != target['images'][imageTimestamps[i]]['imageFilename'])) {
+                        target['images'][imageTimestamps[i]]['imageFilename'] = source['images'][imageTimestamps[i]]['imageFilename'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['fullImagePath']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['fullImagePath'] != target['images'][imageTimestamps[i]]['fullImagePath'])) {
+                        target['images'][imageTimestamps[i]]['fullImagePath'] = source['images'][imageTimestamps[i]]['fullImagePath'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['downloaded']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['downloaded'] != target['images'][imageTimestamps[i]]['downloaded'])) {
+                        target['images'][imageTimestamps[i]]['downloaded'] = source['images'][imageTimestamps[i]]['downloaded'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['localImagePath']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['localImagePath'] != target['images'][imageTimestamps[i]]['localImagePath'])) {
+                        target['images'][imageTimestamps[i]]['localImagePath'] = source['images'][imageTimestamps[i]]['localImagePath'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['localJPGPath']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['localJPGPath'] != target['images'][imageTimestamps[i]]['localJPGPath'])) {
+                        target['images'][imageTimestamps[i]]['localJPGPath'] = source['images'][imageTimestamps[i]]['localJPGPath'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['tiffUrl']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['tiffUrl'] != target['images'][imageTimestamps[i]]['tiffUrl'])) {
+                        target['images'][imageTimestamps[i]]['tiffUrl'] = source['images'][imageTimestamps[i]]['tiffUrl'];
+                    }
+                    if (source['images'][imageTimestamps[i]]['imageUrl']
+                        && (!target['images'][imageTimestamps[i]] ||
+                            source['images'][imageTimestamps[i]]['imageUrl'] != target['images'][imageTimestamps[i]]['imageUrl'])) {
+                        target['images'][imageTimestamps[i]]['imageUrl'] = source['images'][imageTimestamps[i]]['imageUrl'];
+                    }
+                }
+            }
+        }
 
     } else {
         logger.warn('mergeDeployments called but one of the arguments was empty');
