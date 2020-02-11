@@ -580,7 +580,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
 
     // This method handles patch requests
     this.updateDeployment = function (req, res) {
-        me.dataAccess.updateDeploymentByJSON(req.body);
+        me.dataAccess.updateDeployment(req.body);
         res.send('PATCH ME BABY!');
     }
 }
