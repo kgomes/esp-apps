@@ -42,6 +42,10 @@ function DataAccess(opts, logDir) {
     this.slack = null;
     this.slackUsername = 'esps';
 
+    // Data directory variables
+    this.dataDir = opts['dataDir'];
+    this.dataBaseUrl = opts['dataBaseUrl'];
+
     // Grab reference to this for scoping
     var me = this;
 
@@ -1073,7 +1077,7 @@ function DataAccess(opts, logDir) {
 
                 // Copy over the information from the incoming deployment
                 var events = deploymentUtils.mergeDeployments(deployment, deploymentToPersist);
-                
+
                 // TODO kgomes check if slack publishing on and if so, loop over events and send
 
                 // Call the method to save the deployment to the datastore
@@ -1117,15 +1121,16 @@ function DataAccess(opts, logDir) {
      * look through both objects and update the persistent one with any information coming in on the
      * submitted object.  This is an additive process, nothing is removed from the persisten object.
      *
-     * @param deploymentJSON
+     * @param sourceDeployment
      * @param callback
      */
-    this.updateDeploymentByJSON = function (deploymentJSON, callback) {
+    this.updateDeployment = function (sourceDeployment, callback) {
         // First make sure we have an deployment ID on the incoming object
-        if (deploymentJSON && deploymentJSON['id']) {
-
+        if (sourceDeployment && (sourceDeployment['id'] || sourceDeployment['_id'])) {
+            var idToSearchFor = sourceDeployment['id'] || sourceDeployment['_id'];
+            logger.debug('Search for ID ' + idToSearchFor + ' to update');
             // Next try to find a deployment with the given ID
-            this.couchDBConn.get(deploymentJSON['id'], function (err, deployment) {
+            this.couchDBConn.get(idToSearchFor, function (err, targetDeployment) {
                 // If an error occurred, send it back
                 if (err) {
                     logger.error("Error caught trying to find deployment with ID: " + deploymentJSON['id']);
@@ -1133,129 +1138,232 @@ function DataAccess(opts, logDir) {
                         callback(err);
                 } else {
                     // Make sure there is a deployment
-                    if (deployment) {
-                        // // Now examine each of the parameters coming in and if they are specified, update the
-                        // // properties on the deployment
+                    if (targetDeployment) {
 
-                        // // TODO kgomes, I should make sure to only update the document if something has changed.
+                        // Merge the two
+                        var messages = deploymentUtils.mergeDeployments(sourceDeployment, targetDeployment);
 
-                        // // The name of the deployment
-                        // if (name) deployment.name = name;
+                        // Loop over any images and make sure to fill out URLs if they are available to serve
+                        if (targetDeployment['images'] &&
+                            Object.keys(targetDeployment['images']).length > 0) {
 
-                        // // The description of the deployment
-                        // if (description) deployment.description = description;
+                            logger.debug('Images available on deployment ' + targetDeployment['name']);
 
-                        // // The start date
-                        // if (startDate) deployment.startDate = startDate;
+                            // Grab all the timestamps for images
+                            var imageTimestamps = Object.keys(targetDeployment['images']);
+                            logger.debug('There are ' + imageTimestamps.length + ' image timestamps');
 
-                        // // The end date
-                        // if (endDate) deployment.endDate = endDate;
+                            // Now loop over the timestamps
+                            for (var i = 0; i < imageTimestamps.length; i++) {
 
-                        // // The esp information
-                        // if (esp) {
-                        //     // Make sure the deployment has an ESP object
-                        //     if (!deployment.esp) deployment.esp = {};
+                                // Make sure there is an image object on the target deployment at that timestamp
+                                if (targetDeployment['images'][imageTimestamps[i]] &&
+                                    targetDeployment['images'][imageTimestamps[i]]['localImagePath']
+                                    && fs.existsSync(targetDeployment['images'][imageTimestamps[i]]['localImagePath'])) {
+                                    // Pull the relative path to the image off the local data directory
+                                    targetDeployment['images'][imageTimestamps[i]]['tiffUrl'] = me.dataBaseUrl +
+                                        targetDeployment['images'][imageTimestamps[i]]['localImagePath'].substring(me.dataDir.length);
+                                }
 
-                        //     // Now check the properties of the esp
-                        //     if (esp.name) deployment.esp.name = esp.name;
-                        //     if (esp.ftpHost) deployment.esp.ftpHost = esp.ftpHost;
-                        //     if (esp.ftpPort) deployment.esp.ftpPort = esp.ftpPort;
-                        //     if (esp.ftpUsername) deployment.esp.ftpUsername = esp.ftpUsername;
-                        //     if (esp.ftpPassword) deployment.esp.ftpPassword = esp.ftpPassword;
-                        //     if (esp.ftpWorkingDir) deployment.esp.ftpWorkingDir = esp.ftpWorkingDir;
-                        //     if (esp.logFile) deployment.esp.logFile = esp.logFile;
-                        //     if (esp.mode) deployment.esp.mode = esp.mode;
-                        //     if (esp.path) deployment.esp.path = esp.path;
-                        //     if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
-                        // }
+                                // Same for JPG
+                                if (targetDeployment['images'][imageTimestamps[i]] &&
+                                    targetDeployment['images'][imageTimestamps[i]]['localJPGPath']
+                                    && fs.existsSync(targetDeployment['images'][imageTimestamps[i]]['localJPGPath'])) {
+                                    // Pull the relative path to the image off the local data directory
+                                    targetDeployment['images'][imageTimestamps[i]]['imageUrl'] = me.dataBaseUrl +
+                                        targetDeployment['images'][imageTimestamps[i]]['localJPGPath'].substring(me.dataDir.length);
+                                }
+                            }
+                        }
 
-                        // // If ancillary data stats
-                        // if (ancillaryData)
-                        //     deployment.ancillaryData = ancillaryData;
+                        // Check to see if messages should be posted to Slack
+                        if (targetDeployment['notifySlack'] &&
+                            targetDeployment['notifySlack'] == true &&
+                            targetDeployment['slackChannel'] &&
+                            targetDeployment['slackChannel'] != '') {
+                            logger.debug('Will publish any messages to slack on channel ' + targetDeployment['slackChannel']);
+                            // Make sure there is a messages object
+                            if (messages) {
+                                // Grab the sorted message timestamps
+                                var messageTimestamps = Object.keys(messages).sort();
 
-                        // // Now any errors
-                        // if (errors) {
-                        //     if (!deployment.errors)
-                        //         deployment.errors = {};
+                                // Loop over the timestamps
+                                for (var i = 0; i < messageTimestamps.length; i++) {
+                                    // Grab the the message
+                                    var message = messages[messageTimestamps[i]];
 
-                        //     for (var timestamp in errors) {
-                        //         deployment.errors[timestamp] = errors[timestamp];
-                        //     }
-                        // }
+                                    // Make sure we have a message
+                                    if (message) {
+                                        // Check for end of deployment
+                                        if (message['event'] == 'DEPLOYMENT_END_DATE_CHANGED') {
+                                            // If there is no old end date, then send a message that parsing will stop
+                                            if (!message['old']) {
+                                                // Start the message
+                                                var text = 'Deployment "' + targetDeployment['name'] + '"';
+                                                // If there is an ESP attached, add the name to the message
+                                                if (targetDeployment['esp'] &&
+                                                    targetDeployment['esp']['name'])
+                                                    text += ' of ESP ' + targetDeployment['esp']['name'];
 
-                        // // Now samples
-                        // if (samples) {
-                        //     if (!deployment.samples)
-                        //         deployment.samples = {};
+                                                // Finish message
+                                                text += ' was marked as ended';
 
-                        //     for (var timestamp in samples) {
-                        //         deployment.samples[timestamp] = samples[timestamp];
-                        //     }
-                        // }
+                                                // Now try to parse the end date
+                                                var parsedEndDate = null;
+                                                try {
+                                                    parsedEndDate = moment(targetDeployment['endDate'], 'YYYY-MM-DDTHH:mm:ssZZZ');
+                                                } catch (err) {
+                                                    logger.warn('Could not parse end date of deployment ' + targetDeployment['name']);
+                                                    logger.warn(err);
+                                                }
+                                                if (parsedEndDate) {
+                                                    text += ' at ' + parsedEndDate.format('YYYY-MM-DD HH:mm:ss ZZ');
+                                                }
+                                                text += ', it will no longer be monitored in the portal.'
 
-                        // // Now protocolRuns
-                        // if (protocolRuns) {
-                        //     if (!deployment.protocolRuns)
-                        //         deployment.protocolRuns = {};
+                                                // Send out a message that the deployment was marked as complete
+                                                me.slackQueue.push({
+                                                    'text': text,
+                                                    channel: targetDeployment['slackChannel'],
+                                                    username: me.slackUsername
+                                                });
 
-                        //     for (var timestamp in protocolRuns) {
-                        //         deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
-                        //     }
-                        // }
+                                            }
+                                        }
 
-                        // // Now images
-                        // if (images) {
-                        //     if (!deployment.images)
-                        //         deployment.images = {};
+                                        // Check for an error
+                                        if (message['event'] == 'ERROR_OCCURRED') {
+                                            // Create the message to send
+                                            var messageToSend = {
+                                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                    "_\n*ERROR*: " + messages[messageTimestamps[i]]['new']['subject'],
+                                                channel: targetDeployment['slackChannel'],
+                                                username: me.slackUsername,
+                                                attachments: [
+                                                    {
+                                                        fallback: "ERROR Occurred",
+                                                        color: "danger",
+                                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
+                                                            "Message: " + messages[messageTimestamps[i]]['new']['message']
+                                                    }
+                                                ]
+                                            };
+                                            me.slackQueue.push(messageToSend);
+                                        }
 
-                        //     for (var timestamp in images) {
-                        //         deployment.images[timestamp] = images[timestamp];
-                        //     }
-                        // }
+                                        // Check for ProtocolRun started
+                                        if (message['event'] == 'PROTOCOL_RUN_STARTED') {
+                                            // Create a message and put it in the queue to send
+                                            var messageToSend = {
+                                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                    "_\n*Protocol Run Started*: " + messages[messageTimestamps[i]]['new']['name'],
+                                                channel: targetDeployment['slackChannel'],
+                                                username: me.slackUsername,
+                                                attachments: [
+                                                    {
+                                                        fallback: "Protocol Run Started",
+                                                        color: "good",
+                                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
+                                                            "Target Volume: " + messages[messageTimestamps[i]]['new']['targetVol']
+                                                    }
+                                                ]
+                                            };
+                                            // Add it to the slack queue
+                                            me.slackQueue.push(messageToSend);
+                                        }
 
-                        // // Now pcrs
-                        // if (pcrDataArray) {
-                        //     for (var i = 0; i < pcrDataArray.length; i++) {
-                        //         // Grab the data
-                        //         var pcrData = pcrDataArray[i];
+                                        // Now let's look for samples
+                                        if (message['event'] == 'SAMPLE_STARTED') {
+                                            var messageToSend = {
+                                                text: "_" +
+                                                    moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                    '_\n*Sample Started*',
+                                                channel: targetDeployment['slackChannel'],
+                                                username: me.slackUsername,
+                                                attachments: [
+                                                    {
+                                                        fallback: '',
+                                                        color: 'good',
+                                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
+                                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol']
+                                                    }
+                                                ]
+                                            }
+                                            // Add it to the slack queue
+                                            me.slackQueue.push(messageToSend);
+                                        }
+                                        if (message['event'] == 'SAMPLE_TAKEN' || message['event'] == 'SAMPLE_FINISHED') {
+                                            // Figure out the color to use
+                                            var messageColor = 'good';
+                                            if (messages[messageTimestamps[i]]['new']['volDiff'] &&
+                                                Number(messages[messageTimestamps[i]]['new']['volDiff']) > 0) {
+                                                messageColor = 'warning';
+                                            }
+                                            var textToSend = "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_';
+                                            if (message['event'] == 'SAMPLE_TAKEN') textToSend += '\n*Sample Taken*';
+                                            if (message['event'] == 'SAMPLE_FINISHED') textToSend += '\n*Sample Finished*';
+                                            var messageToSend = {
+                                                text: textToSend,
+                                                channel: targetDeployment['slackChannel'],
+                                                username: me.slackUsername,
+                                                attachments: [
+                                                    {
+                                                        fallback: '',
+                                                        color: messageColor,
+                                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
+                                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                            '\nEnd: ' + moment(Number(messages[messageTimestamps[i]]['new']['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                            '\nTook: ' + messages[messageTimestamps[i]]['new']['durationInMinutes'] + ' minutes' +
+                                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol'] +
+                                                            '\nActual Volume: ' + messages[messageTimestamps[i]]['new']['actualVol'] +
+                                                            '\nVol Diff: ' + + messages[messageTimestamps[i]]['new']['volDiff'] + ' ml'
+                                                    }
+                                                ]
+                                            }
+                                            // Add it to the slack queue
+                                            me.slackQueue.push(messageToSend);
+                                        }
 
-                        //         // It will be an object that has pcr types as keys, so we need to
-                        //         // loop over the pcrTypes first
-                        //         for (var pcrType in pcrData) {
-                        //             // Now next item will be the PCR run name
-                        //             for (var pcrRunName in pcrData[pcrType]) {
-                        //                 // Now the item will be the timestamp of the file that was processed
-                        //                 for (var timestamp in pcrData[pcrType][pcrRunName]) {
-                        //                     // Add (or replace the entry on the deployment with this information
-                        //                     if (!deployment.pcrs)
-                        //                         deployment.pcrs = {};
-                        //                     if (!deployment.pcrs[pcrType])
-                        //                         deployment.pcrs[pcrType] = {};
-                        //                     if (!deployment.pcrs[pcrType][pcrRunName])
-                        //                         deployment.pcrs[pcrType][pcrRunName] = {};
-                        //                     if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
-                        //                         deployment.pcrs[pcrType][pcrRunName][timestamp] =
-                        //                             pcrData[pcrType][pcrRunName][timestamp];
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
+                                        // Now for images
+                                        if (message['event'] == 'IMAGE_TAKEN') {
 
-                        // }
+                                            // We need to build the attachment first
+                                            var textToSend = "_" +
+                                                moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                                "_\n*Image Taken*: " + message['new']['imageFilename'] +
+                                                " (" + message['new']['exposure'] + "s - " + message['new']['xPixels'] + "px X " +
+                                                message['new']['yPixels'] + "px)";
+                                            if (message['new']['downloaded']) {
+                                                logger.debug('URL to encode: ' + message['new']['imageUrl']);
+                                                logger.debug('Encoded: ' + encodeURI(message['new']['imageUrl']));
+                                                
+                                                textToSend += "\n<" + encodeURI(message['new']['imageUrl']) + ">"
+                                            }
 
-                        // // Now last line parsed in log file
-                        // if (lastLineParsedFromLogFile) deployment.lastLineParsedFromLogFile = lastLineParsedFromLogFile;
+                                            // Create the message to send
+                                            var messageToSend = {
+                                                text: textToSend,
+                                                channel: targetDeployment['slackChannel'],
+                                                username: me.slackUsername
+                                            };
+
+                                            // Add it to the slack queue
+                                            me.slackQueue.push(messageToSend);
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         // Now try to save the deployment
-                        me.couchDBConn.save(deployment, function (err, res) {
+                        me.couchDBConn.save(targetDeployment, function (err, res) {
                             // First check for error
                             if (err) {
                                 // Make sure the error is a conflict error before recursing
                                 if (err.error === 'conflict') {
-                                    logger.warn("Conflict trapped trying to save deployment with updates " +
-                                        "added, will try again", err);
-                                    me.updateDeployment(deploymentID, name, description, startDate, endDate, esp,
-                                        errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback);
+                                    logger.warn("Conflict trapped trying to update deployment", err);
                                 } else {
                                     logger.error("Error caught trying to save deployment " + deployment.name);
                                     // Since the error is not a conflict error, bail out
@@ -1270,9 +1378,9 @@ function DataAccess(opts, logDir) {
                         });
 
                     } else {
-                        logger.error("No deployment found matching ID " + deploymentID);
+                        logger.error("No deployment found matching ID " + idToSearchFor);
                         if (callback)
-                            callback(new Error("No deployment matching ID " + deploymentID + " found."));
+                            callback(new Error("No deployment matching ID " + idToSearchFor + " found."));
                     }
                 }
             });
@@ -1300,167 +1408,167 @@ function DataAccess(opts, logDir) {
      * @param pcrs
      * @param callback
      */
-    this.updateDeployment = function (deploymentID, name, description, startDate, endDate, esp, ancillaryData, errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback) {
-        // First make sure we have an deployment ID
-        if (deploymentID) {
-            // Next try to find a deployment with the given ID
-            this.couchDBConn.get(deploymentID, function (err, deployment) {
-                // If an error occurred, send it back
-                if (err) {
-                    logger.error("Error caught trying to find deployment with ID: " + deploymentID);
-                    if (callback)
-                        callback(err);
-                } else {
-                    // Make sure there is a deployment
-                    if (deployment) {
-                        // Now examine each of the parameters coming in and if they are specified, update the
-                        // properties on the deployment
+    // this.updateDeployment = function (deploymentID, name, description, startDate, endDate, esp, ancillaryData, errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback) {
+    //     // First make sure we have an deployment ID
+    //     if (deploymentID) {
+    //         // Next try to find a deployment with the given ID
+    //         this.couchDBConn.get(deploymentID, function (err, deployment) {
+    //             // If an error occurred, send it back
+    //             if (err) {
+    //                 logger.error("Error caught trying to find deployment with ID: " + deploymentID);
+    //                 if (callback)
+    //                     callback(err);
+    //             } else {
+    //                 // Make sure there is a deployment
+    //                 if (deployment) {
+    //                     // Now examine each of the parameters coming in and if they are specified, update the
+    //                     // properties on the deployment
 
-                        // TODO kgomes, I should make sure to only update the document if something has changed.
+    //                     // TODO kgomes, I should make sure to only update the document if something has changed.
 
-                        // The name of the deployment
-                        if (name) deployment.name = name;
+    //                     // The name of the deployment
+    //                     if (name) deployment.name = name;
 
-                        // The description of the deployment
-                        if (description) deployment.description = description;
+    //                     // The description of the deployment
+    //                     if (description) deployment.description = description;
 
-                        // The start date
-                        if (startDate) deployment.startDate = startDate;
+    //                     // The start date
+    //                     if (startDate) deployment.startDate = startDate;
 
-                        // The end date
-                        if (endDate) deployment.endDate = endDate;
+    //                     // The end date
+    //                     if (endDate) deployment.endDate = endDate;
 
-                        // The esp information
-                        if (esp) {
-                            // Make sure the deployment has an ESP object
-                            if (!deployment.esp) deployment.esp = {};
+    //                     // The esp information
+    //                     if (esp) {
+    //                         // Make sure the deployment has an ESP object
+    //                         if (!deployment.esp) deployment.esp = {};
 
-                            // Now check the properties of the esp
-                            if (esp.name) deployment.esp.name = esp.name;
-                            if (esp.ftpHost) deployment.esp.ftpHost = esp.ftpHost;
-                            if (esp.ftpPort) deployment.esp.ftpPort = esp.ftpPort;
-                            if (esp.ftpUsername) deployment.esp.ftpUsername = esp.ftpUsername;
-                            if (esp.ftpPassword) deployment.esp.ftpPassword = esp.ftpPassword;
-                            if (esp.ftpWorkingDir) deployment.esp.ftpWorkingDir = esp.ftpWorkingDir;
-                            if (esp.logFile) deployment.esp.logFile = esp.logFile;
-                            if (esp.mode) deployment.esp.mode = esp.mode;
-                            if (esp.path) deployment.esp.path = esp.path;
-                            if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
-                        }
+    //                         // Now check the properties of the esp
+    //                         if (esp.name) deployment.esp.name = esp.name;
+    //                         if (esp.ftpHost) deployment.esp.ftpHost = esp.ftpHost;
+    //                         if (esp.ftpPort) deployment.esp.ftpPort = esp.ftpPort;
+    //                         if (esp.ftpUsername) deployment.esp.ftpUsername = esp.ftpUsername;
+    //                         if (esp.ftpPassword) deployment.esp.ftpPassword = esp.ftpPassword;
+    //                         if (esp.ftpWorkingDir) deployment.esp.ftpWorkingDir = esp.ftpWorkingDir;
+    //                         if (esp.logFile) deployment.esp.logFile = esp.logFile;
+    //                         if (esp.mode) deployment.esp.mode = esp.mode;
+    //                         if (esp.path) deployment.esp.path = esp.path;
+    //                         if (esp.serialNumber) deployment.esp.serialNumber = esp.serialNumber;
+    //                     }
 
-                        // If ancillary data stats
-                        if (ancillaryData)
-                            deployment.ancillaryData = ancillaryData;
+    //                     // If ancillary data stats
+    //                     if (ancillaryData)
+    //                         deployment.ancillaryData = ancillaryData;
 
-                        // Now any errors
-                        if (errors) {
-                            if (!deployment.errors)
-                                deployment.errors = {};
+    //                     // Now any errors
+    //                     if (errors) {
+    //                         if (!deployment.errors)
+    //                             deployment.errors = {};
 
-                            for (var timestamp in errors) {
-                                deployment.errors[timestamp] = errors[timestamp];
-                            }
-                        }
+    //                         for (var timestamp in errors) {
+    //                             deployment.errors[timestamp] = errors[timestamp];
+    //                         }
+    //                     }
 
-                        // Now samples
-                        if (samples) {
-                            if (!deployment.samples)
-                                deployment.samples = {};
+    //                     // Now samples
+    //                     if (samples) {
+    //                         if (!deployment.samples)
+    //                             deployment.samples = {};
 
-                            for (var timestamp in samples) {
-                                deployment.samples[timestamp] = samples[timestamp];
-                            }
-                        }
+    //                         for (var timestamp in samples) {
+    //                             deployment.samples[timestamp] = samples[timestamp];
+    //                         }
+    //                     }
 
-                        // Now protocolRuns
-                        if (protocolRuns) {
-                            if (!deployment.protocolRuns)
-                                deployment.protocolRuns = {};
+    //                     // Now protocolRuns
+    //                     if (protocolRuns) {
+    //                         if (!deployment.protocolRuns)
+    //                             deployment.protocolRuns = {};
 
-                            for (var timestamp in protocolRuns) {
-                                deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
-                            }
-                        }
+    //                         for (var timestamp in protocolRuns) {
+    //                             deployment.protocolRuns[timestamp] = protocolRuns[timestamp];
+    //                         }
+    //                     }
 
-                        // Now images
-                        if (images) {
-                            if (!deployment.images)
-                                deployment.images = {};
+    //                     // Now images
+    //                     if (images) {
+    //                         if (!deployment.images)
+    //                             deployment.images = {};
 
-                            for (var timestamp in images) {
-                                deployment.images[timestamp] = images[timestamp];
-                            }
-                        }
+    //                         for (var timestamp in images) {
+    //                             deployment.images[timestamp] = images[timestamp];
+    //                         }
+    //                     }
 
-                        // Now pcrs
-                        if (pcrDataArray) {
-                            for (var i = 0; i < pcrDataArray.length; i++) {
-                                // Grab the data
-                                var pcrData = pcrDataArray[i];
+    //                     // Now pcrs
+    //                     if (pcrDataArray) {
+    //                         for (var i = 0; i < pcrDataArray.length; i++) {
+    //                             // Grab the data
+    //                             var pcrData = pcrDataArray[i];
 
-                                // It will be an object that has pcr types as keys, so we need to
-                                // loop over the pcrTypes first
-                                for (var pcrType in pcrData) {
-                                    // Now next item will be the PCR run name
-                                    for (var pcrRunName in pcrData[pcrType]) {
-                                        // Now the item will be the timestamp of the file that was processed
-                                        for (var timestamp in pcrData[pcrType][pcrRunName]) {
-                                            // Add (or replace the entry on the deployment with this information
-                                            if (!deployment.pcrs)
-                                                deployment.pcrs = {};
-                                            if (!deployment.pcrs[pcrType])
-                                                deployment.pcrs[pcrType] = {};
-                                            if (!deployment.pcrs[pcrType][pcrRunName])
-                                                deployment.pcrs[pcrType][pcrRunName] = {};
-                                            if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
-                                                deployment.pcrs[pcrType][pcrRunName][timestamp] =
-                                                    pcrData[pcrType][pcrRunName][timestamp];
-                                        }
-                                    }
-                                }
-                            }
+    //                             // It will be an object that has pcr types as keys, so we need to
+    //                             // loop over the pcrTypes first
+    //                             for (var pcrType in pcrData) {
+    //                                 // Now next item will be the PCR run name
+    //                                 for (var pcrRunName in pcrData[pcrType]) {
+    //                                     // Now the item will be the timestamp of the file that was processed
+    //                                     for (var timestamp in pcrData[pcrType][pcrRunName]) {
+    //                                         // Add (or replace the entry on the deployment with this information
+    //                                         if (!deployment.pcrs)
+    //                                             deployment.pcrs = {};
+    //                                         if (!deployment.pcrs[pcrType])
+    //                                             deployment.pcrs[pcrType] = {};
+    //                                         if (!deployment.pcrs[pcrType][pcrRunName])
+    //                                             deployment.pcrs[pcrType][pcrRunName] = {};
+    //                                         if (!deployment.pcrs[pcrType][pcrRunName][timestamp])
+    //                                             deployment.pcrs[pcrType][pcrRunName][timestamp] =
+    //                                                 pcrData[pcrType][pcrRunName][timestamp];
+    //                                     }
+    //                                 }
+    //                             }
+    //                         }
 
-                        }
+    //                     }
 
-                        // Now last line parsed in log file
-                        if (lastLineParsedFromLogFile) deployment.lastLineParsedFromLogFile = lastLineParsedFromLogFile;
+    //                     // Now last line parsed in log file
+    //                     if (lastLineParsedFromLogFile) deployment.lastLineParsedFromLogFile = lastLineParsedFromLogFile;
 
-                        // Now try to save the deployment
-                        me.couchDBConn.save(deployment, function (err, res) {
-                            // First check for error
-                            if (err) {
-                                // Make sure the error is a conflict error before recursing
-                                if (err.error === 'conflict') {
-                                    logger.warn("Conflict trapped trying to save deployment with updates " +
-                                        "added, will try again", err);
-                                    me.updateDeployment(deploymentID, name, description, startDate, endDate, esp,
-                                        errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback);
-                                } else {
-                                    logger.error("Error caught trying to save deployment " + deployment.name);
-                                    // Since the error is not a conflict error, bail out
-                                    if (callback)
-                                        callback(err);
-                                }
-                            } else {
-                                // Send null back to the caller.
-                                if (callback)
-                                    callback(null);
-                            }
-                        });
+    //                     // Now try to save the deployment
+    //                     me.couchDBConn.save(deployment, function (err, res) {
+    //                         // First check for error
+    //                         if (err) {
+    //                             // Make sure the error is a conflict error before recursing
+    //                             if (err.error === 'conflict') {
+    //                                 logger.warn("Conflict trapped trying to save deployment with updates " +
+    //                                     "added, will try again", err);
+    //                                 me.updateDeployment(deploymentID, name, description, startDate, endDate, esp,
+    //                                     errors, samples, protocolRuns, images, pcrDataArray, lastLineParsedFromLogFile, callback);
+    //                             } else {
+    //                                 logger.error("Error caught trying to save deployment " + deployment.name);
+    //                                 // Since the error is not a conflict error, bail out
+    //                                 if (callback)
+    //                                     callback(err);
+    //                             }
+    //                         } else {
+    //                             // Send null back to the caller.
+    //                             if (callback)
+    //                                 callback(null);
+    //                         }
+    //                     });
 
-                    } else {
-                        logger.error("No deployment found matching ID " + deploymentID);
-                        if (callback)
-                            callback(new Error("No deployment matching ID " + deploymentID + " found."));
-                    }
-                }
-            });
-        } else {
-            // Send an error to the callback
-            if (callback)
-                callback(new Error("No deployment ID was specified."));
-        }
-    }
+    //                 } else {
+    //                     logger.error("No deployment found matching ID " + deploymentID);
+    //                     if (callback)
+    //                         callback(new Error("No deployment matching ID " + deploymentID + " found."));
+    //                 }
+    //             }
+    //         });
+    //     } else {
+    //         // Send an error to the callback
+    //         if (callback)
+    //             callback(new Error("No deployment ID was specified."));
+    //     }
+    // }
 
     // ***********************************************************
     // The function to remove a deployment from the CouchDB database
