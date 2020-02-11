@@ -390,7 +390,9 @@ module.exports = {
 
         // The data stores need a copy of a couple of properties from the parent config so attach those
         this.dataStoreOptions['dataDir'] = this.dataDir;
-        this.dataStoreOptions['dataBaseUrl'] = this.appServerOptions['hostBaseUrl'] + '/data';
+        this.dataStoreOptions['dataBaseUrl'] = this.appServerOptions['hostBaseUrl']
+        if (this.port && this.port != 80) this.dataStoreOptions['dataBaseUrl'] += ':' + this.port;
+        this.dataStoreOptions['dataBaseUrl'] += '/data';
         this.dataStoreOptions['slackWebHookURL'] = this.slackWebHookURL;
 
         // Now look for deploymentFileSync overrides

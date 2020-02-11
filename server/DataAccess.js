@@ -81,6 +81,7 @@ function DataAccess(opts, logDir) {
         this.couchConfiguration.host,
         this.couchConfiguration.port,
         {
+            cache: false,
             auth: {
                 username: this.couchConfiguration.username,
                 password: this.couchConfiguration.password
@@ -1335,10 +1336,10 @@ function DataAccess(opts, logDir) {
                                                 " (" + message['new']['exposure'] + "s - " + message['new']['xPixels'] + "px X " +
                                                 message['new']['yPixels'] + "px)";
                                             if (message['new']['downloaded']) {
-                                                logger.debug('URL to encode: ' + message['new']['imageUrl']);
-                                                logger.debug('Encoded: ' + encodeURI(message['new']['imageUrl']));
+                                                logger.debug('URL to encode: ' + targetDeployment['images'][messageTimestamps[i]]['imageUrl']);
+                                                logger.debug('Encoded: ' + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']));
                                                 
-                                                textToSend += "\n<" + encodeURI(message['new']['imageUrl']) + ">"
+                                                textToSend += "\n<" + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']) + ">"
                                             }
 
                                             // Create the message to send

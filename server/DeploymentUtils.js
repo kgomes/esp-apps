@@ -436,9 +436,10 @@ function mergeDeployments(source, target) {
             if (!target['images']) {
                 target['images'] = {};
             }
-
             // Grab all the image timestamps from the source
             var imageTimestamps = Object.keys(source['images']);
+            logger.debug('Source deployment has ' + imageTimestamps.length + ' images');
+            logger.debug('Target deployment has ' + Object.keys(target['images']).length + ' images');
 
             // Loop over the timestamps
             for (var i = 0; i < imageTimestamps.length; i++) {

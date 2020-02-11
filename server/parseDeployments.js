@@ -1,11 +1,11 @@
 /*
-This is a top level script meant to be run via command line (or cron job) that uses
-the ESP web portal API to get a list of all the curently open deployments.  It then
-looks for a local directory (specfied in the configuration) for the raw files from
-that deployment. It recursively crawls this raw directory and parses all the applicable
-information from the files in that directory and then submits the updated deployment
-back to the web portal API.
-*/
+ * This is a top level script meant to be run via command line (or cron job) that uses
+ * the ESP web portal API to get a list of all the curently open deployments.  It then
+ * looks for a local directory (specfied in the configuration) for the raw files from
+ * that deployment. It recursively crawls this raw directory and parses all the applicable
+ * information from the files in that directory and then submits the updated deployment
+ * back to the web portal API.
+ */
 
 // First, let's red in the configuration file and initialize the configuration
 var espCfg = require('./config.js');
