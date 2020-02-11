@@ -484,12 +484,12 @@ function lookForImage(line, timestamp) {
     if (imageMatch && imageMatch.length > 0) {
         image = {
             'timestamp': timestamp.valueOf(),
-            'width': Number(imageMatch[1]),
-            'height': Number(imageMatch[2]),
-            'bit': Number(imageMatch[3]),
+            'xPixels': Number(imageMatch[1]),
+            'yPixels': Number(imageMatch[2]),
+            'bits': Number(imageMatch[3]),
             'exposure': Number(imageMatch[4]),
-            'basePath': imageMatch[5],
-            'filename': imageMatch[6]
+            'imageFilename': imageMatch[6],
+            'fullImagePath': imageMatch[5] + '/' + imageMatch[6]
         }
         //logger.debug('Image:');
         //logger.debug(image);
@@ -500,7 +500,7 @@ function lookForImage(line, timestamp) {
 }
 
 // This method takes in a line and parses for information and attaches to the parsedObject if found
-function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentActor) {
+function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentActor, localDataDirectory, remoteDataDirectory) {
     // First update the timestamp for the most recent line
     var newTimestamp = updateTimestamp(line, previousTimestamp);
 
@@ -516,10 +516,13 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                 'subject': error['subject'],
                 'message': error['message']
             }
+            logger.debug('Line: ' + line + ': contains an error');
+            logger.debug(JSON.stringify(parsedObject['errors'][error['timestamp']], null, 2));
         } else {
             // Look for ancillary data (can be more than one entry in a line so we get back an array)
             var ancillaryDataPoints = lookForAncillaryDataPoints(line, newTimestamp);
             if (ancillaryDataPoints && ancillaryDataPoints.length > 0) {
+                logger.debug('Line: ' + line + ' contains ancillary data points');
                 // Loop over the array of ancillary data points
                 for (var i = 0; i < ancillaryDataPoints.length; i++) {
                     // Grab the data point
@@ -528,20 +531,20 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                     // We need to look at each entry of the data point and make sure we register
                     // that there is this type of data for each point on the parsed object.
                     var dataPointSource = dataPoint['source'];
-                    logger.debug('dataPointSource = ' + dataPointSource);
+                    logger.trace('dataPointSource = ' + dataPointSource);
 
                     // Grab the keys of the data object which are the units of each data point
                     var unitKeys = Object.keys(dataPoint['data']);
 
                     // Now loop over those unit keys
                     for (var j = 0; j < unitKeys.length; j++) {
-                        logger.debug('unitKey = ' + unitKeys[j]);
+                        logger.trace('unitKey = ' + unitKeys[j]);
                         // Check to see if the ancillary data lookup on the parsed object
                         // contains an entry for this source-unit combination
                         if (parsedObject['ancillaryData'] &&
                             parsedObject['ancillaryData'][dataPointSource] &&
                             parsedObject['ancillaryData'][dataPointSource][unitKeys[j]]) {
-                            logger.debug('Entry for ' + dataPointSource + '->' + unitKeys[j] + ' is already on parsed object');
+                            logger.trace('Entry for ' + dataPointSource + '->' + unitKeys[j] + ' is already on parsed object');
                         } else {
                             // Need to add it from the lookup
                             if (!parsedObject['ancillaryData'][dataPointSource]) parsedObject['ancillaryData'][dataPointSource] = {};
@@ -569,6 +572,8 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                         'name': protocolRunStart['name'],
                         'targetVol': protocolRunStart['targetVol']
                     };
+                    logger.debug('Line: ' + line + ': contains a protocol run start');
+                    logger.debug(JSON.stringify(parsedObject['protocolRuns'][protocolRunStart['timestamp']], null, 2));
                 } else {
                     // Let's look for sample start
                     var sampleStart = lookForSampleStart(line, newTimestamp);
@@ -578,6 +583,8 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                             'actor': currentActor,
                             'targetVol': sampleStart['targetVol']
                         }
+                        logger.debug('Line: ' + line + ': contains a stample start');
+                        logger.debug(JSON.stringify(parsedObject['samples'][sampleStart['timestamp']], null, 2));
                     } else {
                         // Let's look for the end of a sample
                         var sampleEnd = lookForSampleEnd(line, newTimestamp);
@@ -594,6 +601,8 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                                 if (latestSample && !latestSample['actualVol']) {
                                     parsedObject['samples'][lastestSampleTimestamp]['actualVol'] = sampleEnd['actualVol'];
                                     parsedObject['samples'][lastestSampleTimestamp]['endts'] = Number(sampleEnd['timestamp']);
+                                    logger.debug('Line ' + line + ': contains a sample end');
+                                    logger.debug(JSON.stringify(parsedObject['samples'][lastestSampleTimestamp], null, 2));
                                 } else {
                                     //logger.error('Either could not find latest sample or it already has actualVol!');
                                 }
@@ -604,15 +613,52 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
                             // Look for an image
                             var image = lookForImage(line, newTimestamp);
                             if (image) {
-                                parsedObject['images'][image['timestamp']] = {
-                                    'actor': currentActor,
-                                    'width': image['width'],
-                                    'height': image['height'],
-                                    'bit': image['bit'],
-                                    'exposure': image['exposure'],
-                                    'basePath': image['basePath'],
-                                    'filename': image['filename']
+
+                                // Before attaching the image, we need to gather more information about the image.
+
+                                // Let's first check and see if the remote directory is defined in as that will help us
+                                // build local paths to the file if it was downloaded
+                                if (remoteDataDirectory) {
+
+                                    // Get the length of the remote file path
+                                    var remoteDataDirectoryLength = remoteDataDirectory.length;
+
+                                    // Use the length of the remote path to grab just the relative path of the image on the
+                                    // remote host
+                                    var remoteRelativeImagePath = image['fullImagePath'].substring(remoteDataDirectoryLength + 1);
+
+                                    // Break that path into parts so we can build a local data path to where the equivalent file should
+                                    var remoteRelativeImagePathArray = remoteRelativeImagePath.split('/');
+
+                                    // Now start building the local path, but just starting with the base data directory for the
+                                    // deployment
+                                    var localImagePath = localDataDirectory;
+
+                                    // Loop over the relative path parts and add to the local path
+                                    for (var i = 0; i < remoteRelativeImagePathArray.length; i++) {
+                                        localImagePath = path.join(localImagePath, remoteRelativeImagePathArray[i]);
+                                    }
+                                    image['localImagePath'] = localImagePath;
+
+                                    // Check to see if the file does exist locally and set the downloaded flag
+                                    var imageExistsLocally = fs.existsSync(localImagePath);
+                                    if (imageExistsLocally) {
+                                        image['downloaded'] = true;
+                                    } else {
+                                        image['downloaded'] = false;
+                                    }
+
+                                    // Using the local image path, create the equivalent path where the JPG version should be
+                                    var localJPGPath = localImagePath.substring(0, localImagePath.lastIndexOf('raw')) +
+                                        'processed' +
+                                        localImagePath.substring(localImagePath.lastIndexOf('raw') + 3).replace('.tif', '.jpg');
+                                    image['localJPGPath'] = localJPGPath;
+
                                 }
+
+                                parsedObject['images'][image['timestamp']] = JSON.parse(JSON.stringify(image));
+                                logger.debug('Line ' + line + ': contains an image');
+                                logger.debug(JSON.stringify(parsedObject['images'][image['timestamp']], null, 2));
                             }
                         }
                     }
@@ -627,7 +673,7 @@ function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentAct
 
 // This function parses a .out file synchronously and returns a JSON
 // object with all the parsed data attached
-function parseFileSync(outFile) {
+function parseFileSync(outFile, localDataDirectory, remoteDataDirectory) {
     // This is an object where the parsed data will be stored
     var parsedObject = {
         protocolRuns: {},
@@ -657,7 +703,7 @@ function parseFileSync(outFile) {
         while (line = liner.next()) {
             // Bump the line number
             lineNumber++;
-            logger.debug('Line ' + lineNumber + ': ' + line.toString('ascii'));
+            logger.trace('Line ' + lineNumber + ': ' + line.toString('ascii'));
 
             // Check to see if we have reached the end of the file or it's a new line
             if (!line || line.toString('ascii').startsWith('@')) {
@@ -666,12 +712,12 @@ function parseFileSync(outFile) {
                 var currentActorMatch = line.toString('ascii').match(currentActorPattern);
                 if (currentActorMatch && currentActorMatch.length > 0) {
                     currentActor = currentActorMatch[1];
-                    logger.debug('Actor set to ' + currentActor);
                 }
 
                 // Call the method to parse the line and get back the updated timestamp of the line
                 if (previousLine) {
-                    previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber, currentActor);
+                    previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp,
+                        lineNumber, currentActor, localDataDirectory, remoteDataDirectory);
                 }
 
                 // Now assign the new line to the placeholder
@@ -689,96 +735,10 @@ function parseFileSync(outFile) {
     return parsedObject;
 }
 
-// This method takes in a path to a file that should be in the .out format and returns and object
-// contains all the related items that were extracted from that log file.  The trick with this is
-// that it needs to be done in an asychronous manner.
-async function parseFile(outFile, callback) {
-
-    // Create a placeholder for the file to read
-    const fileToParse = outFile;
-
-    // This is a variable holding the most recent line (this is for multi-line entries)
-    var previousLine;
-
-    // This is a variable to hold what line we are on
-    var lineNumber = 0;
-
-    // This is variable to hold the current timestamp
-    var previousLineTimestamp;
-
-    // This is the object that will be returned
-    var parsedObject = {
-        protocolRuns: {},
-        samples: {},
-        images: {},
-        errors: {},
-        ancillaryData: {}
-    }
-
-    // First thing to do is create the read stream to the file
-    const fileReadStream = fs.createReadStream(outFile);
-
-    // Create an interface to read the file
-    const rl = readline.createInterface({
-        input: fileReadStream,
-        crlfDelay: Infinity
-    });
-
-    // Add a handler interrupts
-    rl.on('SIGCONT', () => {
-        // `prompt` will automatically resume the stream
-        //logger.debug('SIGCONT caught, resuming ...');
-        rl.prompt();
-    });
-    rl.on('SIGTSTP', () => {
-        // This will override SIGTSTP and prevent the program from going to the
-        // background.
-        //logger.error('Caught SIGTSTP.');
-        callback(null, { message: 'Caught SIGTSTP while reading log file' });
-    });
-
-    // Add handler when the stream read end of file
-    rl.on('close', function (err) {
-        //logger.info("Completed reading of file " + fileToParse);
-        // Since I am using new lines to make sure I have complete lines before parsing, I need
-        // to process the last line read as it may not have been processed in the loop
-        parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber);
-        //        logger.debug(parsedObject);
-
-        // Call the callback
-        if (callback) {
-            callback(err, parsedObject)
-        }
-    });
-
-    rl.on('line', function (line) {
-        // Bump the line number
-        lineNumber++;
-        logger.trace(`Line ${lineNumber}: ${line}`);
-
-        // The first thing we need to do, is decide if this is a new line or 
-        // a continuation of a previous line.  All new line entries should start
-        // with the '@' symbol, so see if the line start with that
-        if (line.startsWith('@')) {
-
-            // Call the method to parse the line and get back the updated timestamp of the line
-            if (previousLine) {
-                previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp, lineNumber);
-            }
-
-            // Now assign the new line to the placeholder
-            previousLine = line;
-        } else {
-            previousLine += '\n' + line;
-        }
-    });
-}
-
 // Export an object that represents the OutParser 'instance'
 module.exports = {
     setLogDirectory: setLogDirectory,
     setLogLevel: setLogLevel,
     setAncillaryDataLookup: setAncillaryDataLookup,
-    parseFile: parseFile,
     parseFileSync: parseFileSync
 }
