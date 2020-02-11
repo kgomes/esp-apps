@@ -26,7 +26,7 @@ const deploymentUtils = require('./DeploymentUtils');
 // The parser for .out files
 const outParser = require('./OutParser');
 outParser.setLogDirectory(espCfg['logDir']);
-outParser.setLogLevel('off');
+outParser.setLogLevel('debug');
 outParser.setAncillaryDataLookup(espCfg['ancillaryDataLookup']);
 
 // Import the logging library
@@ -52,13 +52,13 @@ var parseDeploymentData = function (deployment) {
     // Make sure we have enough info in the deployment
     if (deployment['name'] && deployment['esp'] && deployment['esp']['name']) {
         // Using the ESP and Deployment name, find the data directory locally
-        var pathToDeploymentData = path.join(espCfg['dataDir'], 'instances',
+        var localDataDirectory = path.join(espCfg['dataDir'], 'instances',
             deployment['esp']['name'], 'deployments', deployment['name'], 'data', 'raw');
         logger.debug('Deployment ' + deployment['hame'] + ' data is located at:');
-        logger.debug(pathToDeploymentData);
-        if (fs.existsSync(pathToDeploymentData)) {
+        logger.debug(localDataDirectory);
+        if (fs.existsSync(localDataDirectory)) {
             logger.debug('That path does exist');
-            parseRawDataDirectory(deployment, pathToDeploymentData);
+            parseRawDataDirectory(deployment, localDataDirectory, deployment['esp']['dataDirectory']);
         } else {
             logger.warn('Data path for deployment ' + deployment['name'] + ' of ESP ' +
                 deployment['esp']['name'] + ' does not exists, will not parse anything');
@@ -69,11 +69,12 @@ var parseDeploymentData = function (deployment) {
 // This method takes in a deployment and a directory and parses
 // files in that directory, attaching information from those
 // parsed files to the deployment
-var parseRawDataDirectory = function (deployment, dataDirectory) {
-    logger.debug('Will parse deployment data from directory ' + dataDirectory);
+var parseRawDataDirectory = function (deployment, localDataDirectory, remoteDataDirectory) {
+    logger.debug('Will parse deployment data from directory ' + localDataDirectory);
+    logger.debug('Remote ESP data directory is ' + remoteDataDirectory);
 
     // Read the directory contents
-    var dirListing = fs.readdirSync(dataDirectory);
+    var dirListing = fs.readdirSync(localDataDirectory);
 
     // Make sure there are files
     if (dirListing && dirListing.length > 0) {
@@ -81,7 +82,7 @@ var parseRawDataDirectory = function (deployment, dataDirectory) {
         for (var i = 0; i < dirListing.length; i++) {
 
             // Grab the file name from the array and create a full path
-            var fullPathToFile = path.join(dataDirectory, dirListing[i]);
+            var fullPathToFile = path.join(localDataDirectory, dirListing[i]);
             logger.debug('Looking at ' + fullPathToFile);
 
             // Grab the file stats
@@ -89,12 +90,12 @@ var parseRawDataDirectory = function (deployment, dataDirectory) {
 
             // Check to see if it is a directory and recursive if so
             if (fileStats && fileStats.isDirectory()) {
-                parseRawDataDirectory(deployment, fullPathToFile);
+                parseRawDataDirectory(deployment, fullPathToFile, remoteDataDirectory);
             } else {
                 // Check to see if it's a a file we care about
                 if (fullPathToFile.endsWith('.out')) {
                     // Parse the .out file
-                    var parsedObject = outParser.parseFileSync(fullPathToFile);
+                    var parsedObject = outParser.parseFileSync(fullPathToFile, localDataDirectory, remoteDataDirectory);
 
                     // Merge the data from the .out file with the incoming deployment
                     var messages = deploymentUtils.mergeDeployments(parsedObject, deployment);
@@ -120,7 +121,16 @@ axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
                 // Now the deployment object should have all the information from all
                 // parsed files.
                 // Now call the API to persist any changes to the deployment
-                //axios.post(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments')
+                var patchUrl = espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments/' + openDeployments[i]['_id'];
+                axios.patch(patchUrl, openDeployments[i])
+                    .then(function (response) {
+                        logger.debug('Done processing deployment');
+                        logger.debug(response.data);
+                    })
+                    .catch(function (error) { 
+                        logger.error('Error trying to udpate deployment');
+                        logger.error(error);
+                    });
             }
         } else {
             logger.debug('No open deployments found');
