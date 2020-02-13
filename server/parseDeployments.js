@@ -47,64 +47,72 @@ if (espCfg.parseDeploymentOptions.loggerLevel) {
 }
 logger.info('Starting parse deployment run at ' + new Date());
 
-// Define the functions we need
+// This function takes in a deployment and then parses the files listed in the deployment and
+// attaches the parsed data to the deployment
 var parseDeploymentData = function (deployment) {
     // Make sure we have enough info in the deployment
-    if (deployment['name'] && deployment['esp'] && deployment['esp']['name']) {
-        // Using the ESP and Deployment name, find the data directory locally
+    if (deployment['name'] && deployment['esp'] &&
+        deployment['esp']['name'] &&
+        deployment['esp']['filesToParse'] &&
+        deployment['esp']['dataDirectory']) {
+
+        // Using the ESP and Deployment name, find the local data directory for this deployment
         var localDataDirectory = path.join(espCfg['dataDir'], 'instances',
-            deployment['esp']['name'], 'deployments', deployment['name'], 'data', 'raw');
-        logger.debug('Deployment ' + deployment['hame'] + ' data is located at:');
+            deployment['esp']['name'], 'deployments', deployment['name'], 'data', 'raw', 'esp');
+        logger.debug('Deployment ' + deployment['name'] + ' of ESP ' +
+            deployment['esp']['name'] + ' data is located locally at:');
         logger.debug(localDataDirectory);
+
+        // Make sure the local data path for the deployment exists
         if (fs.existsSync(localDataDirectory)) {
             logger.debug('That path does exist');
-            parseRawDataDirectory(deployment, localDataDirectory, deployment['esp']['dataDirectory']);
+            // Now loop over the files that are listed in the deployment as the ones to be parsed
+            for (var i = 0; i < deployment['esp']['filesToParse'].length; i++) {
+                // Grab the remote file name
+                var fullRemotePathOfFileToParse = deployment['esp']['filesToParse'][i];
+
+                // Now strip off the remote data directory
+                var relativeRemotePathOfFileToParse =
+                    fullRemotePathOfFileToParse.substring(deployment['esp']['dataDirectory'].length + 1);
+
+                // Now split the remote path in case it's in a sub directory
+                var relativeRemotePathParts = relativeRemotePathOfFileToParse.split('/');
+
+                // Create the local path to the same file
+                var localPathOfFileToParse = localDataDirectory;
+                for (var j = 0; j < relativeRemotePathParts.length; j++) {
+                    localPathOfFileToParse = path.join(localPathOfFileToParse, relativeRemotePathParts[j]);
+                }
+                logger.debug('Will parse file ' + fullRemotePathOfFileToParse);
+                logger.debug('Relative path is ' + relativeRemotePathOfFileToParse);
+                if (fs.existsSync(localPathOfFileToParse)) {
+                    logger.debug('Local path to same file is: ' + localPathOfFileToParse + ' and it exists');
+
+                    // Parse the file
+                    var parsedObject = outParser.parseFileSync(localPathOfFileToParse, deployment['esp']['dataDirectory']);
+
+                    // If a parsed object was returned, merge it with the incoming deployment
+                    if (parsedObject) {
+                        logger.debug('parsedObject returned, will merge')
+
+                        // Merge the data from the .out file with the incoming deployment
+                        var messages = deploymentUtils.mergeDeployments(parsedObject, deployment);
+
+                        // the mergeDeployment utility, does not merge ancillary data points, so add those
+                        deployment['ancillaryDataPoints'] = parsedObject['ancillaryDataPoints'];
+                        logger.debug(JSON.stringify(messages, null, 2));
+                    }
+                } else {
+                    logger.debug('The local file does not exist, will not parse it');
+                }
+            }
+            //parseRawDataDirectory(deployment, localDataDirectory, deployment['esp']['dataDirectory']);
         } else {
             logger.warn('Data path for deployment ' + deployment['name'] + ' of ESP ' +
                 deployment['esp']['name'] + ' does not exists, will not parse anything');
         }
     }
 };
-
-// This method takes in a deployment and a directory and parses
-// files in that directory, attaching information from those
-// parsed files to the deployment
-var parseRawDataDirectory = function (deployment, localDataDirectory, remoteDataDirectory) {
-    logger.debug('Will parse deployment data from directory ' + localDataDirectory);
-    logger.debug('Remote ESP data directory is ' + remoteDataDirectory);
-
-    // Read the directory contents
-    var dirListing = fs.readdirSync(localDataDirectory);
-
-    // Make sure there are files
-    if (dirListing && dirListing.length > 0) {
-        // Loop over the listing
-        for (var i = 0; i < dirListing.length; i++) {
-
-            // Grab the file name from the array and create a full path
-            var fullPathToFile = path.join(localDataDirectory, dirListing[i]);
-            logger.debug('Looking at ' + fullPathToFile);
-
-            // Grab the file stats
-            var fileStats = fs.statSync(fullPathToFile);
-
-            // Check to see if it is a directory and recursive if so
-            if (fileStats && fileStats.isDirectory()) {
-                parseRawDataDirectory(deployment, fullPathToFile, remoteDataDirectory);
-            } else {
-                // Check to see if it's a a file we care about
-                if (fullPathToFile.endsWith('.out')) {
-                    // Parse the .out file
-                    var parsedObject = outParser.parseFileSync(fullPathToFile, localDataDirectory, remoteDataDirectory);
-
-                    // Merge the data from the .out file with the incoming deployment
-                    var messages = deploymentUtils.mergeDeployments(parsedObject, deployment);
-                    logger.debug(JSON.stringify(messages, null, 2));
-                }
-            }
-        }
-    }
-}
 
 // Call the API to get a list of the open deployments
 axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
@@ -117,7 +125,7 @@ axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
             for (var i = 0; i < openDeployments.length; i++) {
                 // Call the method to parse all the data for this deployment
                 parseDeploymentData(openDeployments[i]);
-                logger.debug(JSON.stringify(openDeployments[i], null, 2));
+                //logger.debug(JSON.stringify(openDeployments[i], null, 2));
                 // Now the deployment object should have all the information from all
                 // parsed files.
                 // Now call the API to persist any changes to the deployment
@@ -127,7 +135,7 @@ axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
                         logger.debug('Done processing deployment');
                         logger.debug(response.data);
                     })
-                    .catch(function (error) { 
+                    .catch(function (error) {
                         logger.error('Error trying to udpate deployment');
                         logger.error(error);
                     });

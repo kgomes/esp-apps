@@ -1116,6 +1116,190 @@ function DataAccess(opts, logDir) {
         });
     }
 
+    this.sendSlackMessages = function (targetDeployment, messages) {
+        // Check to see if messages should be posted to Slack
+        if (targetDeployment['notifySlack'] &&
+            targetDeployment['notifySlack'] == true &&
+            targetDeployment['slackChannel'] &&
+            targetDeployment['slackChannel'] != '') {
+            logger.debug('Will publish any messages to slack on channel ' + targetDeployment['slackChannel']);
+            // Make sure there is a messages object
+            if (messages) {
+                // Grab the sorted message timestamps
+                var messageTimestamps = Object.keys(messages).sort();
+
+                // Loop over the timestamps
+                for (var i = 0; i < messageTimestamps.length; i++) {
+                    // Grab the the message
+                    var message = messages[messageTimestamps[i]];
+
+                    // Make sure we have a message
+                    if (message) {
+                        // Check for end of deployment
+                        if (message['event'] == 'DEPLOYMENT_END_DATE_CHANGED') {
+                            // If there is no old end date, then send a message that parsing will stop
+                            if (!message['old']) {
+                                // Start the message
+                                var text = 'Deployment "' + targetDeployment['name'] + '"';
+                                // If there is an ESP attached, add the name to the message
+                                if (targetDeployment['esp'] &&
+                                    targetDeployment['esp']['name'])
+                                    text += ' of ESP ' + targetDeployment['esp']['name'];
+
+                                // Finish message
+                                text += ' was marked as ended';
+
+                                // Now try to parse the end date
+                                var parsedEndDate = null;
+                                try {
+                                    parsedEndDate = moment(targetDeployment['endDate'], 'YYYY-MM-DDTHH:mm:ssZZZ');
+                                } catch (err) {
+                                    logger.warn('Could not parse end date of deployment ' + targetDeployment['name']);
+                                    logger.warn(err);
+                                }
+                                if (parsedEndDate) {
+                                    text += ' at ' + parsedEndDate.format('YYYY-MM-DD HH:mm:ss ZZ');
+                                }
+                                text += ', it will no longer be monitored in the portal.'
+
+                                // Send out a message that the deployment was marked as complete
+                                me.slackQueue.push({
+                                    'text': text,
+                                    channel: targetDeployment['slackChannel'],
+                                    username: me.slackUsername
+                                });
+
+                            }
+                        }
+
+                        // Check for an error
+                        if (message['event'] == 'ERROR_OCCURRED') {
+                            // Create the message to send
+                            var messageToSend = {
+                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                    "_\n*ERROR*: " + messages[messageTimestamps[i]]['new']['subject'],
+                                channel: targetDeployment['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: "ERROR Occurred",
+                                        color: "danger",
+                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
+                                            "Message: " + messages[messageTimestamps[i]]['new']['message']
+                                    }
+                                ]
+                            };
+                            me.slackQueue.push(messageToSend);
+                        }
+
+                        // Check for ProtocolRun started
+                        if (message['event'] == 'PROTOCOL_RUN_STARTED') {
+                            // Create a message and put it in the queue to send
+                            var messageToSend = {
+                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                    "_\n*Protocol Run Started*: " + messages[messageTimestamps[i]]['new']['name'],
+                                channel: targetDeployment['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: "Protocol Run Started",
+                                        color: "good",
+                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
+                                            "Target Volume: " + messages[messageTimestamps[i]]['new']['targetVol']
+                                    }
+                                ]
+                            };
+                            // Add it to the slack queue
+                            me.slackQueue.push(messageToSend);
+                        }
+
+                        // Now let's look for samples
+                        if (message['event'] == 'SAMPLE_STARTED') {
+                            var messageToSend = {
+                                text: "_" +
+                                    moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                    '_\n*Sample Started*',
+                                channel: targetDeployment['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: '',
+                                        color: 'good',
+                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
+                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol']
+                                    }
+                                ]
+                            }
+                            // Add it to the slack queue
+                            me.slackQueue.push(messageToSend);
+                        }
+                        if (message['event'] == 'SAMPLE_TAKEN' || message['event'] == 'SAMPLE_FINISHED') {
+                            // Figure out the color to use
+                            var messageColor = 'good';
+                            if (messages[messageTimestamps[i]]['new']['volDiff'] &&
+                                Number(messages[messageTimestamps[i]]['new']['volDiff']) > 0) {
+                                messageColor = 'warning';
+                            }
+                            var textToSend = "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_';
+                            if (message['event'] == 'SAMPLE_TAKEN') textToSend += '\n*Sample Taken*';
+                            if (message['event'] == 'SAMPLE_FINISHED') textToSend += '\n*Sample Finished*';
+                            var messageToSend = {
+                                text: textToSend,
+                                channel: targetDeployment['slackChannel'],
+                                username: me.slackUsername,
+                                attachments: [
+                                    {
+                                        fallback: '',
+                                        color: messageColor,
+                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
+                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                            '\nEnd: ' + moment(Number(messages[messageTimestamps[i]]['new']['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                            '\nTook: ' + messages[messageTimestamps[i]]['new']['durationInMinutes'] + ' minutes' +
+                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol'] +
+                                            '\nActual Volume: ' + messages[messageTimestamps[i]]['new']['actualVol'] +
+                                            '\nVol Diff: ' + + messages[messageTimestamps[i]]['new']['volDiff'] + ' ml'
+                                    }
+                                ]
+                            }
+                            // Add it to the slack queue
+                            me.slackQueue.push(messageToSend);
+                        }
+
+                        // Now for images
+                        if (message['event'] == 'IMAGE_TAKEN') {
+
+                            // We need to build the attachment first
+                            var textToSend = "_" +
+                                moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
+                                "_\n*Image Taken*: " + message['new']['imageFilename'] +
+                                " (" + message['new']['exposure'] + "s - " + message['new']['xPixels'] + "px X " +
+                                message['new']['yPixels'] + "px)";
+                            if (targetDeployment['images'][messageTimestamps[i]]['downloaded']) {
+                                logger.debug('URL to encode: ' + targetDeployment['images'][messageTimestamps[i]]['imageUrl']);
+                                logger.debug('Encoded: ' + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']));
+
+                                textToSend += "\n<" + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']) + ">"
+                            }
+
+                            // Create the message to send
+                            var messageToSend = {
+                                text: textToSend,
+                                channel: targetDeployment['slackChannel'],
+                                username: me.slackUsername
+                            };
+
+                            // Add it to the slack queue
+                            me.slackQueue.push(messageToSend);
+
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
     /**
      * This method takes in a JSON object which should contain a deployment object.  It will use the ID
      * from the incoming JSON object to look up the existing deployment in the data store, it will then
@@ -1129,230 +1313,78 @@ function DataAccess(opts, logDir) {
         // First make sure we have an deployment ID on the incoming object
         if (sourceDeployment && (sourceDeployment['id'] || sourceDeployment['_id'])) {
             var idToSearchFor = sourceDeployment['id'] || sourceDeployment['_id'];
-            logger.debug('Search for ID ' + idToSearchFor + ' to update');
+            logger.debug('updateDeployment called for deployment ' +
+                sourceDeployment['name'] + ' of ESP ' + sourceDeployment['esp']['name']);
+            logger.debug('Searching for deployment with ID ' + idToSearchFor + ' to update');
             // Next try to find a deployment with the given ID
             this.couchDBConn.get(idToSearchFor, function (err, targetDeployment) {
                 // If an error occurred, send it back
                 if (err) {
-                    logger.error("Error caught trying to find deployment with ID: " + deploymentJSON['id']);
+                    logger.error("Error caught trying to find deployment with ID: " + idToSearchFor);
                     if (callback)
                         callback(err);
                 } else {
                     // Make sure there is a deployment
                     if (targetDeployment) {
 
-                        // Merge the two
+                        // Merge the incoming deployment with the one in the database
                         var messages = deploymentUtils.mergeDeployments(sourceDeployment, targetDeployment);
 
                         // Loop over any images and make sure to fill out URLs if they are available to serve
                         if (targetDeployment['images'] &&
                             Object.keys(targetDeployment['images']).length > 0) {
 
-                            logger.debug('Images available on deployment ' + targetDeployment['name']);
-
                             // Grab all the timestamps for images
                             var imageTimestamps = Object.keys(targetDeployment['images']);
-                            logger.debug('There are ' + imageTimestamps.length + ' image timestamps');
+                            logger.debug('There are ' + imageTimestamps.length + ' images on deployment ' + targetDeployment['name']);
+                            logger.debug('Will now check each one to see if they are available locally and will add the URL to the image');
+
+                            // Create path to deployment data
+                            var deploymentDataDir = path.join(me.dataDir, 'instances', targetDeployment['esp']['name'],
+                                'deployments', targetDeployment['name'], 'data', 'raw', 'esp');
+                            logger.debug('Will look for local images in directory ' + deploymentDataDir);
 
                             // Now loop over the timestamps
                             for (var i = 0; i < imageTimestamps.length; i++) {
 
-                                // Make sure there is an image object on the target deployment at that timestamp
+                                // Make sure we have an image at that timestamp and it has a property named 'relativePath'
                                 if (targetDeployment['images'][imageTimestamps[i]] &&
-                                    targetDeployment['images'][imageTimestamps[i]]['localImagePath']
-                                    && fs.existsSync(targetDeployment['images'][imageTimestamps[i]]['localImagePath'])) {
-                                    // Pull the relative path to the image off the local data directory
-                                    targetDeployment['images'][imageTimestamps[i]]['tiffUrl'] = me.dataBaseUrl +
-                                        targetDeployment['images'][imageTimestamps[i]]['localImagePath'].substring(me.dataDir.length);
-                                }
+                                    targetDeployment['images'][imageTimestamps[i]]['relativePath']) {
+                                    logger.debug('Working with image ' + targetDeployment['images'][imageTimestamps[i]]['relativePath']);
 
-                                // Same for JPG
-                                if (targetDeployment['images'][imageTimestamps[i]] &&
-                                    targetDeployment['images'][imageTimestamps[i]]['localJPGPath']
-                                    && fs.existsSync(targetDeployment['images'][imageTimestamps[i]]['localJPGPath'])) {
-                                    // Pull the relative path to the image off the local data directory
-                                    targetDeployment['images'][imageTimestamps[i]]['imageUrl'] = me.dataBaseUrl +
-                                        targetDeployment['images'][imageTimestamps[i]]['localJPGPath'].substring(me.dataDir.length);
-                                }
-                            }
-                        }
+                                    // Start a local path to where the image should be
+                                    var localImagePath = deploymentDataDir;
 
-                        // Check to see if messages should be posted to Slack
-                        if (targetDeployment['notifySlack'] &&
-                            targetDeployment['notifySlack'] == true &&
-                            targetDeployment['slackChannel'] &&
-                            targetDeployment['slackChannel'] != '') {
-                            logger.debug('Will publish any messages to slack on channel ' + targetDeployment['slackChannel']);
-                            // Make sure there is a messages object
-                            if (messages) {
-                                // Grab the sorted message timestamps
-                                var messageTimestamps = Object.keys(messages).sort();
+                                    // Split the relative path by the remote directory separator
+                                    var remoteRelativeImagePathArray =
+                                        targetDeployment['images'][imageTimestamps[i]]['relativePath'].split('/');
 
-                                // Loop over the timestamps
-                                for (var i = 0; i < messageTimestamps.length; i++) {
-                                    // Grab the the message
-                                    var message = messages[messageTimestamps[i]];
+                                    // Using the relative path, generate a full path to where that image should be locally
+                                    for (var j = 0; j < remoteRelativeImagePathArray.length; j++) {
+                                        localImagePath = path.join(localImagePath, remoteRelativeImagePathArray[j]);
+                                    }
+                                    logger.debug('Image should be located locally at ' + localImagePath);
 
-                                    // Make sure we have a message
-                                    if (message) {
-                                        // Check for end of deployment
-                                        if (message['event'] == 'DEPLOYMENT_END_DATE_CHANGED') {
-                                            // If there is no old end date, then send a message that parsing will stop
-                                            if (!message['old']) {
-                                                // Start the message
-                                                var text = 'Deployment "' + targetDeployment['name'] + '"';
-                                                // If there is an ESP attached, add the name to the message
-                                                if (targetDeployment['esp'] &&
-                                                    targetDeployment['esp']['name'])
-                                                    text += ' of ESP ' + targetDeployment['esp']['name'];
+                                    // And create a path to where the JPG version should be
+                                    var localJPGPath = localImagePath.replace('/raw/', '/processed/').replace('.tif', '.jpg');
+                                    logger.debug('JPG version should be located at ' + localJPGPath);
 
-                                                // Finish message
-                                                text += ' was marked as ended';
+                                    // Check to see if the file does exist locally and set the downloaded flag
+                                    if (fs.existsSync(localImagePath)) {
+                                        logger.debug('TIF image exists locally');
+                                        targetDeployment['images'][imageTimestamps[i]]['downloaded'] = true;
+                                        targetDeployment['images'][imageTimestamps[i]]['tiffUrl'] = me.dataBaseUrl +
+                                            localImagePath.substring(me.dataDir.length);
 
-                                                // Now try to parse the end date
-                                                var parsedEndDate = null;
-                                                try {
-                                                    parsedEndDate = moment(targetDeployment['endDate'], 'YYYY-MM-DDTHH:mm:ssZZZ');
-                                                } catch (err) {
-                                                    logger.warn('Could not parse end date of deployment ' + targetDeployment['name']);
-                                                    logger.warn(err);
-                                                }
-                                                if (parsedEndDate) {
-                                                    text += ' at ' + parsedEndDate.format('YYYY-MM-DD HH:mm:ss ZZ');
-                                                }
-                                                text += ', it will no longer be monitored in the portal.'
-
-                                                // Send out a message that the deployment was marked as complete
-                                                me.slackQueue.push({
-                                                    'text': text,
-                                                    channel: targetDeployment['slackChannel'],
-                                                    username: me.slackUsername
-                                                });
-
-                                            }
+                                        // Check for matching JPG
+                                        if (fs.existsSync(localJPGPath)) {
+                                            logger.debug('JPG image exists locally');
+                                            targetDeployment['images'][imageTimestamps[i]]['imageUrl'] = me.dataBaseUrl +
+                                                localJPGPath.substring(me.dataDir.length);
                                         }
-
-                                        // Check for an error
-                                        if (message['event'] == 'ERROR_OCCURRED') {
-                                            // Create the message to send
-                                            var messageToSend = {
-                                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                    "_\n*ERROR*: " + messages[messageTimestamps[i]]['new']['subject'],
-                                                channel: targetDeployment['slackChannel'],
-                                                username: me.slackUsername,
-                                                attachments: [
-                                                    {
-                                                        fallback: "ERROR Occurred",
-                                                        color: "danger",
-                                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
-                                                            "Message: " + messages[messageTimestamps[i]]['new']['message']
-                                                    }
-                                                ]
-                                            };
-                                            me.slackQueue.push(messageToSend);
-                                        }
-
-                                        // Check for ProtocolRun started
-                                        if (message['event'] == 'PROTOCOL_RUN_STARTED') {
-                                            // Create a message and put it in the queue to send
-                                            var messageToSend = {
-                                                text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                    "_\n*Protocol Run Started*: " + messages[messageTimestamps[i]]['new']['name'],
-                                                channel: targetDeployment['slackChannel'],
-                                                username: me.slackUsername,
-                                                attachments: [
-                                                    {
-                                                        fallback: "Protocol Run Started",
-                                                        color: "good",
-                                                        text: "Actor: " + messages[messageTimestamps[i]]['new']['actor'] + "\n" +
-                                                            "Target Volume: " + messages[messageTimestamps[i]]['new']['targetVol']
-                                                    }
-                                                ]
-                                            };
-                                            // Add it to the slack queue
-                                            me.slackQueue.push(messageToSend);
-                                        }
-
-                                        // Now let's look for samples
-                                        if (message['event'] == 'SAMPLE_STARTED') {
-                                            var messageToSend = {
-                                                text: "_" +
-                                                    moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                    '_\n*Sample Started*',
-                                                channel: targetDeployment['slackChannel'],
-                                                username: me.slackUsername,
-                                                attachments: [
-                                                    {
-                                                        fallback: '',
-                                                        color: 'good',
-                                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
-                                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol']
-                                                    }
-                                                ]
-                                            }
-                                            // Add it to the slack queue
-                                            me.slackQueue.push(messageToSend);
-                                        }
-                                        if (message['event'] == 'SAMPLE_TAKEN' || message['event'] == 'SAMPLE_FINISHED') {
-                                            // Figure out the color to use
-                                            var messageColor = 'good';
-                                            if (messages[messageTimestamps[i]]['new']['volDiff'] &&
-                                                Number(messages[messageTimestamps[i]]['new']['volDiff']) > 0) {
-                                                messageColor = 'warning';
-                                            }
-                                            var textToSend = "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_';
-                                            if (message['event'] == 'SAMPLE_TAKEN') textToSend += '\n*Sample Taken*';
-                                            if (message['event'] == 'SAMPLE_FINISHED') textToSend += '\n*Sample Finished*';
-                                            var messageToSend = {
-                                                text: textToSend,
-                                                channel: targetDeployment['slackChannel'],
-                                                username: me.slackUsername,
-                                                attachments: [
-                                                    {
-                                                        fallback: '',
-                                                        color: messageColor,
-                                                        text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
-                                                            '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                            '\nEnd: ' + moment(Number(messages[messageTimestamps[i]]['new']['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                            '\nTook: ' + messages[messageTimestamps[i]]['new']['durationInMinutes'] + ' minutes' +
-                                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol'] +
-                                                            '\nActual Volume: ' + messages[messageTimestamps[i]]['new']['actualVol'] +
-                                                            '\nVol Diff: ' + + messages[messageTimestamps[i]]['new']['volDiff'] + ' ml'
-                                                    }
-                                                ]
-                                            }
-                                            // Add it to the slack queue
-                                            me.slackQueue.push(messageToSend);
-                                        }
-
-                                        // Now for images
-                                        if (message['event'] == 'IMAGE_TAKEN') {
-
-                                            // We need to build the attachment first
-                                            var textToSend = "_" +
-                                                moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                                "_\n*Image Taken*: " + message['new']['imageFilename'] +
-                                                " (" + message['new']['exposure'] + "s - " + message['new']['xPixels'] + "px X " +
-                                                message['new']['yPixels'] + "px)";
-                                            if (message['new']['downloaded']) {
-                                                logger.debug('URL to encode: ' + targetDeployment['images'][messageTimestamps[i]]['imageUrl']);
-                                                logger.debug('Encoded: ' + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']));
-                                                
-                                                textToSend += "\n<" + encodeURI(targetDeployment['images'][messageTimestamps[i]]['imageUrl']) + ">"
-                                            }
-
-                                            // Create the message to send
-                                            var messageToSend = {
-                                                text: textToSend,
-                                                channel: targetDeployment['slackChannel'],
-                                                username: me.slackUsername
-                                            };
-
-                                            // Add it to the slack queue
-                                            me.slackQueue.push(messageToSend);
-
-                                        }
+                                    } else {
+                                        logger.debug('TIF image does not exist locally');
+                                        targetDeployment['images'][imageTimestamps[i]]['downloaded'] = false;
                                     }
                                 }
                             }
@@ -1366,18 +1398,114 @@ function DataAccess(opts, logDir) {
                                 if (err.error === 'conflict') {
                                     logger.warn("Conflict trapped trying to update deployment", err);
                                 } else {
-                                    logger.error("Error caught trying to save deployment " + deployment.name);
+                                    logger.error("Error caught trying to save deployment " + targetDeployment['name']);
                                     // Since the error is not a conflict error, bail out
                                     if (callback)
                                         callback(err);
                                 }
                             } else {
-                                // Send null back to the caller.
+                                // Send out any slack messages
+                                logger.debug('Save of deployment ' + targetDeployment['name'] +
+                                    ' successful, will now send ' + messages.length + ' slack messages');
+                                // update the rev number
+                                targetDeployment['_rev'] = res['rev'];
+                                me.sendSlackMessages(targetDeployment, messages);
+
+                                // If there are ancillary data points available, convert them to an array and batch
+                                // insert them
+                                logger.debug('Will now attempt to process ancillary data points');
+                                if (sourceDeployment['ancillaryDataPoints']) {
+                                    logger.debug('There are ancillary data points');
+                                    // Create an array to populate
+                                    var ancillaryDataPointsArray = [];
+
+                                    // Grab the sources
+                                    var sources = Object.keys(sourceDeployment['ancillaryDataPoints']);
+                                    if (sources) {
+                                        // Loop over the sources
+                                        for (var i = 0; i < sources.length; i++) {
+                                            var source = sources[i];
+                                            logger.debug('Filling ancillary data array from source ' + source);
+                                            // Now grab the timestamps for the source
+                                            var sourceTimestamps = Object.keys(sourceDeployment['ancillaryDataPoints'][source]);
+                                            if (sourceTimestamps) {
+                                                // Loop over the timestamps
+                                                for (var j = 0; j < sourceTimestamps.length; j++) {
+
+                                                    // Grab the keys, which are the units that were parsed
+                                                    var dataObjectKeys =
+                                                        Object.keys(sourceDeployment['ancillaryDataPoints'][source][sourceTimestamps[j]]);
+
+                                                    // Now loop over the keys
+                                                    for (var k = 0; k < dataObjectKeys.length; k++) {
+                                                        // Grab the key
+                                                        var dataObjectKey = dataObjectKeys[k];
+
+                                                        // Now grab the lookup from the target deployment to get the other information
+                                                        var dataObjectLookup = targetDeployment['ancillaryData'][source][dataObjectKey];
+
+                                                        // Now put the data in the array to batch insert
+                                                        ancillaryDataPointsArray.push(
+                                                            [source,
+                                                                dataObjectLookup['varName'],
+                                                                dataObjectLookup['varLongName'],
+                                                                dataObjectLookup['units'],
+                                                                dataObjectKey,
+                                                                moment(Number(sourceTimestamps[j])).format('YYYY-MM-DD HH:mm:ssZ'),
+                                                                Number(sourceDeployment['ancillaryDataPoints'][source][sourceTimestamps[j]][dataObjectKey])
+                                                            ]
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // I should have all the ancillary data in the form of an array, batch insert it!
+                                    me.batchInsertAncillaryData(targetDeployment['_id'], targetDeployment['esp']['name'],
+                                        ancillaryDataPointsArray, function (err, numDataPointsInserted) {
+                                            if (err) {
+                                                logger.error('Error trying to batch insert ancillary data');
+                                                logger.error(err)
+                                            } else {
+                                                logger.debug('Batch insert complete, inserted ' + numDataPointsInserted + ' data points');
+
+                                                // Now call method to remove duplicates
+                                                me.cleanOutDuplicateAncillaryData(function (err, result) {
+                                                    if (err) {
+                                                        logger.error('Error caught trying to clean out duplicates');
+                                                        logger.error(err);
+                                                    }
+
+                                                    // Call method to sync ancillary data lookup with data stats
+                                                    me.setDeploymentAncillaryStatsFromDatabase(targetDeployment, function (err, res) {
+                                                        if (err) {
+                                                            logger.error('Error trying to update ancillary stats from databse');
+                                                            logger.error(err)
+                                                        }
+
+                                                        // Now update the deployment to persist those stats
+                                                        me.couchDBConn.save(targetDeployment, function (err, res) {
+                                                            if (err) {
+                                                                logger.error('Error trying to save deployment after ancillary status update');
+                                                                logger.error(err);
+                                                            } else {
+                                                                logger.debug('Save successful after syncing ancillary stats');
+                                                            }
+                                                        });
+                                                    })
+                                                });
+                                            }
+                                        });
+                                } else {
+                                    // No ancillary data was attached
+                                }
+
+                                // Now return to caller by sending callback without waiting for the ancillary stuff to happen
                                 if (callback)
                                     callback(null);
                             }
                         });
-
                     } else {
                         logger.error("No deployment found matching ID " + idToSearchFor);
                         if (callback)

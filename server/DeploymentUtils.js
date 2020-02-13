@@ -516,6 +516,48 @@ function mergeDeployments(source, target) {
             }
         }
 
+        // Now we need to sync up the ancillary lookup
+        if (source['ancillaryData'] && source['ancillaryDataPoints'] &&
+            Object.keys(source['ancillaryDataPoints']).length > 0) {
+            // Let's make sure the target has some thing to attach the ancillary lookup items to
+            if (!target['ancillaryData']) {
+                target['ancillaryData'] = {};
+            }
+
+            // Now let's look over the ancillary data source on the source deployment
+            var ancillarySources = Object.keys(source['ancillaryData']);
+            for (var i = 0; i < ancillarySources.length; i++) {
+                var ancillarySource = ancillarySources[i];
+                logger.debug('Working with ancillary source ' + ancillarySource);
+                // First make sure there is one on the target
+                if (!target['ancillaryData'][ancillarySource]) {
+                    target['ancillaryData'][ancillarySource] = {};
+                }
+
+                // Now loop over the units lookups on that source
+                var ancillarySourceUnitKeys = Object.keys(source['ancillaryData'][ancillarySource]);
+                for (var j = 0; j < ancillarySourceUnitKeys.length; j++) {
+
+                    // Make sure the target has an object associated with the source and unit key
+                    if (!target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]])
+                        target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]] = {};
+
+                    // Grab the source ancillary data object
+                    var ancillarySourceObject = source['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]];
+
+                    // Now grab the property keys
+                    var ancillarySourceObjectKeys = Object.keys(ancillarySourceObject);
+
+                    // Loop over the keys
+                    for (var k = 0; k < ancillarySourceUnitKeys.length; k++) {
+                        // Set the key and value on the target
+                        target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]] =
+                            source['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]];
+                    }
+                }
+            }
+        }
+
     } else {
         logger.warn('mergeDeployments called but one of the arguments was empty');
         logger.warn('Source');

@@ -12,12 +12,6 @@ const fs = require('fs');
 // Import the path module
 const path = require('path');
 
-// Import the readline module
-const readline = require('readline');
-
-// Create line by line reader
-const lineByLine = require('n-readlines');
-
 // The moment module
 const moment = require('moment');
 
@@ -57,63 +51,115 @@ function setAncillaryDataLookup(ancillaryDataLookupParam) {
 
 // This is a function that takes in a line and the previous date and returns the updated date from
 // the line entry
-function updateTimestamp(line, timestamp) {
+function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksPerSecond) {
+    logger.trace('updateTimestamp called for file type ' + fileType);
+
     // The date object to return
     var dateToReturn;
 
-    // These are the two regular expressions for parsing timestamps
-    var timestampPattern1 = new RegExp(/^(\d+):(\d+):(\d+)\.(\d+)(\D+)(\d+)-(\D+)-(\d+)/);
-    var timestampPattern2 = new RegExp(/^(\d+):(\d+):(\d+)\.(\d+)/);
+    // How we look for the timestamp depends on what type of log file we are parsing
+    if (fileType == 'out') {
+        logger.trace('File type is .out');
 
-    // Make sure a line is available
-    if (line) {
-        // First extract the first non-whitespace part of the line which should be some time indicator
-        var timeIndicator = line.split(' ')[0];
+        // Convert the buffer to a string
+        var line = completeLineBuffer.toString();
 
-        // Verify it start with the '@' symbol and then grab what's after
-        if (timeIndicator && timeIndicator.startsWith('@')) {
-            timeIndicator = timeIndicator.substring(1);
+        // These are the two regular expressions for parsing timestamps from a .out file
+        var timestampPattern1 = new RegExp(/^(\d+):(\d+):(\d+)\.(\d+)(\D+)(\d+)-(\D+)-(\d+)/);
+        var timestampPattern2 = new RegExp(/^(\d+):(\d+):(\d+)\.(\d+)/);
 
-            // Now the time indicator can be in a couple of forms:
-            // 1. Full timestamp: 07:30:57.19UTC17-Apr-13
-            // 2. Time of day only: 18:43:00.26
+        // Make sure a line is available
+        if (line) {
 
-            // Use regular expressions to try and pull the different pieces out of the time indicator
-            // Let's start with the most specific match first
-            var ts1Matches = timeIndicator.match(timestampPattern1);
-            if (ts1Matches && ts1Matches.length > 0) {
-                // Construct the time string in such a manner that it can be parse by the momentJS library
-                // We use the format YY-MMM-DDThh:mm:ss.sTZD
-                var momentString = ts1Matches[8] + '-' + ts1Matches[7] + '-' + ts1Matches[6] + ' '
-                    + ts1Matches[1] + ':' + ts1Matches[2] + ':' + ts1Matches[3] + '.' +
-                    ts1Matches[4] + timezoneLookup.lookup[ts1Matches[5]];
-                // Try to parse the timezone
-                try {
-                    dateToReturn = moment(momentString, 'YY-MMM-DD HH:mm:ss.SSZ');
-                } catch (error) {
-                    logger.error('Error trying to convert time indicator into full timestamp: ' + timeIndicator);
-                    logger.error(error);
-                }
-            } else {
-                // Try the second timestamp pattern
-                var ts2Matches = timeIndicator.toString().match(timestampPattern2);
-                if (ts2Matches && ts2Matches.length > 0 && timestamp) {
+            // First extract the first non-whitespace part of the line which should be some time indicator
+            var timeIndicator = line.split(' ')[0];
 
-                    // Since this is just a time update, we need to get update the time on the incoming timestamp
-                    // by first creating a clone of it
-                    dateToReturn = timestamp.clone();
+            // Verify it start with the '@' symbol and then grab what's after
+            if (timeIndicator && timeIndicator.startsWith('@')) {
+                timeIndicator = timeIndicator.substring(1);
 
+                // Now the time indicator can be in a couple of forms:
+                // 1. Full timestamp: 07:30:57.19UTC17-Apr-13
+                // 2. Time of day only: 18:43:00.26
+
+                // Use regular expressions to try and pull the different pieces out of the time indicator
+                // Let's start with the most specific match first
+                var ts1Matches = timeIndicator.match(timestampPattern1);
+                if (ts1Matches && ts1Matches.length > 0) {
+                    // Construct the time string in such a manner that it can be parse by the momentJS library
+                    // We use the format YY-MMM-DDThh:mm:ss.sTZD
+                    var momentString = ts1Matches[8] + '-' + ts1Matches[7] + '-' + ts1Matches[6] + ' '
+                        + ts1Matches[1] + ':' + ts1Matches[2] + ':' + ts1Matches[3] + '.' +
+                        ts1Matches[4] + timezoneLookup.lookup[ts1Matches[5]];
+                    // Try to parse the timezone
                     try {
-                        // Now set the hours, minutes, seconds and milliseconds
-                        dateToReturn.set('hour', parseInt(ts2Matches[1]))
-                        dateToReturn.set('minute', parseInt(ts2Matches[2]))
-                        dateToReturn.set('second', parseInt(ts2Matches[3]))
-                        dateToReturn.set('ms', parseInt(ts2Matches[4] + '0'))
+                        dateToReturn = moment(momentString, 'YY-MMM-DD HH:mm:ss.SSZ');
                     } catch (error) {
-                        logger.error('Error caught trying to update cloned timestamp with ' + timeIndicator);
+                        logger.error('Error trying to convert time indicator into full timestamp: ' + timeIndicator);
                         logger.error(error);
                     }
+                } else {
+                    // Try the second timestamp pattern
+                    var ts2Matches = timeIndicator.match(timestampPattern2);
+                    if (ts2Matches && ts2Matches.length > 0 && timestamp) {
+
+                        // Since this is just a time update, we need to get update the time on the incoming timestamp
+                        // by first creating a clone of it
+                        dateToReturn = timestamp.clone();
+
+                        try {
+                            // Now set the hours, minutes, seconds and milliseconds
+                            dateToReturn.set('hour', parseInt(ts2Matches[1]))
+                            dateToReturn.set('minute', parseInt(ts2Matches[2]))
+                            dateToReturn.set('second', parseInt(ts2Matches[3]))
+                            dateToReturn.set('ms', parseInt(ts2Matches[4] + '0'))
+                        } catch (error) {
+                            logger.error('Error caught trying to update cloned timestamp with ' + timeIndicator);
+                            logger.error(error);
+                        }
+                    }
                 }
+            }
+        }
+    } else {
+        // Check to see if the file is a .log file
+        if (fileType == 'log') {
+            logger.trace('file type is .log');
+
+            // Set up some pattern matching expressions
+            var timestampPattern1 = new RegExp(/^@(\D+)(\d+\.\d+)/);
+            var timestampPattern2 = new RegExp(/^@(\d+\.\d+)(\D+)/);
+
+            // Look for the timestamp indicator '@' (decimal 64) in the first byte
+            if (completeLineBuffer[0] === 64) {
+                logger.trace('Line starts with @');
+                // Try to match on the first timestamp pattern
+                var ts1Matches = completeLineBuffer.toString().match(timestampPattern1);
+                if (ts1Matches && ts1Matches.length > 0) {
+
+                    // Create the date in the local timezone of the server
+                    dateToReturn = moment.unix(Number(ts1Matches[2]));
+                } else {
+                    // Try the second timestamp pattern
+                    var ts2Matches = completeLineBuffer.toString().match(timestampPattern2);
+                    if (ts2Matches && ts2Matches.length > 0) {
+
+                        // Create the date in the local timezone of the server
+                        dateToReturn = moment.unix(Number(ts2Matches[1]));
+                    }
+                }
+            } else if (completeLineBuffer[0] === 43) {
+                logger.trace('Time increment found');
+                // This means we found a time increment, so grab the number of ticks
+                var numberOfTicks = 1;
+                if (completeLineBuffer.slice(1) && completeLineBuffer.slice(1).length > 0) {
+                    numberOfTicks = parseInt(completeLineBuffer.slice(1));
+                }
+
+                // OK, now with # of ticks, calculate the seconds to add to the last timestamp
+                var millisToAdd = parseInt((numberOfTicks / numberOfTicksPerSecond) * 1000);
+                logger.trace('Will add ' + millisToAdd + ' milliseconds')
+                dateToReturn = moment(timestamp.valueOf() + millisToAdd);
             }
         }
     }
@@ -122,10 +168,143 @@ function updateTimestamp(line, timestamp) {
     return dateToReturn;
 }
 
+/**
+ * This function takes in several parameters and tries to determine 
+ * which actor wrote the line in the log file
+ * @param {*} fileType This is either 'out' or 'log'
+ * @param {*} completeLineBuffer Is the Buffer to search for actors in
+ * @param {*} previousActor Is the last actor to have written a line
+ * @param {*} actorLegend Is a legend that is used in .log files to track actors in a efficient way
+ */
+function findActor(fileType, completeLineBuffer, actorLegend) {
+
+    // Just set to previous actor
+    var actorToReturn;
+
+    // If the file type is .out, use pattern matching to look for an actor
+    if (fileType && fileType == 'out') {
+
+        // This is a regular expression that is used for .out files
+        var currentActorPattern = new RegExp(/<(\S+)>/);
+
+        // Look for a pattern match
+        var actorMatch = completeLineBuffer.toString('ascii').match(currentActorPattern);
+        if (actorMatch && actorMatch.length > 0) {
+            actorToReturn = actorMatch[1];
+        }
+    }
+
+    // Now look for actor if it's a .log file
+    if (fileType && fileType == 'log') {
+        // Check to see if the line is an update for the actor legend
+        if (completeLineBuffer.toString().startsWith('=') && completeLineBuffer.toString().length > 2) {
+            actorLegend[completeLineBuffer.toString().charAt(1)] = completeLineBuffer.toString().substring(2);
+            logger.trace('New actor legend ' + completeLineBuffer.toString().charAt(1) + ' => ' +
+                actorLegend[completeLineBuffer.toString().charAt(1)])
+        }
+
+        // See if the actor is defined in the line. Start by checking 
+        // to make sure the buffer is more than two bytes
+        if (completeLineBuffer && completeLineBuffer.length > 2) {
+            // Check to see if the second byte is a quote.
+            if (completeLineBuffer[1] === 34) {
+                // Create an array and fill with characters until the next quote
+                var actorBuffer = [];
+                for (var i = 2; i < completeLineBuffer.length; i++) {
+                    if (completeLineBuffer[i] === 34) {
+                        break;
+                    } else {
+                        actorBuffer.push(completeLineBuffer[i]);
+                    }
+                }
+                actorToReturn = (new Buffer(actorBuffer)).toString();
+            } else {
+                // If the first character is not a '\' and the second matches a 
+                // key in the actor legend, set the actor
+                if (!completeLineBuffer.toString().startsWith('@') &&
+                    !completeLineBuffer.toString().startsWith('\\') &&
+                    actorLegend[String.fromCharCode(completeLineBuffer[1])]) {
+                    actorToReturn = actorLegend[String.fromCharCode(completeLineBuffer[1])];
+                }
+            }
+        }
+    }
+
+    // Now return the actor
+    return actorToReturn;
+}
+
+/**
+ * This method takes in the type of file being parsed, the buffer line and
+ * the JSON object that contains the lookup of actors and then returns just
+ * the Buffer that has the body of the message
+ * @param {string} fileType 
+ * @param {Buffer} completeLineBuffer 
+ * @param {Object} actorLegend 
+ */
+function getMessageBody(fileType, completeLineBuffer, actorLegend) {
+
+    // The message body to return
+    var messageBody;
+
+    // If the file is a .out file
+    if (fileType == 'out') {
+        // Convert the buffer to a string
+        var tempString = completeLineBuffer.toString();
+
+        // Just remove the stuff before the first space in the string
+        messageBody = Buffer.from(tempString.substring(tempString.indexOf(' ')+1));
+    } else {
+        if (fileType == 'log') {
+            // Assign the whole buffer to start
+            messageBody = completeLineBuffer;
+
+            // First, look for any special characters that we need to remove from the
+            // front of the bugger
+            if (completeLineBuffer[0] === 33 ||
+                completeLineBuffer[0] === 35 ||
+                completeLineBuffer[0] === 126 ||
+                completeLineBuffer[0] === 96 ||
+                completeLineBuffer[0] === 46) {
+                // Remove the first character
+                messageBody = completeLineBuffer.slice(1);
+            }
+
+            // Check to make sure the buffer is more than one byte
+            if (messageBody && messageBody.length > 1) {
+
+                // Check to see if the first byte is a quote.
+                if (messageBody[0] === 34) {
+                    var quoteLength = 1;
+                    // Search for second quote
+                    for (var i = 1; i < messageBody.length; i++) {
+                        quoteLength++;
+                        if (messageBody[i] === 34) {
+                            break;
+                        }
+                    }
+                    // Now strip off the quoted part
+                    messageBody = messageBody.slice(quoteLength);
+                } else {
+                    // Check to see if the first byte, defines an actor
+                    if (actorLegend[String.fromCharCode(messageBody[0])]) {
+                        messageBody = messageBody.slice(1);
+                    }
+                }
+
+                // Now remove any leading backslashes
+                if (messageBody[0] === 92) messageBody = messageBody.slice(1);
+            }
+        }
+    }
+
+    // Return the message body
+    return messageBody;
+}
+
 // This is a function that looks for an error message in the given line and will return an object with
 // a 'message' property and a 'subject' property if an error is found.  It will return nothing if no
 // error was found
-// TODO kgomes WHAT ABOUT ACTORS!!!!!
 function lookForError(line, timestamp) {
     // The handle that will be returned (defaults to nothing)
     var errorToReturn;
@@ -339,24 +518,38 @@ function lookForAncillaryDataPoints(line, timestamp) {
     // The handle that will be returned (defaults to nothing)
     var ancillaryDataToReturn = [];
 
-    // The first thing we need to do is figure out if the line is actually made up
-    // of multiple lines separated by \n.
-    var lineSeparator = '\n';
-
-    // We do need to check for the special case when the line is a record of an email because the \n
-    // is a string in this case so the line separator is a bit different.
+    // Let's first see if there is any indication that the line might contain ancillary data
     if (line.indexOf('Can@') >= 0 || line.indexOf('CTD@') >= 0 || line.indexOf('ISUS@') >= 0) {
-        if (line.indexOf('.email') >= 0) {
-            lineSeparator = '\\n';
-        }
-    }
-    var lineSplitOnNewLines = line.split(lineSeparator);
+        // The first thing we need to do is figure out if the line is actually made up
+        // of multiple lines separated by \n.
+        var lineSeparator;
 
-    // Now iterate over that array of lines to look for ancillary data
-    for (var i = 0; i < lineSplitOnNewLines.length; i++) {
-        var parsedAncillaryData = parseAncillaryDataFromLine(lineSplitOnNewLines[i], timestamp);
-        if (parsedAncillaryData) {
-            ancillaryDataToReturn.push(parsedAncillaryData);
+        // Depending on the configuration of the log file writer, there can be several
+        // line separators.  They can be '\', '\n' or '\\n' so let's start with the most
+        // specific
+        if (line.indexOf('\\n') >= 0) {
+            lineSeparator = '\\n';
+        } else {
+            if (line.indexOf('\n') >= 0) {
+                lineSeparator = '\n';
+            } else {
+                if (line.indexOf('\\') >= 0) {
+                    lineSeparator = '\\';
+                }
+            }
+        }
+
+        // If we have a line separator, try to split the line into separate entries
+        if (lineSeparator) {
+            var lineSplitOnNewLines = line.split(lineSeparator);
+
+            // Now iterate over that array of lines to look for ancillary data
+            for (var i = 0; i < lineSplitOnNewLines.length; i++) {
+                var parsedAncillaryData = parseAncillaryDataFromLine(lineSplitOnNewLines[i], timestamp);
+                if (parsedAncillaryData) {
+                    ancillaryDataToReturn.push(parsedAncillaryData);
+                }
+            }
         }
     }
 
@@ -370,12 +563,13 @@ function lookForProtocolRunStart(line, timestamp) {
     // The protocol run to return
     var protocolRunStart;
 
+    // Debug to indicate might have protocol run
     if (line.indexOf('sampling at most') >= 0) {
         logger.debug('Possible protocol start line:');
         logger.debug(line);
     }
-    // This is the regular expression we will use to look a protocol runs
-    var protocolRunStartPattern = new RegExp(/^\S+\s+(.*)\s+sampling at most (\d+\.*\d*)ml(.*)/);
+    // This is the regular expression we will use to look a protocol runs in out files
+    var protocolRunStartPattern = new RegExp(/^(.*)\s+sampling at most (\d+\.*\d*)ml\s*$/);
 
     // This is the regular expression to indicate a follow on WCR
     var wcrRunStartPattern = new RegExp(/^\S+\s+(.*)Whole\s+Cell\s+Archive\s+sampling\s+(\d+\.*\d*)ml/);
@@ -417,8 +611,8 @@ function lookForSampleStart(line, timestamp) {
 
     // This is the regular expression to use to look for a sample start
     if (line.indexOf(' Sampling') >= 0) {
-        //logger.debug('Possible sample start line:');
-        //logger.debug(line);
+        logger.debug('Possible sample start line:');
+        logger.debug(line);
     }
     var sampleStartPattern = new RegExp(/Sampling\s+(\d+\.*\d*)ml.*$/);
 
@@ -429,8 +623,6 @@ function lookForSampleStart(line, timestamp) {
             'timestamp': timestamp.valueOf(),
             'targetVol': Number(sampleStartMatch[1])
         }
-        //logger.debug('Sample start')
-        //logger.debug(sampleStart);
     }
     // Return the result
     return sampleStart;
@@ -443,8 +635,8 @@ function lookForSampleEnd(line, timestamp) {
 
     // This is the regular expression used to look for sample end
     if (line.indexOf('Sampled') >= 0) {
-        //logger.debug('Possible sample end line:');
-        //logger.debug(line);
+        logger.debug('Possible sample end line:');
+        logger.debug(line);
     }
     var sampleStopPattern = new RegExp(/Sampled\s+(\d+\.*\d*)ml.*$/);
 
@@ -455,8 +647,6 @@ function lookForSampleEnd(line, timestamp) {
             'timestamp': timestamp.valueOf(),
             'actualVol': Number(sampleStopMatch[1])
         }
-        //logger.debug('Sample End');
-        //logger.debug(sampleEnd);
     }
 
     // Return the result
@@ -473,11 +663,10 @@ function lookForImage(line, timestamp) {
 
     // The regular expression to search for images
     if (lineWithoutNewlines.indexOf('image') >= 0) {
-        //logger.debug('Possible image line:');
-        //logger.debug(lineWithoutNewlines);
+        logger.debug('Possible image line:');
+        logger.debug(lineWithoutNewlines);
     }
-    var imagePattern = new RegExp(/Exposing\s+(\d+)x(\d+)\s+pixel\s+(\d+)-bit\s+image\s+for\s+(\d+\.*\d*)\s+seconds\s+(.*)\/([a-zA-Z0-9#]+\.tif)/);
-
+    var imagePattern = new RegExp(/Exposing\s+(\d+)x(\d+)\s+pixel\s+(\d+)-bit\s+image\s+for\s+(\d+\.*\d*)\s+seconds\\*\s*(.*)\/([a-zA-Z0-9#]+\.tif)/);
 
     // Try to match to incoming line
     var imageMatch = lineWithoutNewlines.match(imagePattern);
@@ -491,189 +680,160 @@ function lookForImage(line, timestamp) {
             'imageFilename': imageMatch[6],
             'fullImagePath': imageMatch[5] + '/' + imageMatch[6]
         }
-        //logger.debug('Image:');
-        //logger.debug(image);
     }
 
     // Return the result
     return image;
 }
 
-// This method takes in a line and parses for information and attaches to the parsedObject if found
-function parseLine(parsedObject, line, previousTimestamp, lineNumber, currentActor, localDataDirectory, remoteDataDirectory) {
-    // First update the timestamp for the most recent line
-    var newTimestamp = updateTimestamp(line, previousTimestamp);
+// This method takes in a buffer and parses for information and attaches to the parsedObject if found
+function parseLine(parsedObject, completeLineBuffer, timestamp, lineNumber, currentActor, remoteDataDirectory) {
 
-    // Make sure timestamp came back OK
-    if (newTimestamp) {
-        // OK, so we have an accurate date and time of the incoming log line, let's run through the
-        // test to parse the line
-        var error = lookForError(line, newTimestamp);
-        if (error) {
-            // Add the timestamp and add to the parsed object
-            parsedObject['errors'][error['timestamp']] = {
-                'actor': currentActor,
-                'subject': error['subject'],
-                'message': error['message']
-            }
-            logger.debug('Line: ' + line + ': contains an error');
-            logger.debug(JSON.stringify(parsedObject['errors'][error['timestamp']], null, 2));
-        } else {
-            // Look for ancillary data (can be more than one entry in a line so we get back an array)
-            var ancillaryDataPoints = lookForAncillaryDataPoints(line, newTimestamp);
-            if (ancillaryDataPoints && ancillaryDataPoints.length > 0) {
-                logger.debug('Line: ' + line + ' contains ancillary data points');
-                // Loop over the array of ancillary data points
-                for (var i = 0; i < ancillaryDataPoints.length; i++) {
-                    // Grab the data point
-                    var dataPoint = ancillaryDataPoints[i];
+    // Convert the line into a string
+    var line = completeLineBuffer.toString();
 
-                    // We need to look at each entry of the data point and make sure we register
-                    // that there is this type of data for each point on the parsed object.
-                    var dataPointSource = dataPoint['source'];
-                    logger.trace('dataPointSource = ' + dataPointSource);
+    // OK, so we have an accurate date and time of the incoming log line, let's run through the
+    // test to parse the line
+    var error = lookForError(line, timestamp);
+    if (error) {
+        // Add the timestamp and add to the parsed object
+        parsedObject['errors'][error['timestamp']] = {
+            'actor': currentActor,
+            'subject': error['subject'],
+            'message': error['message']
+        }
+        logger.debug('Line ' + lineNumber + ' contains an error: ' + line);
+        logger.debug(JSON.stringify(parsedObject['errors'][error['timestamp']], null, 2));
+    } else {
+        // Look for ancillary data (can be more than one entry in a line so we get back an array)
+        var ancillaryDataPoints = lookForAncillaryDataPoints(line, timestamp);
+        if (ancillaryDataPoints && ancillaryDataPoints.length > 0) {
+            logger.debug('Line ' + lineNumber + ' contains ancillary data: ' + line);
+            // Loop over the array of ancillary data points
+            for (var i = 0; i < ancillaryDataPoints.length; i++) {
+                // Grab the data point
+                var dataPoint = ancillaryDataPoints[i];
+                logger.debug(dataPoint);
 
-                    // Grab the keys of the data object which are the units of each data point
-                    var unitKeys = Object.keys(dataPoint['data']);
+                // We need to look at each entry of the data point and make sure we register
+                // that there is this type of data for each point on the parsed object.
+                var dataPointSource = dataPoint['source'];
+                logger.trace('dataPointSource = ' + dataPointSource);
 
-                    // Now loop over those unit keys
-                    for (var j = 0; j < unitKeys.length; j++) {
-                        logger.trace('unitKey = ' + unitKeys[j]);
-                        // Check to see if the ancillary data lookup on the parsed object
-                        // contains an entry for this source-unit combination
-                        if (parsedObject['ancillaryData'] &&
-                            parsedObject['ancillaryData'][dataPointSource] &&
-                            parsedObject['ancillaryData'][dataPointSource][unitKeys[j]]) {
-                            logger.trace('Entry for ' + dataPointSource + '->' + unitKeys[j] + ' is already on parsed object');
-                        } else {
-                            // Need to add it from the lookup
-                            if (!parsedObject['ancillaryData'][dataPointSource]) parsedObject['ancillaryData'][dataPointSource] = {};
-                            parsedObject['ancillaryData'][dataPointSource][unitKeys[j]] = ancillaryDataLookup[dataPointSource][unitKeys[j]];
-                        }
-                    }
-                    // Make sure there is an object for the source
-                    if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']]) {
-                        parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']] = {};
-                    }
-                    // Now add the data using timestamp as key (if it's not there already)
-                    if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']]) {
-                        parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']] = ancillaryDataPoints[i]['data'];
+                // Grab the keys of the data object which are the units of each data point
+                var unitKeys = Object.keys(dataPoint['data']);
+
+                // Now loop over those unit keys
+                for (var j = 0; j < unitKeys.length; j++) {
+                    logger.trace('unitKey = ' + unitKeys[j]);
+                    // Check to see if the ancillary data lookup on the parsed object
+                    // contains an entry for this source-unit combination
+                    if (parsedObject['ancillaryData'] &&
+                        parsedObject['ancillaryData'][dataPointSource] &&
+                        parsedObject['ancillaryData'][dataPointSource][unitKeys[j]]) {
+                        logger.trace('Entry for ' + dataPointSource + '->' + unitKeys[j] + ' is already on parsed object');
                     } else {
-                        logger.debug('Line ' + lineNumber + ': ' + ancillaryDataPoints[i]['source'] + ' data at ' + moment.unix(ancillaryDataPoints[i]['timestamp'] / 1000).format() + ' already parsed, will skip');
+                        // Need to add it from the lookup
+                        if (!parsedObject['ancillaryData'][dataPointSource]) parsedObject['ancillaryData'][dataPointSource] = {};
+                        parsedObject['ancillaryData'][dataPointSource][unitKeys[j]] = ancillaryDataLookup[dataPointSource][unitKeys[j]];
                     }
                 }
-            } else {
-                // Let's see if the line indicates the start of a protocol(s)
-                var protocolRunStart = lookForProtocolRunStart(line, newTimestamp);
-                if (protocolRunStart) {
-                    // // Add the protocol run start to the list of protocol runs
-                    parsedObject['protocolRuns'][protocolRunStart['timestamp']] = {
-                        'actor': currentActor,
-                        'name': protocolRunStart['name'],
-                        'targetVol': protocolRunStart['targetVol']
-                    };
-                    logger.debug('Line: ' + line + ': contains a protocol run start');
-                    logger.debug(JSON.stringify(parsedObject['protocolRuns'][protocolRunStart['timestamp']], null, 2));
+                // Make sure there is an object for the source
+                if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']]) {
+                    parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']] = {};
+                }
+                // Now add the data using timestamp as key (if it's not there already)
+                if (!parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']]) {
+                    parsedObject['ancillaryDataPoints'][ancillaryDataPoints[i]['source']][ancillaryDataPoints[i]['timestamp']] = ancillaryDataPoints[i]['data'];
                 } else {
-                    // Let's look for sample start
-                    var sampleStart = lookForSampleStart(line, newTimestamp);
-                    if (sampleStart) {
-                        // Add a sample indexed by start time
-                        parsedObject['samples'][sampleStart['timestamp']] = {
-                            'actor': currentActor,
-                            'targetVol': sampleStart['targetVol']
-                        }
-                        logger.debug('Line: ' + line + ': contains a stample start');
-                        logger.debug(JSON.stringify(parsedObject['samples'][sampleStart['timestamp']], null, 2));
-                    } else {
-                        // Let's look for the end of a sample
-                        var sampleEnd = lookForSampleEnd(line, newTimestamp);
-                        if (sampleEnd) {
-                            // We need to find the most recent sample that was started so we can complete it
-                            // Grab all the timestamp keys
-                            var timestamps = Object.keys(parsedObject['samples']);
-                            if (timestamps && timestamps.length > 0) {
-                                // Sort the timestamps
-                                timestamps.sort();
-                                // Grab the most recent timestamp
-                                var lastestSampleTimestamp = timestamps[timestamps.length - 1];
-                                var latestSample = parsedObject['samples'][lastestSampleTimestamp];
-                                if (latestSample && !latestSample['actualVol']) {
-                                    parsedObject['samples'][lastestSampleTimestamp]['actualVol'] = sampleEnd['actualVol'];
-                                    parsedObject['samples'][lastestSampleTimestamp]['endts'] = Number(sampleEnd['timestamp']);
-                                    logger.debug('Line ' + line + ': contains a sample end');
-                                    logger.debug(JSON.stringify(parsedObject['samples'][lastestSampleTimestamp], null, 2));
-                                } else {
-                                    //logger.error('Either could not find latest sample or it already has actualVol!');
-                                }
+                    logger.debug('Line ' + lineNumber + ': ' + ancillaryDataPoints[i]['source'] + ' data at ' + moment.unix(ancillaryDataPoints[i]['timestamp'] / 1000).format() + ' already parsed, will skip');
+                }
+            }
+        } else {
+            // Let's see if the line indicates the start of a protocol(s)
+            var protocolRunStart = lookForProtocolRunStart(line, timestamp);
+            if (protocolRunStart) {
+                // // Add the protocol run start to the list of protocol runs
+                parsedObject['protocolRuns'][protocolRunStart['timestamp']] = {
+                    'actor': currentActor,
+                    'name': protocolRunStart['name'],
+                    'targetVol': protocolRunStart['targetVol']
+                };
+                logger.debug('Line ' + lineNumber + ' contains a procotocol start: ' + line);
+                logger.debug(JSON.stringify(parsedObject['protocolRuns'][protocolRunStart['timestamp']], null, 2));
+            } else {
+                // Let's look for sample start
+                var sampleStart = lookForSampleStart(line, timestamp);
+                if (sampleStart) {
+                    // Add a sample indexed by start time
+                    parsedObject['samples'][sampleStart['timestamp']] = {
+                        'actor': currentActor,
+                        'targetVol': sampleStart['targetVol']
+                    }
+                    logger.debug('Line ' + lineNumber + ' contains a sample start' + line);
+                    logger.debug(JSON.stringify(parsedObject['samples'][sampleStart['timestamp']], null, 2));
+                } else {
+                    // Let's look for the end of a sample
+                    var sampleEnd = lookForSampleEnd(line, timestamp);
+                    if (sampleEnd) {
+                        // We need to find the most recent sample that was started so we can complete it
+                        // Grab all the timestamp keys
+                        var timestamps = Object.keys(parsedObject['samples']);
+                        if (timestamps && timestamps.length > 0) {
+                            // Sort the timestamps
+                            timestamps.sort();
+                            // Grab the most recent timestamp
+                            var lastestSampleTimestamp = timestamps[timestamps.length - 1];
+                            var latestSample = parsedObject['samples'][lastestSampleTimestamp];
+                            if (latestSample && !latestSample['actualVol']) {
+                                parsedObject['samples'][lastestSampleTimestamp]['actualVol'] = sampleEnd['actualVol'];
+                                parsedObject['samples'][lastestSampleTimestamp]['endts'] = Number(sampleEnd['timestamp']);
+                                logger.debug('Line ' + lineNumber + ' contains a sample end: ' + line);
+                                logger.debug(JSON.stringify(parsedObject['samples'][lastestSampleTimestamp], null, 2));
                             } else {
-                                //logger.error('Recording a sample end, but I do not have any started samples!');
+                                //logger.error('Either could not find latest sample or it already has actualVol!');
                             }
                         } else {
-                            // Look for an image
-                            var image = lookForImage(line, newTimestamp);
-                            if (image) {
+                            //logger.error('Recording a sample end, but I do not have any started samples!');
+                        }
+                    } else {
+                        // Look for an image
+                        var image = lookForImage(line, timestamp);
+                        if (image) {
 
-                                // Before attaching the image, we need to gather more information about the image.
+                            // Before attaching the image, we need to gather more information about the image.
 
-                                // Let's first check and see if the remote directory is defined in as that will help us
-                                // build local paths to the file if it was downloaded
-                                if (remoteDataDirectory) {
+                            // Let's first check and see if the remote directory is defined in as that will help us
+                            // build local paths to the file if it was downloaded
+                            if (remoteDataDirectory) {
 
-                                    // Get the length of the remote file path
-                                    var remoteDataDirectoryLength = remoteDataDirectory.length;
+                                // Get the length of the remote file path
+                                var remoteDataDirectoryLength = remoteDataDirectory.length;
 
-                                    // Use the length of the remote path to grab just the relative path of the image on the
-                                    // remote host
-                                    var remoteRelativeImagePath = image['fullImagePath'].substring(remoteDataDirectoryLength + 1);
-
-                                    // Break that path into parts so we can build a local data path to where the equivalent file should
-                                    var remoteRelativeImagePathArray = remoteRelativeImagePath.split('/');
-
-                                    // Now start building the local path, but just starting with the base data directory for the
-                                    // deployment
-                                    var localImagePath = localDataDirectory;
-
-                                    // Loop over the relative path parts and add to the local path
-                                    for (var i = 0; i < remoteRelativeImagePathArray.length; i++) {
-                                        localImagePath = path.join(localImagePath, remoteRelativeImagePathArray[i]);
-                                    }
-                                    image['localImagePath'] = localImagePath;
-
-                                    // Check to see if the file does exist locally and set the downloaded flag
-                                    var imageExistsLocally = fs.existsSync(localImagePath);
-                                    if (imageExistsLocally) {
-                                        image['downloaded'] = true;
-                                    } else {
-                                        image['downloaded'] = false;
-                                    }
-
-                                    // Using the local image path, create the equivalent path where the JPG version should be
-                                    var localJPGPath = localImagePath.substring(0, localImagePath.lastIndexOf('raw')) +
-                                        'processed' +
-                                        localImagePath.substring(localImagePath.lastIndexOf('raw') + 3).replace('.tif', '.jpg');
-                                    image['localJPGPath'] = localJPGPath;
-
-                                }
-
-                                parsedObject['images'][image['timestamp']] = JSON.parse(JSON.stringify(image));
-                                logger.debug('Line ' + line + ': contains an image');
-                                logger.debug(JSON.stringify(parsedObject['images'][image['timestamp']], null, 2));
+                                // Use the length of the remote path to grab just the relative path of the image on the
+                                // remote host
+                                var remoteRelativeImagePath = image['fullImagePath'].substring(remoteDataDirectoryLength + 1);
+                                image['relativePath'] = remoteRelativeImagePath;
                             }
+
+                            parsedObject['images'][image['timestamp']] = JSON.parse(JSON.stringify(image));
+                            logger.debug('Line ' + lineNumber + ' contains and image: ' + line);
+                            logger.debug(JSON.stringify(parsedObject['images'][image['timestamp']], null, 2));
                         }
                     }
                 }
             }
         }
     }
-
-    // Now return the timestamp
-    return newTimestamp
 }
 
-// This function parses a .out file synchronously and returns a JSON
-// object with all the parsed data attached
-function parseFileSync(outFile, localDataDirectory, remoteDataDirectory) {
+// This function parses a file synchronously and returns a JSON object with all 
+// the parsed data attached
+function parseFileSync(fileToParse, localDataDirectory, remoteDataDirectory, numberOfTicksPerSecond) {
+
+    // Set the number of ticks per second
+    var logFileNumberOfTicksPerSecond = Number(numberOfTicksPerSecond) || 100;
+
     // This is an object where the parsed data will be stored
     var parsedObject = {
         protocolRuns: {},
@@ -685,50 +845,141 @@ function parseFileSync(outFile, localDataDirectory, remoteDataDirectory) {
     }
 
     // Let's make sure the file exists first
-    if (fs.existsSync(outFile)) {
-        logger.debug('Will parse out file ' + outFile);
+    if (fs.existsSync(fileToParse)) {
+        logger.debug('Will parse file ' + fileToParse);
 
-        // Create line reader
-        const liner = new lineByLine(outFile);
+        // First determine which type of file is being parsed, a .out or a .log
+        var fileType;
+        if (fileToParse.endsWith('.log')) fileType = 'log';
+        if (fileToParse.endsWith('.out')) fileType = 'out';
+        logger.debug('File being parsed is of type ' + fileType);
 
-        // A couple of variables to keep track of things
-        var previousLine;
-        var previousLineTimestamp;
-        var line;
-        var lineNumber = 0;
-        var currentActor = '';
-        var currentActorPattern = new RegExp(/<(\S+)>/);
+        // Make sure we found a file type
+        if (fileType) {
 
-        // Loop over file line by line
-        while (line = liner.next()) {
-            // Bump the line number
-            lineNumber++;
-            logger.trace('Line ' + lineNumber + ': ' + line.toString('ascii'));
+            // This is an array of line segments used to concatenate multiline entries in .log files
+            var lineSegments = [];
 
-            // Check to see if we have reached the end of the file or it's a new line
-            if (!line || line.toString('ascii').startsWith('@')) {
+            // This is a variable to use to track multiline entries in .out files
+            //var previousLine;
 
-                // Look for a change in current actor
-                var currentActorMatch = line.toString('ascii').match(currentActorPattern);
-                if (currentActorMatch && currentActorMatch.length > 0) {
-                    currentActor = currentActorMatch[1];
+            // This is the Moment object that contains the most recent date and time parsed
+            var previousTimestamp;
+
+            // This variable holds the most recent line read
+            var line;
+
+            // This variable holds the number of the most recent line read
+            var lineNumber = 0;
+
+            // The is an object that keeps track of the current actor aliases that are used
+            // in .log files to keep track of actors in an efficient way
+            var actorLegend = {};
+
+            // This is a variable that holds the most recent actor
+            var currentActor = '';
+
+            // read contents of the file
+            const data = fs.readFileSync(fileToParse, 'UTF-8');
+
+            // // split the contents by new line
+            const lines = data.split(/\n/);
+            logger.debug('readSync give a grand total of ' + lines.length + ' lines');
+
+            // This is a flag to indicate the the line segments contain everything to be parsed
+            var readyToParseBuffer = false;
+
+            // Loop over file line by line
+            lines.forEach((lineString) => {
+                // Convert to Buffer
+                var line = Buffer.from(lineString);
+
+                // First, bump the line number
+                lineNumber++;
+                logger.trace('Line ' + lineNumber + ': ' + line.toString('ascii'));
+
+                // Before we actually parse information out of a line from a log file, we need 
+                // to determine if the current line indicates a completion of a line
+                // read.  This is important because log files can contain multi-line entries
+                // and the way we look for them is different depending on the file type
+                if (fileType == 'out') {
+
+                    // If the current line starts with a '@', that means the previous line
+                    // is complete and is ready for parsgin
+                    if (!line.toString('ascii').startsWith('@')) {
+                        lineSegments.push(line);
+                    } else {
+                        // Set the flag that the line buffer is ready to parse
+                        readyToParseBuffer = true;
+                    }
+                } else {
+                    if (fileType == 'log') {
+                        // Push the line on the segment array
+                        lineSegments.push(line);
+
+                        // If there is no line continuation at the end of the line, we
+                        // are done reading all line segments
+                        if (line[line.length - 1] !== 92) {
+                            readyToParseBuffer = true;
+                        }
+                    }
                 }
 
-                // Call the method to parse the line and get back the updated timestamp of the line
-                if (previousLine) {
-                    previousLineTimestamp = parseLine(parsedObject, previousLine, previousLineTimestamp,
-                        lineNumber, currentActor, localDataDirectory, remoteDataDirectory);
-                }
+                // Now check to see if the ready to parse flag is set
+                if (readyToParseBuffer) {
 
-                // Now assign the new line to the placeholder
-                previousLine = line.toString('ascii');
-            } else {
-                previousLine += '\n' + line.toString('ascii');
+                    // Grab the complete buffer from the segments
+                    var completeLineBuffer = Buffer.concat(lineSegments);
+                    logger.trace('Ready to parse line ' + lineNumber + ': ' + completeLineBuffer.toString());
+
+                    // First thing to do is see if the line has any indication of a timestamp update
+                    var newTimestamp = updateTimestamp(fileType, completeLineBuffer, previousTimestamp, logFileNumberOfTicksPerSecond);
+                    if (newTimestamp) {
+                        logger.trace('Timestamp was updated to ' + newTimestamp.format());
+                        previousTimestamp = newTimestamp;
+                    }
+
+                    // Now try to find if there is an actor specified in the given line
+                    var actorFromLine = findActor(fileType, completeLineBuffer, actorLegend);
+                    if (actorFromLine) {
+                        currentActor = actorFromLine;
+                        logger.trace('Actor set to ' + currentActor);
+                    }
+
+                    // Now that we have the full line, the timestamp and the actor, let's strip off the front part of the line and
+                    // just get the body of the message to parse.
+                    var messageBody = getMessageBody(fileType, completeLineBuffer, actorLegend);
+                    logger.trace('Extracted message body was ' + messageBody.toString());
+
+                    // Call the method to parse the line into the data object
+                    parseLine(parsedObject, messageBody, previousTimestamp, lineNumber, currentActor, remoteDataDirectory);
+
+                    // Now reset the line buffer depending on the file type
+                    if (fileType == 'out') {
+                        lineSegments = [line];
+                    } else {
+                        if (fileType == 'log') {
+                            lineSegments = [];
+                        }
+                    }
+
+                    // Reset the flag to parse the line buffer.
+                    readyToParseBuffer = false;
+                }
+            });
+
+            // Becuase in .out files, we had to read a line ahead before knowing if the line was complete,
+            // that leaves the last buffer un-parsed, so let's parse it
+            if (fileType == 'out') {
+                var completeLineBuffer = Buffer.concat(lineSegments);
+                logger.trace('Parsing last line of .out file ' + lineNumber + ': ' + completeLineBuffer.toString());
             }
 
+        } else {
+            logger.warn('A file type could not be determined for file ' + fileToParse);
         }
     } else {
-        logger.warn('File submitted (' + outFile + ') does not exist');
+        logger.warn('File submitted (' + fileToParse + ') does not exist');
     }
 
     // Now return the parsed object
