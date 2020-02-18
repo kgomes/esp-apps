@@ -158,13 +158,13 @@ function DeploymentFileSync(opts, basedir, logDir) {
                                         logger.debug("All remote files should be syncd for deployment " +
                                             deploymentToSync.name);
                                         // Now emit the listing of files that were sync'd
-                                        for (var syncdFile in filesSynchronized) {
-                                            me.emit('ftpFileUpdated', {
-                                                deployment: deploymentToSync,
-                                                file: syncdFile,
-                                                stats: filesSynchronized[syncdFile]
-                                            });
-                                        }
+                                        // for (var syncdFile in filesSynchronized) {
+                                        //     me.emit('ftpFileUpdated', {
+                                        //         deployment: deploymentToSync,
+                                        //         file: syncdFile,
+                                        //         stats: filesSynchronized[syncdFile]
+                                        //     });
+                                        // }
                                     }
 
                                     // Since all the files should be syncd, clear the sync and move on
