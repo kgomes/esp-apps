@@ -116,7 +116,7 @@ var parseDeploymentData = function (deployment) {
 };
 
 // Call the API to get a list of the open deployments
-axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
+axios.get(espCfg.hostBaseUrl + '/deployments?openOnly=true')
     .then(function (response) {
         // Grab the array of Deployments
         var openDeployments = response.data;
@@ -130,7 +130,7 @@ axios.get(espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments?openOnly=true')
                 // Now the deployment object should have all the information from all
                 // parsed files.
                 // Now call the API to persist any changes to the deployment
-                var patchUrl = espCfg.hostBaseUrl + ':' + espCfg.port + '/deployments/' + openDeployments[i]['_id'];
+                var patchUrl = espCfg.hostBaseUrl + '/deployments/' + openDeployments[i]['_id'];
                 axios.patch(patchUrl, openDeployments[i])
                     .then(function (response) {
                         logger.debug('Done processing deployment');
