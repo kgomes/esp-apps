@@ -375,9 +375,9 @@ function mergeDeployments(source, target) {
                 }
 
                 // If there is a target and actual volume, calculate the difference
-                if (sourceSample['targetVol'] && sourceSample['actualVol'] && !sourceSample['volDiff']) {
+                if (sourceSample['targetVolume'] && sourceSample['actualVolume'] && !sourceSample['volDiff']) {
                     try {
-                        sourceSample['volDiff'] = (Number(sourceSample['targetVol']) - Number(sourceSample['actualVol'])).toFixed(2);
+                        sourceSample['volDiff'] = (Number(sourceSample['targetVolume']) - Number(sourceSample['actualVolume'])).toFixed(2);
                     } catch (err) {
                         logger.warn('Error caught trying to calculate difference between ' +
                             'target and actual volume for sample');
@@ -454,7 +454,6 @@ function mergeDeployments(source, target) {
                         new: JSON.parse(JSON.stringify(target['images'][imageTimestamps[i]]))
                     }
                     logger.debug('Adding image');
-                    logger.debug()
                 } else {
                     // Should do a merge on the properties of the source to target image
                     if (source['images'][imageTimestamps[i]]['xPixels']
@@ -523,6 +522,8 @@ function mergeDeployments(source, target) {
             if (!target['ancillaryData']) {
                 target['ancillaryData'] = {};
             }
+            logger.debug('Source ancillary data lookup');
+            logger.debug(JSON.stringify(source['ancillaryData'], null, 2));
 
             // Now let's look over the ancillary data source on the source deployment
             var ancillarySources = Object.keys(source['ancillaryData']);
@@ -537,7 +538,7 @@ function mergeDeployments(source, target) {
                 // Now loop over the units lookups on that source
                 var ancillarySourceUnitKeys = Object.keys(source['ancillaryData'][ancillarySource]);
                 for (var j = 0; j < ancillarySourceUnitKeys.length; j++) {
-
+                    logger.debug('Working with ancillary data unit key: ' + ancillarySourceUnitKeys[j]);
                     // Make sure the target has an object associated with the source and unit key
                     if (!target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]])
                         target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]] = {};
