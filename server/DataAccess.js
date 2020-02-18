@@ -1227,7 +1227,7 @@ function DataAccess(opts, logDir) {
                                         color: 'good',
                                         text: 'Actor: ' + messages[messageTimestamps[i]]['new']['actor'] +
                                             '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
-                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol']
+                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVolume']
                                     }
                                 ]
                             }
@@ -1256,8 +1256,8 @@ function DataAccess(opts, logDir) {
                                             '\nStart: ' + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
                                             '\nEnd: ' + moment(Number(messages[messageTimestamps[i]]['new']['endts'])).format('YYYY-MM-DD HH:mm:ss ZZ') +
                                             '\nTook: ' + messages[messageTimestamps[i]]['new']['durationInMinutes'] + ' minutes' +
-                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVol'] +
-                                            '\nActual Volume: ' + messages[messageTimestamps[i]]['new']['actualVol'] +
+                                            '\nTarget Volume: ' + messages[messageTimestamps[i]]['new']['targetVolume'] +
+                                            '\nActual Volume: ' + messages[messageTimestamps[i]]['new']['actualVolume'] +
                                             '\nVol Diff: ' + + messages[messageTimestamps[i]]['new']['volDiff'] + ' ml'
                                     }
                                 ]
@@ -1491,6 +1491,14 @@ function DataAccess(opts, logDir) {
                                                                 logger.error(err);
                                                             } else {
                                                                 logger.debug('Save successful after syncing ancillary stats');
+                                
+                                                                // And lastly, sync the ancillary data file with data from the database
+                                                                me.syncAncillaryDataFileWithDatabase(targetDeployment, me.dataDir, function(err){
+                                                                    if (err){
+                                                                        logger.error('Error trying to sync ancillary data to file');
+                                                                        logger.error(err);
+                                                                    }
+                                                                });
                                                             }
                                                         });
                                                     })
