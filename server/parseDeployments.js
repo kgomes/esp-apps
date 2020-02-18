@@ -26,7 +26,7 @@ const deploymentUtils = require('./DeploymentUtils');
 // The parser for .out files
 const outParser = require('./OutParser');
 outParser.setLogDirectory(espCfg['logDir']);
-outParser.setLogLevel('debug');
+outParser.setLogLevel('info');
 outParser.setAncillaryDataLookup(espCfg['ancillaryDataLookup']);
 
 // Import the logging library
@@ -89,7 +89,8 @@ var parseDeploymentData = function (deployment) {
                     logger.debug('Local path to same file is: ' + localPathOfFileToParse + ' and it exists');
 
                     // Parse the file
-                    var parsedObject = outParser.parseFileSync(localPathOfFileToParse, deployment['esp']['dataDirectory']);
+                    var parsedObject = outParser.parseFileSync(localPathOfFileToParse, deployment['esp']['dataDirectory'],
+                        Number(deployment['esp']['numberOfTicksPerSecond']) || 100);
 
                     // If a parsed object was returned, merge it with the incoming deployment
                     if (parsedObject) {
