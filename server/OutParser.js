@@ -1,5 +1,5 @@
 /*
- * This is a module (CommonJS format) that is responsible for dealing with .out files.  
+ * This is a module (CommonJS format) that is responsible for dealing with .out and .log files.  
  * .out files are basically log files from the ESP but have been run through the 'dumplog'
  * utility, which makes them more human readable.  This class has the knowledge of how to 
  * parse those files and report back all the contents of that log file so that a calling 
@@ -253,7 +253,7 @@ function getMessageBody(fileType, completeLineBuffer, actorLegend) {
         var tempString = completeLineBuffer.toString();
 
         // Just remove the stuff before the first space in the string
-        messageBody = Buffer.from(tempString.substring(tempString.indexOf(' ')+1));
+        messageBody = Buffer.from(tempString.substring(tempString.indexOf(' ') + 1));
     } else {
         if (fileType == 'log') {
             // Assign the whole buffer to start
@@ -384,6 +384,8 @@ function parseAncillaryDataPayload(timestamp, source, hour, minute, second, payl
                 var units = variableMatcher[2];
                 // Remove any quotes from units
                 units = units.replace('"', '');
+                // Remove any trailing backslashes
+                units = units.replace(/\\$/, "");
                 parseResults['data'][units] = Number(variableMatcher[1]);
             }
         }
@@ -621,7 +623,7 @@ function lookForSampleStart(line, timestamp) {
     if (sampleStartMatch && sampleStartMatch.length > 0) {
         sampleStart = {
             'timestamp': timestamp.valueOf(),
-            'targetVol': Number(sampleStartMatch[1])
+            'targetVolume': Number(sampleStartMatch[1])
         }
     }
     // Return the result
@@ -645,7 +647,7 @@ function lookForSampleEnd(line, timestamp) {
     if (sampleStopMatch && sampleStopMatch.length > 0) {
         sampleEnd = {
             'timestamp': timestamp.valueOf(),
-            'actualVol': Number(sampleStopMatch[1])
+            'actualVolume': Number(sampleStopMatch[1])
         }
     }
 
@@ -768,7 +770,7 @@ function parseLine(parsedObject, completeLineBuffer, timestamp, lineNumber, curr
                     // Add a sample indexed by start time
                     parsedObject['samples'][sampleStart['timestamp']] = {
                         'actor': currentActor,
-                        'targetVol': sampleStart['targetVol']
+                        'targetVolume': sampleStart['targetVolume']
                     }
                     logger.debug('Line ' + lineNumber + ' contains a sample start' + line);
                     logger.debug(JSON.stringify(parsedObject['samples'][sampleStart['timestamp']], null, 2));
@@ -785,13 +787,13 @@ function parseLine(parsedObject, completeLineBuffer, timestamp, lineNumber, curr
                             // Grab the most recent timestamp
                             var lastestSampleTimestamp = timestamps[timestamps.length - 1];
                             var latestSample = parsedObject['samples'][lastestSampleTimestamp];
-                            if (latestSample && !latestSample['actualVol']) {
-                                parsedObject['samples'][lastestSampleTimestamp]['actualVol'] = sampleEnd['actualVol'];
+                            if (latestSample && !latestSample['actualVolume']) {
+                                parsedObject['samples'][lastestSampleTimestamp]['actualVolume'] = sampleEnd['actualVolume'];
                                 parsedObject['samples'][lastestSampleTimestamp]['endts'] = Number(sampleEnd['timestamp']);
                                 logger.debug('Line ' + lineNumber + ' contains a sample end: ' + line);
                                 logger.debug(JSON.stringify(parsedObject['samples'][lastestSampleTimestamp], null, 2));
                             } else {
-                                //logger.error('Either could not find latest sample or it already has actualVol!');
+                                //logger.error('Either could not find latest sample or it already has actualVolume!');
                             }
                         } else {
                             //logger.error('Recording a sample end, but I do not have any started samples!');
@@ -801,14 +803,15 @@ function parseLine(parsedObject, completeLineBuffer, timestamp, lineNumber, curr
                         var image = lookForImage(line, timestamp);
                         if (image) {
 
-                            // Before attaching the image, we need to gather more information about the image.
-
                             // Let's first check and see if the remote directory is defined in as that will help us
                             // build local paths to the file if it was downloaded
                             if (remoteDataDirectory) {
+                                logger.debug('remote data directory is ' + remoteDataDirectory);
 
                                 // Get the length of the remote file path
                                 var remoteDataDirectoryLength = remoteDataDirectory.length;
+                                logger.debug('Remote data directory length is ' + remoteDataDirectoryLength);
+                                logger.debug('fullImagePath is ' + image['fullImagePath']);
 
                                 // Use the length of the remote path to grab just the relative path of the image on the
                                 // remote host
@@ -827,9 +830,136 @@ function parseLine(parsedObject, completeLineBuffer, timestamp, lineNumber, curr
     }
 }
 
+// This function takes in a CVS file and parses out the ancillary data from it and attaches
+// it to the supplied object.
+function parseCSVFile(parsedObject, fileToParse) {
+
+    // The first thing to do is figure out what the source is and for now, we will
+    // just use the name of the file as the source
+    var source;
+    if (path.basename(fileToParse) == 'CTD.csv') {
+        source = 'CTD'
+    }
+
+    // If a source was determined, parse the file
+    if (source) {
+
+        // Import the parser
+        var parse = require('csv-parse/lib/sync');
+
+        // Read all the records into memory
+        const records = parse(fs.readFileSync(fileToParse));
+        logger.debug('Records read from file');
+        logger.debug(records);
+
+        // Let's grab the first row
+        var firstRow = records[0];
+
+        // Loop over the entries, looking for timestamp header
+        var timestampColumn;
+        var timestampHeader;
+        for (var i = 0; i < firstRow.length; i++) {
+            // Look for the DOY (Day of year)
+            if (firstRow[i] == 'Epoch seconds' ||
+                firstRow[i] == 'Epoch millis' ||
+                firstRow[i] == 'Date') {
+                timestampColumn = i;
+                timestampHeader = firstRow[i];
+                logger.debug('I think timestamp column is ' + i + ' with header ' + firstRow[i]);
+                break;
+            }
+        }
+
+        // Check to see if we think we found timestamp column
+        if (timestampColumn >= 0) {
+
+            // OK, we think we have timestamp column, let's iterate over the data rows
+            for (var i = 1; i < records.length; i++) {
+                // Grab the row
+                var record = records[i];
+
+                // Grab the timestamp first
+                var timestamp;
+                if (timestampHeader == 'Epoch seconds') {
+                    try {
+                        timestamp = moment.unix(Number(record[timestampColumn]));
+                    } catch (err) {
+                        logger.warn('Error caught trying to convert from epoch seconds to date: ' + record[timestampColumn]);
+                        logger.warn(err);
+                    }
+                } else if (timestampHeader == 'Epoch millis') {
+                    try {
+                        timestamp = moment(Number(record[timestampColumn]));
+                    } catch (err) {
+                        logger.warn('Error caught trying to convert from epoch millis to date: ' + record[timestampColumn]);
+                        logger.warn(err);
+                    }
+                } else if (timestampHeader == 'Date') {
+                    try {
+                        timestamp = moment(record[timestampColumn]);
+                    } catch (err) {
+                        logger.warn('Error caught trying to convert from iso to date: ' + record[timestampColumn]);
+                        logger.warn(err);
+                    }
+                }
+
+                // Now iterate over the columns
+                if (timestamp) {
+                    logger.trace('Timestamp for row ' + i + ' is ' + timestamp.format());
+                    for (var j = 0; j < record.length; j++) {
+                        if (j != timestampColumn) {
+                            // Grab the header of the row
+                            var columnHeader = records[0][j];
+
+                            // Grab the var name and the units
+                            var varUnitsRegExp = new RegExp(/.*\((.*)\)/);
+
+                            // Create a matcher
+                            var varUnitsMatcher = columnHeader.match(varUnitsRegExp);
+
+                            // Check to see if a match occurred
+                            if (varUnitsMatcher && varUnitsMatcher.length > 0) {
+                                var units = varUnitsMatcher[1].trim();
+
+                                // Now that I have the units, I need to first make sure the incoming
+                                // parsed object has the right lookup for this ancillary data attached
+                                if (parsedObject['ancillaryData'] &&
+                                    parsedObject['ancillaryData'][source] &&
+                                    parsedObject['ancillaryData'][source][units]) {
+                                    logger.trace('Entry for ' + source + '->' + units + ' is already on parsed object');
+                                } else {
+                                    // Need to add it from the lookup
+                                    if (!parsedObject['ancillaryData'][source]) parsedObject['ancillaryData'][source] = {};
+                                    parsedObject['ancillaryData'][source][units] = ancillaryDataLookup[source][units];
+                                }
+
+                                // Make sure there is an object for the source
+                                if (!parsedObject['ancillaryDataPoints'][source]) {
+                                    parsedObject['ancillaryDataPoints'][source] = {};
+                                }
+                                // Now add the data using timestamp as key (if it's not there already)
+                                if (!parsedObject['ancillaryDataPoints'][source][timestamp.valueOf()]) {
+                                    parsedObject['ancillaryDataPoints'][source][timestamp.valueOf()] = {};
+                                }
+
+                                // Now add the data
+                                parsedObject['ancillaryDataPoints'][source][timestamp.valueOf()][units] = Number(record[j]);
+                            }
+                        }
+                    }
+                    logger.trace('Added data point at time ' + timestamp.format());
+                    logger.trace(parsedObject['ancillaryDataPoints'][source][timestamp.valueOf()]);
+                }
+            }
+        } else {
+            logger.warn('Could not find a timestamp column in ' + fileToParse);
+        }
+    }
+}
+
 // This function parses a file synchronously and returns a JSON object with all 
 // the parsed data attached
-function parseFileSync(fileToParse, localDataDirectory, remoteDataDirectory, numberOfTicksPerSecond) {
+function parseFileSync(fileToParse, remoteDataDirectory, numberOfTicksPerSecond) {
 
     // Set the number of ticks per second
     var logFileNumberOfTicksPerSecond = Number(numberOfTicksPerSecond) || 100;
@@ -852,10 +982,11 @@ function parseFileSync(fileToParse, localDataDirectory, remoteDataDirectory, num
         var fileType;
         if (fileToParse.endsWith('.log')) fileType = 'log';
         if (fileToParse.endsWith('.out')) fileType = 'out';
+        if (fileToParse.endsWith('.csv')) fileType = 'csv';
         logger.debug('File being parsed is of type ' + fileType);
 
         // Make sure we found a file type
-        if (fileType) {
+        if (fileType && (fileType == 'log' || fileType == 'out')) {
 
             // This is an array of line segments used to concatenate multiline entries in .log files
             var lineSegments = [];
@@ -973,10 +1104,17 @@ function parseFileSync(fileToParse, localDataDirectory, remoteDataDirectory, num
             if (fileType == 'out') {
                 var completeLineBuffer = Buffer.concat(lineSegments);
                 logger.trace('Parsing last line of .out file ' + lineNumber + ': ' + completeLineBuffer.toString());
+                // TODO kgomes - finish parsing this, it's not done
             }
 
         } else {
-            logger.warn('A file type could not be determined for file ' + fileToParse);
+            // Not a log or out file, check for csv
+            if (fileType == 'csv') {
+                logger.debug('The file is a CSV file and will try to parse out data');
+                parseCSVFile(parsedObject, fileToParse);
+            } else {
+                logger.warn('A file type could not be determined for file ' + fileToParse);
+            }
         }
     } else {
         logger.warn('File submitted (' + fileToParse + ') does not exist');
