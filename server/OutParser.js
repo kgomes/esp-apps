@@ -87,7 +87,7 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
                 var ts1Matches = timeIndicator.match(timestampPattern1);
                 if (ts1Matches && ts1Matches.length > 0) {
                     // Construct the time string in such a manner that it can be parse by the momentJS library
-                    // We use the format YY-MMM-DDThh:mm:ss.sTZD
+                    // We use the format YY-MMM-DD hh:mm:ss.sTZD
                     var momentString = ts1Matches[8] + '-' + ts1Matches[7] + '-' + ts1Matches[6] + ' '
                         + ts1Matches[1] + ':' + ts1Matches[2] + ':' + ts1Matches[3] + '.' +
                         ts1Matches[4] + timezoneLookup.lookup[ts1Matches[5]];
