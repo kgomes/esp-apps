@@ -108,6 +108,11 @@ module.exports = {
                 varName: '% Flow',
                 varLongName: 'Percent Flow',
                 units: '%'
+            },
+            'L/min': {
+                varName: 'Flow',
+                varLongName: 'Flow rate',
+                units: 'L/min'
             }
         },
         ISUS: {
