@@ -545,15 +545,22 @@ function mergeDeployments(source, target) {
 
                     // Grab the source ancillary data object
                     var ancillarySourceObject = source['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]];
+                    if (ancillarySourceObject) {
 
-                    // Now grab the property keys
-                    var ancillarySourceObjectKeys = Object.keys(ancillarySourceObject);
-
-                    // Loop over the keys
-                    for (var k = 0; k < ancillarySourceUnitKeys.length; k++) {
-                        // Set the key and value on the target
-                        target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]] =
-                            source['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]];
+                        // Now grab the property keys
+                        var ancillarySourceObjectKeys = Object.keys(ancillarySourceObject);
+                        if (ancillarySourceObjectKeys) {
+                            // Loop over the keys
+                            for (var k = 0; k < ancillarySourceUnitKeys.length; k++) {
+                                // Set the key and value on the target
+                                target['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]] =
+                                    source['ancillaryData'][ancillarySource][ancillarySourceUnitKeys[j]][ancillarySourceObjectKeys[k]];
+                            }
+                        } else {
+                            logger.warn('No ancillary source object keys found');
+                        }
+                    } else {
+                        logger.warn('No ancillary source object was returned for unit key ' + ancillarySourceUnitKeys[j]);
                     }
                 }
             }
