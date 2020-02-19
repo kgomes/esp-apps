@@ -114,8 +114,12 @@ espApp.controller('DetailPanelController',
             var deploymentID = objkeyParts[1];
             var property = objkeyParts[2];
 
+            // A flag to keep indicate if the message object was something that should add a tab
+            var addTab = false;
+
             // Depending on what was selected, add the proper component to the tabbed panel
             if (property === 'protocolRuns') {
+                addTab = true;
                 $scope.tabs.push({
                     index: nextTabIndex,
                     objkey: messageObject.objkey,
@@ -124,6 +128,7 @@ espApp.controller('DetailPanelController',
                     content: "templates/directives/ProtocolDetailsInclude.html"
                 });
             } else if (property === 'samples') {
+                addTab = true;
                 $scope.tabs.push({
                     index: nextTabIndex,
                     objkey: messageObject.objkey,
@@ -133,6 +138,7 @@ espApp.controller('DetailPanelController',
                     content: "templates/directives/SampleDetailsInclude.html"
                 });
             } else if (property === 'images') {
+                addTab = true;
                 $scope.tabs.push({
                     index: nextTabIndex,
                     objkey: messageObject.objkey,
@@ -142,6 +148,7 @@ espApp.controller('DetailPanelController',
                     content: "templates/directives/ImageDetailsInclude.html"
                 });
             } else if (property === 'errors') {
+                addTab = true;
                 $scope.tabs.push({
                     index: nextTabIndex,
                     objkey: messageObject.objkey,
@@ -151,6 +158,7 @@ espApp.controller('DetailPanelController',
                     content: "templates/directives/ErrorDetailsInclude.html"
                 });
             } else if (property === 'pcrs') {
+                addTab = true;
                 $scope.tabs.push({
                     index: nextTabIndex,
                     objkey: messageObject.objkey,
@@ -161,15 +169,18 @@ espApp.controller('DetailPanelController',
                 });
             }
 
-            // Set the active index to the new one
-            // https://github.com/angular-ui/bootstrap/issues/5656#issuecomment-203513128
-            var oldTabIndex = nextTabIndex;
-            $timeout(function () { 
-                $scope.active = oldTabIndex;
-            });
+            // Now if a tab was added, make it active and increment the next tab number
+            if (addTab) {
+                // Set the active index to the new one
+                // https://github.com/angular-ui/bootstrap/issues/5656#issuecomment-203513128
+                var oldTabIndex = nextTabIndex;
+                $timeout(function () {
+                    $scope.active = oldTabIndex;
+                });
 
-            // increment the index
-            nextTabIndex++;
+                // increment the index
+                nextTabIndex++;
+            }
         });
 
         // This is the method that handles the event when the user de-selected something
