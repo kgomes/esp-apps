@@ -109,123 +109,123 @@ espApp.controller('GraphPanelController',
 
         // A method to handle events where an object was selected by the user
         $scope.$on('objectSelected', function (event, messageObject) {
-                //$log.log("Object was selected, graph should do something: ", messageObject);
+            //$log.log("Object was selected, graph should do something: ", messageObject);
 
-                // Grab the object key
-                var objkey = messageObject.objkey;
+            // Grab the object key
+            var objkey = messageObject.objkey;
 
-                // Pull apart the object key to find what we need to plot
-                var objkeyParts = objkey.split("-");
+            // Pull apart the object key to find what we need to plot
+            var objkeyParts = objkey.split("-");
 
-                // Grab the input type
-                var inputType = objkeyParts[0];
-                var deploymentID = objkeyParts[1];
-                var property = objkeyParts[2];
+            // Grab the input type
+            var inputType = objkeyParts[0];
+            var deploymentID = objkeyParts[1];
+            var property = objkeyParts[2];
 
-                // If the property is ancillary data, call the function to plot it
-                if (property === 'ancdata') {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+            // If the property is ancillary data, call the function to plot it
+            if (property === 'ancdata') {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Grab the sourceID
-                    var sourceID = objkeyParts[3]
-                    plotAncdata(objkey, deployment, sourceID);
-                } else if (property === 'errors') {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+                // Grab the sourceID
+                var sourceID = objkeyParts[3]
+                plotAncdata(objkey, deployment, sourceID);
+            } else if (property === 'errors') {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Now call the method to show them on the plot
-                    displayErrors(objkey, deployment);
-                } else if (property === "images") {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+                // Now call the method to show them on the plot
+                displayErrors(objkey, deployment);
+            } else if (property === "images") {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Now call the method to show them on the plot
-                    displayImages(objkey, deployment);
-                } else if (property === "protocolRuns") {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+                // Now call the method to show them on the plot
+                displayImages(objkey, deployment);
+            } else if (property === "protocolRuns") {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Now call the method to show them on the plot
-                    displayProtocolRuns(objkey, deployment);
-                } else if (property === "samples") {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+                // Now call the method to show them on the plot
+                displayProtocolRuns(objkey, deployment);
+            } else if (property === "samples") {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Now call the method to show them on the plot
-                    displaySamples(objkey, deployment);
-                } else if (property === "pcrs") {
-                    // Grab the deployment that should be on the message object
-                    var deployment = messageObject.deployment;
+                // Now call the method to show them on the plot
+                displaySamples(objkey, deployment);
+            } else if (property === "pcrs") {
+                // Grab the deployment that should be on the message object
+                var deployment = messageObject.deployment;
 
-                    // Now call the method to show them on the plot
-                    displayPCRs(objkey, deployment);
-                }
-                /*
-
-                 // The type should be the second argument
-                 if (type === "anc") {
-                 } else if (type === "errors") {
-
-                 } else if (type === "images") {
-
-                 } else if (type === "processruns") {
-
-                 } else if (type === "samples") {
-
-                 } else if (type === "pcrs") {
-
-                 // Loop over all deployments to find the one we are looking for based on the key
-                 // of the item the user clicked
-                 for (var i = 0; i < espAppCoordinator.getSelectedDeployments().length; i++) {
-
-                 // Check for ID match
-                 if (espAppCoordinator.getSelectedDeployments()[i]._id === deploymentID &&
-                 espAppCoordinator.getSelectedDeployments()[i].pcrs) {
-
-                 // Create an array to store the PCRs
-                 var flagData = [];
-
-                 // For each PCR, add it to the array
-                 Object.keys(espAppCoordinator.getSelectedDeployments()[i].pcrs).forEach(function (pcrts) {
-
-                 flagData.push({
-                 x: new Date(parseInt(pcrts)),
-                 title: espAppCoordinator.getSelectedDeployments()[i].pcrs[pcrts].name,
-                 text: "<b>PCR run writing to file " +
-                 espAppCoordinator.getSelectedDeployments()[i].pcrs[pcrts].filename + "</b>"
-                 });
-                 }
-                 );
-
-                 // Now create a new series
-                 var pcrSeries = {
-                 type: 'flags',
-                 data: flagData,
-                 shape: 'squarepin',
-                 width: 16
-                 };
-
-                 // Add it to the chart
-                 $scope.chart.addSeries(pcrSeries, true);
-
-                 // Set the object key on the series options so we can find it later
-                 $scope.chart.series[$scope.chart.series.length - 1].options.objkey = objkey;
-
-                 // Check to see if this is the only series added, if so, we have to set
-                 // the navigator as well so the dates are OK
-                 if ($scope.chart.series.length === 2) {
-                 $scope.chart.series[0].setData(flagData);
-                 }
-
-                 // If this is the only series, set the X Axis to it's extremes
-                 if ($scope.chart.series.length <= 2)
-                 $scope.chart.xAxis[0].setExtremes();
-                 }
-                 }
-                 }
-                 */
+                // Now call the method to show them on the plot
+                displayPCRs(objkey, deployment);
             }
+            /*
+
+             // The type should be the second argument
+             if (type === "anc") {
+             } else if (type === "errors") {
+
+             } else if (type === "images") {
+
+             } else if (type === "processruns") {
+
+             } else if (type === "samples") {
+
+             } else if (type === "pcrs") {
+
+             // Loop over all deployments to find the one we are looking for based on the key
+             // of the item the user clicked
+             for (var i = 0; i < espAppCoordinator.getSelectedDeployments().length; i++) {
+
+             // Check for ID match
+             if (espAppCoordinator.getSelectedDeployments()[i]._id === deploymentID &&
+             espAppCoordinator.getSelectedDeployments()[i].pcrs) {
+
+             // Create an array to store the PCRs
+             var flagData = [];
+
+             // For each PCR, add it to the array
+             Object.keys(espAppCoordinator.getSelectedDeployments()[i].pcrs).forEach(function (pcrts) {
+
+             flagData.push({
+             x: new Date(parseInt(pcrts)),
+             title: espAppCoordinator.getSelectedDeployments()[i].pcrs[pcrts].name,
+             text: "<b>PCR run writing to file " +
+             espAppCoordinator.getSelectedDeployments()[i].pcrs[pcrts].filename + "</b>"
+             });
+             }
+             );
+
+             // Now create a new series
+             var pcrSeries = {
+             type: 'flags',
+             data: flagData,
+             shape: 'squarepin',
+             width: 16
+             };
+
+             // Add it to the chart
+             $scope.chart.addSeries(pcrSeries, true);
+
+             // Set the object key on the series options so we can find it later
+             $scope.chart.series[$scope.chart.series.length - 1].options.objkey = objkey;
+
+             // Check to see if this is the only series added, if so, we have to set
+             // the navigator as well so the dates are OK
+             if ($scope.chart.series.length === 2) {
+             $scope.chart.series[0].setData(flagData);
+             }
+
+             // If this is the only series, set the X Axis to it's extremes
+             if ($scope.chart.series.length <= 2)
+             $scope.chart.xAxis[0].setExtremes();
+             }
+             }
+             }
+             */
+        }
         );
 
         // This is the method that handles removal of objects from the graph
@@ -297,23 +297,23 @@ espApp.controller('GraphPanelController',
                             // Check to see if the axis is a inverted axis or not
                             if ($scope.chart.yAxis[i].reversed) {
                                 // Now compare max values
-                                if (typeof(reversedAxisMax) === 'undefined' || reversedAxisMax < $scope.chart.yAxis[i].max) {
+                                if (typeof (reversedAxisMax) === 'undefined' || reversedAxisMax < $scope.chart.yAxis[i].max) {
                                     // Set the max
                                     reversedAxisMax = $scope.chart.yAxis[i].max;
                                 }
                                 // And now min values
-                                if (typeof(reversedAxisMin) === 'undefined' || reversedAxisMin > $scope.chart.yAxis[i].min) {
+                                if (typeof (reversedAxisMin) === 'undefined' || reversedAxisMin > $scope.chart.yAxis[i].min) {
                                     // Set the min
                                     reversedAxisMin = $scope.chart.yAxis[i].min;
                                 }
                             } else {
                                 // Now compare max values
-                                if (typeof(normalAxisMax) === 'undefined' || $scope.chart.yAxis[i].max > normalAxisMax) {
+                                if (typeof (normalAxisMax) === 'undefined' || $scope.chart.yAxis[i].max > normalAxisMax) {
                                     // Set the max
                                     normalAxisMax = $scope.chart.yAxis[i].max;
                                 }
                                 // And now min values
-                                if (typeof(normalAxisMin) === 'undefined' || $scope.chart.yAxis[i].min < normalAxisMin) {
+                                if (typeof (normalAxisMin) === 'undefined' || $scope.chart.yAxis[i].min < normalAxisMin) {
                                     // Set the min
                                     normalAxisMin = $scope.chart.yAxis[i].min;
                                 }
@@ -324,7 +324,7 @@ espApp.controller('GraphPanelController',
                     // Now loop over and set all axes to the same min/max
                     for (var i = 0; i < $scope.chart.yAxis.length; i++) {
                         if (i > 1) {
-                            if ($scope.chart.yAxis[i].reversed){
+                            if ($scope.chart.yAxis[i].reversed) {
                                 $scope.chart.yAxis[i].setExtremes(reversedAxisMin, reversedAxisMax);
                             } else {
                                 $scope.chart.yAxis[i].setExtremes(normalAxisMin, normalAxisMax);
@@ -371,14 +371,14 @@ espApp.controller('GraphPanelController',
 
                     // For each error, add it to the array
                     Object.keys(errorObject).forEach(function (errorts) {
-                            flagData.push({
-                                x: new Date(parseInt(errorts)),
-                                title: "E",
-                                text: '<b>' +
+                        flagData.push({
+                            x: new Date(parseInt(errorts)),
+                            title: "E",
+                            text: '<b>' +
                                 errorObject[errorts].subject + '</b><br/ >' +
                                 errorObject[errorts].message
-                            });
-                        }
+                        });
+                    }
                     );
 
                     // Now create a new series
@@ -420,17 +420,17 @@ espApp.controller('GraphPanelController',
                         // For each image, add it to the array
                         Object.keys(imagesObject).forEach(function (imagets) {
 
-                                flagData.push({
-                                    x: new Date(parseInt(imagets)),
-                                    title: "I",
-                                    text: "<b>" +
+                            flagData.push({
+                                x: new Date(parseInt(imagets)),
+                                title: "I",
+                                text: "<b>" +
                                     imagesObject[imagets].imageFilename +
                                     "</b> (" +
                                     imagesObject[imagets].xPixels + "x" +
                                     imagesObject[imagets].yPixels + ", " +
                                     imagesObject[imagets].exposure + "s)"
-                                });
-                            }
+                            });
+                        }
                         );
 
                         // Now create a new series
@@ -468,56 +468,56 @@ espApp.controller('GraphPanelController',
                 // Grab the protocolRuns object from the server
                 deploymentData.getProtocolRuns(deployment._id, function (protocolRunsObject) {
 
-                        // Make sure there is data
-                        if (protocolRunsObject) {
-                            // Create an array to store the protocolRuns
-                            var flagData = [];
+                    // Make sure there is data
+                    if (protocolRunsObject) {
+                        // Create an array to store the protocolRuns
+                        var flagData = [];
 
-                            // For each ProtocolRun, add it to the array
-                            Object.keys(protocolRunsObject).forEach(function (protocolRunTS) {
+                        // For each ProtocolRun, add it to the array
+                        Object.keys(protocolRunsObject).forEach(function (protocolRunTS) {
 
-                                    var bodyText = "<b>" +
-                                        protocolRunsObject[protocolRunTS].name +
-                                        "</b> (" +
-                                        protocolRunsObject[protocolRunTS].targetVol + " ml)";
-                                    if (protocolRunsObject[protocolRunTS].archive) {
-                                        bodyText += " with archive of " +
-                                            protocolRunsObject[protocolRunTS].archive.targetVol + " ml";
-                                    }
-                                    flagData.push({
-                                        x: new Date(parseInt(protocolRunTS)),
-                                        title: "P",
-                                        text: bodyText
-                                    });
-                                }
-                            );
-
-                            // Now create a new series
-                            var protocolRunSeries = {
-                                id: objkey,
-                                type: 'flags',
-                                data: flagData,
-                                shape: 'circlepin',
-                                color: '#0011AA',
-                                width: 4,
-                                events: {
-                                    click: function (event) {
-                                        //$log.log("ProtcolRun clicked");
-                                        //$log.log(event);
-                                    }
-                                }
-                            };
-
-                            // Add it to the chart
-                            $scope.chart.addSeries(protocolRunSeries, true);
-
-                            // If this is the only series, set the X Axis to it's extremes
-                            if ($scope.chart.series.length <= 2)
-                                $scope.chart.xAxis[0].setExtremes();
+                            var bodyText = "<b>" +
+                                protocolRunsObject[protocolRunTS].name +
+                                "</b> (" +
+                                protocolRunsObject[protocolRunTS].targetVol + " ml)";
+                            if (protocolRunsObject[protocolRunTS].archive) {
+                                bodyText += " with archive of " +
+                                    protocolRunsObject[protocolRunTS].archive.targetVol + " ml";
+                            }
+                            flagData.push({
+                                x: new Date(parseInt(protocolRunTS)),
+                                title: "P",
+                                text: bodyText
+                            });
                         }
+                        );
+
+                        // Now create a new series
+                        var protocolRunSeries = {
+                            id: objkey,
+                            type: 'flags',
+                            data: flagData,
+                            shape: 'circlepin',
+                            color: '#0011AA',
+                            width: 4,
+                            events: {
+                                click: function (event) {
+                                    //$log.log("ProtcolRun clicked");
+                                    //$log.log(event);
+                                }
+                            }
+                        };
+
+                        // Add it to the chart
+                        $scope.chart.addSeries(protocolRunSeries, true);
+
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
+                }
                 )
-                ;
+                    ;
             }
         }
 
@@ -529,70 +529,70 @@ espApp.controller('GraphPanelController',
                 // Grab the samples object from the server
                 deploymentData.getSamples(deployment._id, function (samplesObject) {
 
-                        // Make sure there is data
-                        if (samplesObject) {
-                            // Create an array to store the samples
-                            var flagData = [];
+                    // Make sure there is data
+                    if (samplesObject) {
+                        // Create an array to store the samples
+                        var flagData = [];
 
-                            // Create an array for plotbands on the Xaxis
-                            var plotBands = [];
+                        // Create an array for plotbands on the Xaxis
+                        var plotBands = [];
 
-                            // For each Sample, add it to the array
-                            Object.keys(samplesObject).forEach(function (sampleTS) {
-                                    // First push the data into the array
-                                    flagData.push({
-                                        x: new Date(parseInt(sampleTS)),
-                                        title: "S",
-                                        text: "<b>" + deployment.esp.name + "-Start sample targeting " +
-                                        samplesObject[sampleTS].targetVolume + " ml</b>"
-                                    });
+                        // For each Sample, add it to the array
+                        Object.keys(samplesObject).forEach(function (sampleTS) {
+                            // First push the data into the array
+                            flagData.push({
+                                x: new Date(parseInt(sampleTS)),
+                                title: "S",
+                                text: "<b>" + deployment.esp.name + "-Start sample targeting " +
+                                    samplesObject[sampleTS].targetVolume + " ml</b>"
+                            });
 
-                                    // Next, push a plot band if the sample has start and end times
-                                    //$log.log(samplesObject[sampleTS]);
-                                    if (samplesObject[sampleTS].endts) {
-                                        var startDate = new Date(parseInt(sampleTS));
-                                        var endDate = new Date(samplesObject[sampleTS].endts);
-                                        var sampleID = objkey + '_' + sampleTS;
-                                        //$log.log("Going to add plot band");
-                                        //$log.log("from: ", startDate);
-                                        //$log.log("to: ", endDate);
-                                        //$log.log("SampleID: ", sampleID);
-                                        $scope.chart.xAxis[0].addPlotBand({
-                                            id: objkey,
-                                            color: '#FCFFC5',
-                                            from: startDate,
-                                            to: endDate
-                                        });
-                                    }
-                                }
-                            );
-
-                            // Now create a new series
-                            var sampleSeries = {
-                                id: objkey,
-                                type: 'flags',
-                                data: flagData,
-                                shape: 'squarepin',
-                                color: '#FFCC00',
-                                width: 4,
-                                events: {
-                                    click: function (event) {
-                                        //$log.log("Sample clicked");
-                                        //$log.log(event);
-                                    }
-                                }
-                            };
-
-                            // Add it to the chart
-                            $scope.chart.addSeries(sampleSeries, true);
-
-                            // If this is the only series, set the X Axis to it's extremes
-                            if ($scope.chart.series.length <= 2)
-                                $scope.chart.xAxis[0].setExtremes();
+                            // Next, push a plot band if the sample has start and end times
+                            //$log.log(samplesObject[sampleTS]);
+                            if (samplesObject[sampleTS].endts) {
+                                var startDate = new Date(parseInt(sampleTS));
+                                var endDate = new Date(samplesObject[sampleTS].endts);
+                                var sampleID = objkey + '_' + sampleTS;
+                                //$log.log("Going to add plot band");
+                                //$log.log("from: ", startDate);
+                                //$log.log("to: ", endDate);
+                                //$log.log("SampleID: ", sampleID);
+                                $scope.chart.xAxis[0].addPlotBand({
+                                    id: objkey,
+                                    color: '#FCFFC5',
+                                    from: startDate,
+                                    to: endDate
+                                });
+                            }
                         }
+                        );
+
+                        // Now create a new series
+                        var sampleSeries = {
+                            id: objkey,
+                            type: 'flags',
+                            data: flagData,
+                            shape: 'squarepin',
+                            color: '#FFCC00',
+                            width: 4,
+                            events: {
+                                click: function (event) {
+                                    //$log.log("Sample clicked");
+                                    //$log.log(event);
+                                }
+                            }
+                        };
+
+                        // Add it to the chart
+                        $scope.chart.addSeries(sampleSeries, true);
+
+                        // If this is the only series, set the X Axis to it's extremes
+                        if ($scope.chart.series.length <= 2)
+                            $scope.chart.xAxis[0].setExtremes();
                     }
+                }
                 )
-                ;
+                    ;
             }
         }
 
@@ -608,14 +608,14 @@ espApp.controller('GraphPanelController',
 
                     // For each PCR Run, add it to the array
                     Object.keys(pcrsByTimeObject).forEach(function (pcrts) {
-                            flagData.push({
-                                x: new Date(parseInt(pcrts)),
-                                title: "R",
-                                text: '<b>PCR: ' +
+                        flagData.push({
+                            x: new Date(parseInt(pcrts)),
+                            title: "R",
+                            text: '<b>PCR: ' +
                                 pcrsByTimeObject[pcrts].pcrType + '</b><br/ >' +
                                 pcrsByTimeObject[pcrts].pcrRunName
-                            });
-                        }
+                        });
+                    }
                     );
 
                     // Now create a new series
@@ -820,10 +820,17 @@ espApp.controller('GraphPanelController',
                 }
 
                 // Now remove the axis if it was found
-                if (yAxisToRemove) {
-                    yAxisToRemove.remove(true);
-                    //$log.log("yAxis is gone");
-                }
+                // kgomes - I commented this out because it just throws errors and does not
+                // seem to do anything
+                // if (yAxisToRemove) {
+                //     try {
+                //         yAxisToRemove.remove(true);
+                //     } catch (err) {
+                //         $log.log('Error trying to remove yAxis');
+                //         $log.log(err);
+                //     }
+                //     //$log.log("yAxis is gone");
+                // }
 
                 // Also if the object key contains 'samples' remove the plot bands
                 if (objkey.indexOf('samples') >= 0) {
@@ -837,4 +844,4 @@ espApp.controller('GraphPanelController',
             }
         }
     })
-;
+    ;

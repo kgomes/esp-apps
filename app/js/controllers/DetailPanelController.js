@@ -4,7 +4,10 @@
  This is the controller for managing the details table in the application
  */
 espApp.controller('DetailPanelController',
-    function DetailPanelController($scope, $http, $log, espAppCoordinator, deploymentData) {
+    function DetailPanelController($scope, $http, $log, $timeout, espAppCoordinator, deploymentData) {
+        // Next tab index
+        var nextTabIndex = 0;
+
         // This is the array of tabs that are displayed
         $scope.tabs = [];
 
@@ -23,7 +26,6 @@ espApp.controller('DetailPanelController',
 
         // The method to handle the selection of a details tab
         $scope.selectDetailsTab = function (index) {
-            //$log.log("Tab " + index + " selected");
             // Need to make the correct tab active
             for (var i = 0; i < $scope.detailTables.length; i++) {
                 if (i === index) {
@@ -111,19 +113,19 @@ espApp.controller('DetailPanelController',
             var inputType = objkeyParts[0];
             var deploymentID = objkeyParts[1];
             var property = objkeyParts[2];
-            //$log.log("inputType,deploymentID,property:", inputType, deploymentID, property);
 
             // Depending on what was selected, add the proper component to the tabbed panel
             if (property === 'protocolRuns') {
                 $scope.tabs.push({
+                    index: nextTabIndex,
                     objkey: messageObject.objkey,
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Procotol Runs",
-                    active: true,
                     content: "templates/directives/ProtocolDetailsInclude.html"
                 });
             } else if (property === 'samples') {
                 $scope.tabs.push({
+                    index: nextTabIndex,
                     objkey: messageObject.objkey,
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Samples",
@@ -132,6 +134,7 @@ espApp.controller('DetailPanelController',
                 });
             } else if (property === 'images') {
                 $scope.tabs.push({
+                    index: nextTabIndex,
                     objkey: messageObject.objkey,
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " Images",
@@ -140,14 +143,16 @@ espApp.controller('DetailPanelController',
                 });
             } else if (property === 'errors') {
                 $scope.tabs.push({
+                    index: nextTabIndex,
                     objkey: messageObject.objkey,
                     deploymentID: deploymentID,
-                    title: messageObject.deployment.esp.name +  " Errors",
+                    title: messageObject.deployment.esp.name + " Errors",
                     active: true,
                     content: "templates/directives/ErrorDetailsInclude.html"
                 });
             } else if (property === 'pcrs') {
                 $scope.tabs.push({
+                    index: nextTabIndex,
                     objkey: messageObject.objkey,
                     deploymentID: deploymentID,
                     title: messageObject.deployment.esp.name + " PCRs",
@@ -155,6 +160,16 @@ espApp.controller('DetailPanelController',
                     content: "templates/directives/PCRDetailsInclude.html"
                 });
             }
+
+            // Set the active index to the new one
+            // https://github.com/angular-ui/bootstrap/issues/5656#issuecomment-203513128
+            var oldTabIndex = nextTabIndex;
+            $timeout(function () { 
+                $scope.active = oldTabIndex;
+            });
+
+            // increment the index
+            nextTabIndex++;
         });
 
         // This is the method that handles the event when the user de-selected something
@@ -182,7 +197,6 @@ espApp.controller('DetailPanelController',
 
         // This is a method that removes the de-selected object from the details panel
         var removeObject = function (objkey) {
-            //$log.log("Going to remove tab with objkey " + objkey);
             // Loop over tabs and remove the one matching the object key
             var indexToRemove = -1;
             for (var i = 0; i < $scope.tabs.length; i++) {

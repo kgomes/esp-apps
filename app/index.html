@@ -155,9 +155,8 @@
         <div id="col-detail" class="col-xs-12" ng-controller="DetailPanelController">
             <div id="panel-detail" class="panel panel-default">
                 <div id="panel-body-detail" class="panel-body">
-                    <uib-tabset>
-                        <uib-tab ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active"
-                             disabled="tab.disabled">
+                    <uib-tabset active="active">
+                        <uib-tab ng-repeat="tab in tabs" index="tab.index" heading="{{tab.title}}">
                             <div ng-include="tab.content"></div>
                         </uib-tab>
                     </uib-tabset>
