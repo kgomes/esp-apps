@@ -22,6 +22,8 @@ const path = require('path');
 
 // Some utilities for dealing with deployments
 const deploymentUtils = require('./DeploymentUtils');
+deploymentUtils.setLogDirectory(espCfg['logDir']);
+deploymentUtils.setLogLevel('info');
 
 // The parser for .out files
 const outParser = require('./OutParser');
