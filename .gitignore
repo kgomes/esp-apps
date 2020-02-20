@@ -11,3 +11,11 @@ server/config.js
 /esp.code-workspace
 /server/test/moe-real2.log
 /server/test/moe-real2.out
+/server/test/don-real.out
+/server/test/logs/moe-mars-2013-real-full.out
+/server/test/logs/moe-gom-2020-brief.out
+/server/test/logs/bruce-2013-real.log
+/server/test/logs/bruce-2013-real-full.out
+/server/test/logs/moe-mars-2013-real.log
+/server/test/logs/moe-mars-2013-real.out
+/server/test/logs/bruce-2013-real.out
