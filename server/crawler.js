@@ -6,6 +6,9 @@
 var espCfg = require('./config.js');
 espCfg.init();
 
+// Import the Axios library for HTTP interaction
+const axios = require('axios');
+
 // Import 3rd party library dependencies
 var log4js = require('log4js');
 
@@ -27,36 +30,33 @@ if (espCfg.crawlerOptions.loggerLevel) {
 // synchronization of files from FTP servers
 var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions, espCfg.dataDir, espCfg.logDir);
 
-// Create the object used to interface to the data stores
-var da = require('./DataAccess').createDataAccess(espCfg.dataStoreOptions, espCfg.logDir);
-
-// Create a LogParser object
-var lp = require('./LogParser').createLogParser(da, espCfg.dataDir, espCfg.logParserOptions, espCfg.logDir);
-
-// Create an event handler
-require('./CrawlerEventHandler').createCrawlerEventHandler(dfs, lp, espCfg.dataDir, espCfg.eventHandlerOptions, espCfg.logDir);
-
-// Go ahead and call the first processing of deployments since we are in start
-try {
-    da.getOpenDeployments(function (err, deployments) {
-        for (var i = 0; i < deployments.length; i++) {
-            processDeployment(deployments[i]);
-        }
-    });
-} catch (error) {
-    logger.error('Error caught from initial processing of open deployments');
-    logger.error(error);
-}
-
 // Set up the interval to walk through the list of deployments for processing
 setInterval(function () {
     try {
-        // Load the deployment data
-        da.getOpenDeployments(function (err, deployments) {
-            for (var i = 0; i < deployments.length; i++) {
-                processDeployment(deployments[i]);
-            }
-        });
+        // Call the API to get a list of the open deployments
+        axios.get(espCfg.hostBaseUrl + '/deployments?openOnly=true')
+            .then(function (response) {
+                // Grab the array of Deployments
+                var openDeployments = response.data;
+                if (openDeployments && openDeployments.length > 0) {
+                    logger.debug('Will parse ' + openDeployments.length + ' deployment(s)');
+                    // Loop over the open deployments
+                    for (var i = 0; i < openDeployments.length; i++) {
+                        // Call the method to parse all the data for this deployment
+                        processDeployment(openDeployments[i]);
+                    }
+                } else {
+                    logger.debug('No open deployments found');
+                }
+            })
+            .catch(function (error) {
+                logger.error('Error caught trying to get open deployments from the portal API');
+                logger.error(error);
+            })
+            .then(function () {
+                // always executed
+            });
+
     } catch (error) {
         logger.error('Error caught trying to process deployments');
         logger.error(error);
