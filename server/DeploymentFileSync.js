@@ -3,7 +3,6 @@ var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var im = require('imagemagick');
-var eventEmitter = require('events').EventEmitter;
 
 // Create the FTP client from the FTP library that
 // can be used to create connections
@@ -15,9 +14,6 @@ log4js.loadAppender('file');
 
 // Grab the logger
 var logger = log4js.getLogger('DeploymentFileSync');
-
-// Inherit event emitter functionality
-util.inherits(DeploymentFileSync, eventEmitter);
 
 // The constructor function
 function DeploymentFileSync(opts, basedir, logDir) {
@@ -157,14 +153,6 @@ function DeploymentFileSync(opts, basedir, logDir) {
                                     } else {
                                         logger.debug("All remote files should be syncd for deployment " +
                                             deploymentToSync.name);
-                                        // Now emit the listing of files that were sync'd
-                                        // for (var syncdFile in filesSynchronized) {
-                                        //     me.emit('ftpFileUpdated', {
-                                        //         deployment: deploymentToSync,
-                                        //         file: syncdFile,
-                                        //         stats: filesSynchronized[syncdFile]
-                                        //     });
-                                        // }
                                     }
 
                                     // Since all the files should be syncd, clear the sync and move on
