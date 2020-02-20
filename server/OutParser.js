@@ -86,14 +86,19 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
                 // Let's start with the most specific match first
                 var ts1Matches = timeIndicator.match(timestampPattern1);
                 if (ts1Matches && ts1Matches.length > 0) {
+                    // Grab the timezone from the lookup
+                    var timezone = timezoneLookup.lookup[ts1Matches[5]];
+
                     // Construct the time string in such a manner that it can be parse by the momentJS library
                     // We use the format YY-MMM-DD hh:mm:ss.sTZD
                     var momentString = ts1Matches[8] + '-' + ts1Matches[7] + '-' + ts1Matches[6] + ' '
                         + ts1Matches[1] + ':' + ts1Matches[2] + ':' + ts1Matches[3] + '.' +
-                        ts1Matches[4] + timezoneLookup.lookup[ts1Matches[5]];
+                        ts1Matches[4] + timezone;
                     // Try to parse the timezone
                     try {
                         dateToReturn = moment(momentString, 'YY-MMM-DD HH:mm:ss.SSZ');
+                        dateToReturn.zone(timezone);
+                        logger.trace('Converted to ' + dateToReturn.format());
                     } catch (error) {
                         logger.error('Error trying to convert time indicator into full timestamp: ' + timeIndicator);
                         logger.error(error);
@@ -109,10 +114,10 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
 
                         try {
                             // Now set the hours, minutes, seconds and milliseconds
-                            dateToReturn.set('hour', parseInt(ts2Matches[1]))
-                            dateToReturn.set('minute', parseInt(ts2Matches[2]))
-                            dateToReturn.set('second', parseInt(ts2Matches[3]))
-                            dateToReturn.set('ms', parseInt(ts2Matches[4] + '0'))
+                            dateToReturn.set('hour', parseInt(ts2Matches[1]));
+                            dateToReturn.set('minute', parseInt(ts2Matches[2]));
+                            dateToReturn.set('second', parseInt(ts2Matches[3]));
+                            dateToReturn.set('ms', parseInt(ts2Matches[4] + '0'));
                         } catch (error) {
                             logger.error('Error caught trying to update cloned timestamp with ' + timeIndicator);
                             logger.error(error);
