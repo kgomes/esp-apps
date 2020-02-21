@@ -14,7 +14,7 @@ module.exports = {
     slackWebHookURL: '',
 
     // The base URL of the web portal
-    hostBaseUrl: 'http://localhost',
+    hostBaseUrl: 'http://localhost:8081',
 
     // The port of the web portal
     port: 8081,
@@ -349,7 +349,7 @@ module.exports = {
         this.appServerOptions['hostBaseUrl'] = this.hostBaseUrl;
         this.appServerOptions['port'] = this.port;
 
-        // Now check for dataStoreOption overrides        
+        // Now check for dataStoreOption overrides
         if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']) {
             this.dataStoreOptions.loggerLevel = process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL'];
         }
