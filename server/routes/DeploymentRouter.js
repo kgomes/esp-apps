@@ -9,7 +9,7 @@ var logger = log4js.getLogger('DeploymentRouter');
 var moment = require('moment');
 
 // Grab the model objects
-var Deployment = require('../models/Deployment');
+//var Deployment = require('../models/Deployment');
 
 // The constructor function
 function DeploymentRouter(dataAccess, opts, logDir) {
