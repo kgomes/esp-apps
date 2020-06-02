@@ -4,7 +4,7 @@ espApp.directive('protocolDetails', function () {
     return {
         restrict: 'E',
         replace: true,
-        templateUrl: '/templates/directives/ProtocolDetails.html',
+        templateUrl: 'templates/directives/ProtocolDetails.html',
         controller: 'ProtocolDetailsController'
     };
 });

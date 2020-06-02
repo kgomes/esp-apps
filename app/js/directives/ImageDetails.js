@@ -4,7 +4,7 @@ espApp.directive('imageDetails', function () {
     return {
         restrict: 'E',
         replace: true,
-        templateUrl: '/templates/directives/ImageDetails.html',
+        templateUrl: 'templates/directives/ImageDetails.html',
         controller: 'ImageDetailsController'
     };
 });
@@ -66,7 +66,7 @@ espApp.controller("ImageDetailsController", function ImageDetailsController($sco
             setImageByUrl($scope.selectedImage.imageUrl);
         } else {
             // Assign it the URL of an image indicated it has not been downloaded
-            setImageByUrl('/img/not_available.jpg');
+            setImageByUrl('img/not_available.jpg');
         }
     };
 

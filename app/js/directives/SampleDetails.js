@@ -4,7 +4,7 @@ espApp.directive('sampleDetails', function () {
     return {
         restrict: 'E',
         replace: true,
-        templateUrl: '/templates/directives/SampleDetails.html',
+        templateUrl: 'templates/directives/SampleDetails.html',
         controller: 'SampleDetailsController'
     };
 });

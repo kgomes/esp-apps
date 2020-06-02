@@ -52,7 +52,7 @@
                                         {{deployment.esp.name}}
                                     </a>
                                     <a target="_blank"
-                                       href="/deployments/{{deployment._id}}?returnSummary=true"
+                                       href="deployments/{{deployment._id}}?returnSummary=true"
                                        class="btn btn-sm fa fa-download"></a>
                                 </h4>
                             </div>
@@ -107,7 +107,7 @@
                                     <div ng-repeat="(key, value) in deployment.ancillaryData">
                                         <hr/>
                                         <div class="ancillary-data-key">{{key}} <a target="_blank"
-                                                                                   href="/data/instances/{{deployment.esp.name}}/deployments/{{deployment.name}}/data/processed/{{key}}.csv"
+                                                                                   href="data/instances/{{deployment.esp.name}}/deployments/{{deployment.name}}/data/processed/{{key}}.csv"
                                                                                    class="btn btn-sm fa fa-download"></a>
                                         </div>
                                         <div ng-repeat="(key2,value2) in deployment.ancillaryData[key]"

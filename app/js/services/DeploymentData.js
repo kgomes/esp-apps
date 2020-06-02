@@ -12,7 +12,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         getAllDeploymentNames: function (successcb) {
             $http({
                 method: 'GET',
-                url: '/deployments?namesOnly=true'
+                url: 'deployments?namesOnly=true'
             }).then(function (response) {
                 successcb(response.data);
             }, function (response) {
@@ -23,7 +23,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This is a method to return all deployments with a given name
         getDeploymentsByName: function (name, successcb) {
             $http({
-                method: 'GET', url: '/deployments?name=' + name
+                method: 'GET', url: 'deployments?name=' + name
             }).then(function (response) {
                     successcb(response.data);
                 }, function (response) {
@@ -35,7 +35,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends the errors object to the callback
         getDeploymentErrors: function (deploymentID, successcb) {
             // Construct the URL to grab the errors
-            var errorsUrl = "/deployments/" + deploymentID + "/errors";
+            var errorsUrl = "deployments/" + deploymentID + "/errors";
             //$log.log("errorUrl: " + errorsUrl);
 
             // Make the call
@@ -52,7 +52,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends the images object to the callback
         getDeploymentImages: function (deploymentID, successcb) {
             // Construct the URL to grab the images
-            var imagesUrl = "/deployments/" + deploymentID + "/images";
+            var imagesUrl = "deployments/" + deploymentID + "/images";
             //$log.log("imageUrl: " + imagesUrl);
 
             // Make the call
@@ -69,7 +69,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends the protocolRuns object to the callback
         getProtocolRuns: function (deploymentID, successcb) {
             // Construct the URL to grab the protocolRuns
-            var protocolRunsUrl = "/deployments/" + deploymentID + "/protocolRuns";
+            var protocolRunsUrl = "deployments/" + deploymentID + "/protocolRuns";
             //$log.log("protocolRunUrl: " + protocolRunsUrl);
 
             // Make the call
@@ -86,7 +86,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends the samples object to the callback
         getSamples: function (deploymentID, successcb) {
             // Construct the URL to grab the samples
-            var samplesUrl = "/deployments/" + deploymentID + "/samples";
+            var samplesUrl = "deployments/" + deploymentID + "/samples";
             //$log.log("samplesUrl: " + samplesUrl);
 
             // Make the call
@@ -103,7 +103,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends the errors object to the callback
         getErrors: function (deploymentID, successcb) {
             // Construct the URL to grab the samples
-            var errorsUrl = "/deployments/" + deploymentID + "/errors";
+            var errorsUrl = "deployments/" + deploymentID + "/errors";
             //$log.log("errorsUrl: " + errorsUrl);
 
             // Make the call
@@ -120,7 +120,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in a deployment ID and sends a time-indexed list of PCRs to the callback
         getPCRsByTime: function (deploymentID, successcb) {
             // Construct the URL to grab the pcrs sorted by their timestamps
-            var pcrsByTimeUrl = "/deployments/" + deploymentID + "/pcrs?byTime=true";
+            var pcrsByTimeUrl = "deployments/" + deploymentID + "/pcrs?byTime=true";
             //$log.log("pcrsByTimeUrl: " + pcrsByTimeUrl);
 
             // Make the call
@@ -138,7 +138,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // PCRs associated with that deployment (no data though)
         getPCRFullTree: function (deploymentID, successcb) {
             // Construct the URL to grab the full tree PCR listing
-            var pcrsFullTreeUrl = "/deployments/" + deploymentID + "/pcrs?fullTree=true";
+            var pcrsFullTreeUrl = "deployments/" + deploymentID + "/pcrs?fullTree=true";
             //$log.log("pcrsFullTreeUrl: " + pcrsFullTreeUrl);
 
             // Make the call
@@ -155,7 +155,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This method takes in various parameters for PCR data and retrieves the actual data
         getPCRData: function (deploymentID, pcrType, varName, epochMillis, successcb) {
             // Construct the URL to grab the PCR data
-            var pcrDataUrl = "/deployments/" + deploymentID + "/pcrs/" + encodeURIComponent(pcrType) + "/" +
+            var pcrDataUrl = "deployments/" + deploymentID + "/pcrs/" + encodeURIComponent(pcrType) + "/" +
                 encodeURIComponent(varName) + "/" + epochMillis + "/";
             //$log.log("pcrDataUrl: " + pcrDataUrl);
 
@@ -173,7 +173,7 @@ espApp.factory('deploymentData', function ($http, $log) {
         // This is a method to get ancillary data from the server
         getAncillaryData: function (sourceID, startDate, endDate, successcb) {
             // Construct the data URL
-            var dataUrl = "/ancdata/" + sourceID;
+            var dataUrl = "ancdata/" + sourceID;
 
             // Add params if we have them
             if (startDate && endDate) {

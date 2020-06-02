@@ -4,7 +4,7 @@ espApp.directive('errorDetails', function () {
     return {
         restrict: 'E',
         replace: true,
-        templateUrl: '/templates/directives/ErrorDetails.html',
+        templateUrl: 'templates/directives/ErrorDetails.html',
         controller: 'ErrorDetailsController'
     };
 });

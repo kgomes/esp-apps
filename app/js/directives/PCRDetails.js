@@ -4,7 +4,7 @@ espApp.directive('pcrDetails', function () {
     return {
         restrict: 'E',
         replace: true,
-        templateUrl: '/templates/directives/PCRDetails.html',
+        templateUrl: 'templates/directives/PCRDetails.html',
         controller: 'PCRDetailsController'
     };
 });
