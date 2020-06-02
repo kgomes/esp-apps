@@ -19,3 +19,4 @@ server/config.js
 /server/test/logs/moe-mars-2013-real.log
 /server/test/logs/moe-mars-2013-real.out
 /server/test/logs/bruce-2013-real.out
+/services/.env

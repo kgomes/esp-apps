@@ -3,19 +3,47 @@
 # Start with the CentOS 7 base image
 FROM centos:7
 
-ADD ./ /opt/esp
+# COPY in the files that are necessary for the portal to run
+COPY ./server/AppServer.js \
+     ./server/couch-views.js \
+     ./server/crawler.js \
+     ./server/DataAccess.js \
+     ./server/DeploymentFileSync.js \
+     ./server/DeploymentUtils.js \
+     ./server/OutParser.js \
+     ./server/package-lock.json \
+     ./server/package.json \
+     ./server/parseDeployments.js \
+     ./server/server.js \
+     ./server/TimeZoneLookup.js \
+     /opt/esp/server/
+
+COPY ./server/routes /opt/esp/server/routes/
+
+COPY ./app/favicon.ico \
+     ./app/index.html \
+     ./app/package-lock.json \
+     ./app/package.json \
+     /opt/esp/app/
+
+COPY ./app/css /opt/esp/app/css/
+COPY ./app/img /opt/esp/app/img/
+COPY ./app/js /opt/esp/app/js/
+COPY ./app/templates /opt/esp/app/templates/
 
 # Update the OS and then install all the necessary packages
 RUN yum upgrade -y && \
     yum update -y && \
-    curl --silent --location https://rpm.nodesource.com/setup_10.x | bash - && \
-    yum install -y git nodejs ImageMagick && \
+    curl --silent --location https://rpm.nodesource.com/setup_12.x | bash - && \
+    yum install -y nodejs ImageMagick cronie && \
     cd /opt/esp/server && \
     npm install && \
     cd /opt/esp/app && \
-#    npm install bower && \
-#    ./node_modules/bower/bin/bower --allow-root install && \
-    npm install -g forever
+    npm install
+
+# Add the cron job to run the deployment parser
+COPY parser-cron /etc/cron.d/parser-cron
+RUN chmod 0644 /etc/cron.d/parser-cron
 
 ADD run.sh /run.sh
 RUN chmod -v +x /run.sh
