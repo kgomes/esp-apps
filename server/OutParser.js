@@ -59,7 +59,6 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
 
     // How we look for the timestamp depends on what type of log file we are parsing
     if (fileType == 'out') {
-        logger.trace('File type is .out');
 
         // Convert the buffer to a string
         var line = completeLineBuffer.toString();
@@ -97,7 +96,7 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
                     // Try to parse the timezone
                     try {
                         dateToReturn = moment(momentString, 'YY-MMM-DD HH:mm:ss.SSZ');
-                        dateToReturn.zone(timezone);
+                        dateToReturn.utcOffset(timezone);
                         logger.trace('Converted to ' + dateToReturn.format());
                     } catch (error) {
                         logger.error('Error trying to convert time indicator into full timestamp: ' + timeIndicator);
@@ -129,7 +128,6 @@ function updateTimestamp(fileType, completeLineBuffer, timestamp, numberOfTicksP
     } else {
         // Check to see if the file is a .log file
         if (fileType == 'log') {
-            logger.trace('file type is .log');
 
             // Set up some pattern matching expressions
             var timestampPattern1 = new RegExp(/^@(\D+)(\d+\.\d+)/);
@@ -222,7 +220,7 @@ function findActor(fileType, completeLineBuffer, actorLegend) {
                         actorBuffer.push(completeLineBuffer[i]);
                     }
                 }
-                actorToReturn = (new Buffer(actorBuffer)).toString();
+                actorToReturn = (Buffer.from(actorBuffer)).toString();
             } else {
                 // If the first character is not a '\' and the second matches a 
                 // key in the actor legend, set the actor
@@ -437,6 +435,7 @@ function parseCanAncillaryDataFromLine(line, timestamp) {
 
         // Check for successful match
         if (canDataMatcher && canDataMatcher.length > 0) {
+            logger.debug('Found ancillary can data in non-email line: ' + line);
 
             // Call the method to parse the timstampe and payload into a data point        
             canData = parseAncillaryDataPayload(timestamp, 'Can', canDataMatcher[1], canDataMatcher[2],
@@ -996,17 +995,14 @@ function parseFileSync(fileToParse, remoteDataDirectory, numberOfTicksPerSecond)
             // This is an array of line segments used to concatenate multiline entries in .log files
             var lineSegments = [];
 
-            // This is a variable to use to track multiline entries in .out files
-            //var previousLine;
-
             // This is the Moment object that contains the most recent date and time parsed
             var previousTimestamp;
 
-            // This variable holds the most recent line read
-            var line;
-
             // This variable holds the number of the most recent line read
             var lineNumber = 0;
+
+            // A placeholder to keep track of which line is being parsed
+            var parsedLineNumber = 0;
 
             // The is an object that keeps track of the current actor aliases that are used
             // in .log files to keep track of actors in an efficient way
@@ -1043,6 +1039,7 @@ function parseFileSync(fileToParse, remoteDataDirectory, numberOfTicksPerSecond)
                     // If the current line starts with a '@', that means the previous line
                     // is complete and is ready for parsgin
                     if (!line.toString('ascii').startsWith('@')) {
+                        lineSegments.push(Buffer.from('\n', 'utf8'));
                         lineSegments.push(line);
                     } else {
                         // Set the flag that the line buffer is ready to parse
@@ -1064,38 +1061,47 @@ function parseFileSync(fileToParse, remoteDataDirectory, numberOfTicksPerSecond)
                 // Now check to see if the ready to parse flag is set
                 if (readyToParseBuffer) {
 
-                    // Grab the complete buffer from the segments
-                    var completeLineBuffer = Buffer.concat(lineSegments);
-                    logger.trace('Ready to parse line ' + lineNumber + ': ' + completeLineBuffer.toString());
+                    // Make sure there is something to parse
+                    if (lineSegments.length > 0) {
 
-                    // First thing to do is see if the line has any indication of a timestamp update
-                    var newTimestamp = updateTimestamp(fileType, completeLineBuffer, previousTimestamp, logFileNumberOfTicksPerSecond);
-                    if (newTimestamp) {
-                        logger.trace('Timestamp was updated to ' + newTimestamp.format());
-                        previousTimestamp = newTimestamp;
+                        // Grab the complete buffer from the segments
+                        var completeLineBuffer = Buffer.concat(lineSegments);
+                        logger.trace('Ready to parse line starting on line ' + parsedLineNumber + ': ' + completeLineBuffer.toString());
+
+                        // First thing to do is see if the line has any indication of a timestamp update
+                        var newTimestamp = updateTimestamp(fileType, completeLineBuffer, previousTimestamp, logFileNumberOfTicksPerSecond);
+                        if (newTimestamp) {
+                            logger.trace('Timestamp was updated to ' + newTimestamp.format());
+                            previousTimestamp = newTimestamp;
+                        }
+
+                        // Now try to find if there is an actor specified in the given line
+                        var actorFromLine = findActor(fileType, completeLineBuffer, actorLegend);
+                        if (actorFromLine) {
+                            currentActor = actorFromLine;
+                            logger.trace('Actor set to ' + currentActor);
+                        }
+
+                        // Now that we have the full line, the timestamp and the actor, let's strip off the front part of the line and
+                        // just get the body of the message to parse.
+                        var messageBody = getMessageBody(fileType, completeLineBuffer, actorLegend);
+                        logger.trace('Extracted message body was ' + messageBody.toString());
+
+                        // Call the method to parse the line into the data object
+                        parseLine(parsedObject, messageBody, previousTimestamp, lineNumber, currentActor, remoteDataDirectory);
+                        
                     }
-
-                    // Now try to find if there is an actor specified in the given line
-                    var actorFromLine = findActor(fileType, completeLineBuffer, actorLegend);
-                    if (actorFromLine) {
-                        currentActor = actorFromLine;
-                        logger.trace('Actor set to ' + currentActor);
-                    }
-
-                    // Now that we have the full line, the timestamp and the actor, let's strip off the front part of the line and
-                    // just get the body of the message to parse.
-                    var messageBody = getMessageBody(fileType, completeLineBuffer, actorLegend);
-                    logger.trace('Extracted message body was ' + messageBody.toString());
-
-                    // Call the method to parse the line into the data object
-                    parseLine(parsedObject, messageBody, previousTimestamp, lineNumber, currentActor, remoteDataDirectory);
 
                     // Now reset the line buffer depending on the file type
                     if (fileType == 'out') {
                         lineSegments = [line];
+                        // Set the parsed line number equal to the current line
+                        parsedLineNumber = lineNumber;
                     } else {
                         if (fileType == 'log') {
                             lineSegments = [];
+                            // Set the parsed line number equal to the next line
+                            parsedLineNumber = lineNumber + 1;
                         }
                     }
 
