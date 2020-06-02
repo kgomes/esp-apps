@@ -14,7 +14,7 @@ services:
     env_file: .env
 
     # This is the image to use to run couchdb
-    image: couchdb:1.6
+    image: couchdb:3.1
 
     # Any environment variables
     environment:
@@ -32,10 +32,7 @@ services:
 
     # These are the volumes to be mounted inside the container
     volumes:
-      - "${ESP_APPS_BASEDIR_HOST}/couchdb/etc:/usr/local/etc/couchdb"
-      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/lib:/usr/local/var/lib/couchdb"
-      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/log:/usr/local/var/log/couchdb"
-      - "${ESP_APPS_BASEDIR_HOST}/couchdb/var/run:/usr/local/var/run/couchdb"
+      - "${ESP_APPS_BASEDIR_HOST}/couchdb/data:/opt/couchdb/data"
 
     # Now give a sensible name to the container
     container_name: esp-couchdb
@@ -46,12 +43,11 @@ services:
     env_file: .env
 
     # This is the image to use to run postgres
-    image: postgres:9.3
+    image: postgres:12.3
 
     # Any environment variables
     environment:
-      - POSTGRES_USER=${ESP_APPS_POSTGRES_USER}
-      - POSTGRES_DB=${ESP_APPS_POSTGRES_DB}
+      - POSTGRES_PASSWORD=${ESP_APPS_PG_PASSWORD}
 
     # Open the PostgreSQL port to the other containers in this compose file
     expose:
@@ -75,13 +71,8 @@ services:
     # Declare the file to read the environment variables from
     env_file: .env
 
-    # Define the build file
-    build:
-      context: ./services/esp-core
-      args:
-        ESP_NAME: chris
-        ESP_MODE: real
-        ESP_PORT: 7777
+    # This is the image to use to run postgres
+    image: mbari/esp-web-log-parser
 
     # Define the port to expose to other containers
     expose:
@@ -95,12 +86,12 @@ services:
 
     # The volumes to mount for the core service
     volumes:
-      - "${ESP_APPS_BASEDIR_HOST}/core-service/logs:/var/log/httpd"
-      - "${ESP_APPS_BASEDIR_HOST}/core-service/uploads:/data/uploads"
+      - "${ESP_APPS_BASEDIR_HOST}/esp-web-log-parser/logs:/var/log/httpd"
+      - "${ESP_APPS_BASEDIR_HOST}/esp-web-log-parser/uploads:/data/uploads"
       - "${ESP_APPS_BASEDIR_HOST}/ESP2Gscript:/home/esp/ESP2Gscript"
 
     # Give the container a name
-    container_name: esp-core-service
+    container_name: esp-web-log-parser
 
   # This is an HTTP service for uploading images for auto analysis
   ia-service:
