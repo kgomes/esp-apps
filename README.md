@@ -80,3 +80,27 @@ These instructions assume you have cloned the Git repository for this project in
 1. Click on the Save Document. You have now created a new ESP deployment that will be parsed to populate the information from the deployment.
 1. The next step is to start the FTP crawler which will syncronize all deployment files with the local ESP portal.  You do this by opening a command line in the server directory and running ```node crawler.js```.  This will then copy down any FTP files from remote ESP ftp servers to the ESP web portal.
 1. Lastly, you need to run the parseDeployments.js script which will read in all the deployments from the ESP portal API and then parse any files that it can and load that data into the portal. You do this by opening a command line in the server directory and running ```node parseDeployments.js```.  The ESP data should now be available in the web portal (probably need to refresh the page).
+
+## Building and running from local Docker image
+
+If you want to build the ESP Docker image locally, you can simply run ```docker build -t mbari/esp-portal .``` and that will build a local image.  Assuming you have the supporting services running using the docker-compose in the previous sections instructions, you can run the portal and connect to those services.  First you need to change your config.js file as the hostname for the CouchDB and Postgres servers will be relative to the docker-compose network and will be 'esp-couchdb' and 'esp-posgresql' respectively.  Also, you will mount your data directory to the esp-portal image so you need to update the config.js and map the dataDir and logDir entries to point to the location inside the container where you will mount your data and log directories. Your apiBaseUrl might change as well, depending on how expose the portal server port to the host.  The easiest way is to show this by example.  Let's say I have the following data and log directories:
+
+1. dataDir: '/my/host/data/dir'
+1. logDir: '/my/host/log/dir'
+
+And let's say I am going to mount those to the '/esp-portal/data' and '/esp-portal/logs' directories inside the portal container. Also, I am going to do a straight mapping from the portal port of 8081 inside the container to the 8081 port on the host.  The config.js changes would be:
+
+1. In config.js under the server, crawler, and parseDeployments objects, change the dataDir to '/esp-portal/data' and the logDir to '/esp-portal/logs'.
+1. Under the server->dataAccessOptions object, change the couchHost and pgHost to 'esp-couchdb' and 'esp-postgresql' respectively.
+
+You should now be able to start up the esp-portal server, crawler and parseDeployments by running the following:
+
+    docker run -p 8081:8081 -v /my/checkout/of/esp-apps/server/config.js:/opt/esp/server/config.js -v /my/host/data/dir:/esp-portal/data -v /my/host/log/dir:/esp-portal/logs --network="resources_default" mbari/esp-portal
+
+Note that it will take about a minute for the ESP portal to become available as I have a pause built to give other services that may be starting at the same time to start. The FTP sync defaults to checking every minute and the parsing of the ESP files defaults to every 5 minutes so it can be several minutes before the sync and parse takes place and the web page is updated.  Also note that it's on my list to have the page updated automatically by pushing events from the server, the app will need to be refreshed to show any updates that have taken place since the last time the page was updated. I know, I'm working on it. :)
+
+## Deploying to production
+
+### CentOS 8
+
+CentOS 8 is a bit different as they have moved to podman instead of Docker, so the deployment is a bit different.
