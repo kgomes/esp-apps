@@ -16,11 +16,6 @@ services:
     # This is the image to use to run couchdb
     image: couchdb:3.1
 
-    # Any environment variables
-    environment:
-      - COUCHDB_USER=${ESP_APPS_COUCHDB_USERNAME}
-      - COUCHDB_PASSWORD=${ESP_APPS_COUCHDB_PASSWORD}
-
     # Open the CouchDB port to the other containers in this compose file
     expose:
       - "5984"
@@ -44,10 +39,6 @@ services:
 
     # This is the image to use to run postgres
     image: postgres:12.3
-
-    # Any environment variables
-    environment:
-      - POSTGRES_PASSWORD=${ESP_APPS_PG_PASSWORD}
 
     # Open the PostgreSQL port to the other containers in this compose file
     expose:
