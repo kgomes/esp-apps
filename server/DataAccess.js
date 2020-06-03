@@ -1,15 +1,12 @@
 // Grab dependencies
-var util = require('util');
 var fs = require('fs');
 var cradle = require('cradle');
 var os = require('os');
 var { Pool } = require('pg');
 var path = require('path');
-var fs = require('fs');
 var readline = require('readline');
 var stream = require('stream');
 var moment = require('moment');
-var eventEmitter = require('events').EventEmitter;
 var Slack = require('node-slackr');
 var deploymentUtils = require('./DeploymentUtils');
 
@@ -23,28 +20,37 @@ log4js.loadAppender('file');
 // Grab the logger
 var logger = log4js.getLogger('DataAccess');
 
-// Inherit event emitter functionality
-util.inherits(DataAccess, eventEmitter);
-
 // The constructor function
-function DataAccess(opts, logDir) {
+function DataAccess(config, dataDir,  dataDirectoryBaseUrl, slackUsername, slackWebHookURL, logDir, logLevel) {
     // TODO kgomes, verify all options are present in the incoming 'opts' object
 
     // Set the log directory
     log4js.addAppender(log4js.appenders.file(logDir + '/DataAccess.log'), 'DataAccess');
+    deploymentUtils.setLogDirectory(logDir);
 
     // Set the logger level
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
+        deploymentUtils.setLogLevel(logLevel);
     }
 
     // Slack variables
     this.slack = null;
-    this.slackUsername = 'esps';
+    this.slackUsername = slackUsername;
+
+    // Create the slack connection if a web hook url is specified
+    if (slackWebHookURL) {
+        logger.info("Will send message to Slack at URL " + slackWebHookURL);
+        this.slack = new Slack(slackWebHookURL);
+    }
+
+    // Create an array that will act as a queue for slack messages so we can make sure we don't send messages
+    // too fast
+    this.slackQueue = [];
 
     // Data directory variables
-    this.dataDir = opts['dataDir'];
-    this.dataBaseUrl = opts['dataBaseUrl'];
+    this.dataDir = dataDir;
+    this.dataDirectoryBaseUrl =  dataDirectoryBaseUrl;
 
     // Grab reference to this for scoping
     var me = this;
@@ -54,26 +60,16 @@ function DataAccess(opts, logDir) {
     logger.info("There are " + this.numberOfCPUs + " CPUs on this server");
 
     // Grab the number of points that will be batch inserted
-    this.numAncillaryPointsToBatch = opts.numAncillaryPointsToBatch;
-
-    // Create the slack connection if a web hook url is specified
-    if (opts.slackWebHookURL) {
-        logger.info("Will send message to Slack at URL " + opts.slackWebHookURL);
-        this.slack = new Slack(opts.slackWebHookURL);
-    }
-
-    // Create an array that will act as a queue for slack messages so we can make sure we don't send messages
-    // too fast
-    this.slackQueue = [];
+    this.numAncillaryPointsToBatch = config.numAncillaryPointsToBatch;
 
     // Set the local properties for the data connection to couch DB
     this.couchConfiguration = {
-        host: opts.couchHost,
-        port: opts.couchPort,
-        ssl: opts.couchSSL,
-        username: opts.couchUsername,
-        password: opts.couchPassword,
-        database: opts.couchDatabase
+        host: config.couchHost,
+        port: config.couchPort,
+        ssl: config.couchSSL,
+        username: config.couchUsername,
+        password: config.couchPassword,
+        database: config.couchDatabase
     };
 
     // Grab a connection to the CouchDB server
@@ -122,12 +118,12 @@ function DataAccess(opts, logDir) {
 
     // Set the local properties for the PostgreSQL connection
     this.pgConfiguration = {
-        protocol: opts.pgProtocol,
-        host: opts.pgHost,
-        port: opts.pgPort,
-        username: opts.pgUsername,
-        password: opts.pgPassword,
-        database: opts.pgDatabase
+        protocol: config.pgProtocol,
+        host: config.pgHost,
+        port: config.pgPort,
+        username: config.pgUsername,
+        password: config.pgPassword,
+        database: config.pgDatabase
     };
 
     // Form the connection string
@@ -143,11 +139,11 @@ function DataAccess(opts, logDir) {
 
     // Create a connection pool for the PostgreSQL database
     this.pgPool = new Pool({
-        host: opts.pgHost,
-        port: opts.pgPort,
-        database: opts.pgDatabase,
-        user: opts.pgUsername,
-        password: opts.pgPassword
+        host: config.pgHost,
+        port: config.pgPort,
+        database: config.pgDatabase,
+        user: config.pgUsername,
+        password: config.pgPassword
     });
 
     // This is an array of ancillary data files that are currently in the process of being sync'd
@@ -839,7 +835,7 @@ function DataAccess(opts, logDir) {
             });
         } else if (deploymentName) {
             logger.debug('Going to get ESP list for deployment ' + deploymentName);
-            var opts = {
+            let opts = {
                 key: deploymentName
             }
             // Run the couch query
@@ -1077,7 +1073,7 @@ function DataAccess(opts, logDir) {
                 deploymentToPersist['resource'] = 'Deployment';
 
                 // Copy over the information from the incoming deployment
-                var events = deploymentUtils.mergeDeployments(deployment, deploymentToPersist);
+                deploymentUtils.mergeDeployments(deployment, deploymentToPersist);
 
                 // TODO kgomes check if slack publishing on and if so, loop over events and send
 
@@ -1175,7 +1171,7 @@ function DataAccess(opts, logDir) {
                         // Check for an error
                         if (message['event'] == 'ERROR_OCCURRED') {
                             // Create the message to send
-                            var messageToSend = {
+                            let messageToSend = {
                                 text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
                                     "_\n*ERROR*: " + messages[messageTimestamps[i]]['new']['subject'],
                                 channel: targetDeployment['slackChannel'],
@@ -1195,7 +1191,7 @@ function DataAccess(opts, logDir) {
                         // Check for ProtocolRun started
                         if (message['event'] == 'PROTOCOL_RUN_STARTED') {
                             // Create a message and put it in the queue to send
-                            var messageToSend = {
+                            let messageToSend = {
                                 text: "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
                                     "_\n*Protocol Run Started*: " + messages[messageTimestamps[i]]['new']['name'],
                                 channel: targetDeployment['slackChannel'],
@@ -1215,7 +1211,7 @@ function DataAccess(opts, logDir) {
 
                         // Now let's look for samples
                         if (message['event'] == 'SAMPLE_STARTED') {
-                            var messageToSend = {
+                            let messageToSend = {
                                 text: "_" +
                                     moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') +
                                     '_\n*Sample Started*',
@@ -1236,15 +1232,15 @@ function DataAccess(opts, logDir) {
                         }
                         if (message['event'] == 'SAMPLE_TAKEN' || message['event'] == 'SAMPLE_FINISHED') {
                             // Figure out the color to use
-                            var messageColor = 'good';
+                            let messageColor = 'good';
                             if (messages[messageTimestamps[i]]['new']['volDiff'] &&
                                 Number(messages[messageTimestamps[i]]['new']['volDiff']) > 0) {
                                 messageColor = 'warning';
                             }
-                            var textToSend = "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_';
+                            let textToSend = "_" + moment(Number(messageTimestamps[i])).format('YYYY-MM-DD HH:mm:ss ZZ') + '_';
                             if (message['event'] == 'SAMPLE_TAKEN') textToSend += '\n*Sample Taken*';
                             if (message['event'] == 'SAMPLE_FINISHED') textToSend += '\n*Sample Finished*';
-                            var messageToSend = {
+                            let messageToSend = {
                                 text: textToSend,
                                 channel: targetDeployment['slackChannel'],
                                 username: me.slackUsername,
@@ -1373,13 +1369,13 @@ function DataAccess(opts, logDir) {
                                     if (fs.existsSync(localImagePath)) {
                                         logger.debug('TIF image exists locally');
                                         targetDeployment['images'][imageTimestamps[i]]['downloaded'] = true;
-                                        targetDeployment['images'][imageTimestamps[i]]['tiffUrl'] = me.dataBaseUrl +
+                                        targetDeployment['images'][imageTimestamps[i]]['tiffUrl'] = me.dataDirectoryBaseUrl +
                                             localImagePath.substring(me.dataDir.length);
 
                                         // Check for matching JPG
                                         if (fs.existsSync(localJPGPath)) {
                                             logger.debug('JPG image exists locally');
-                                            targetDeployment['images'][imageTimestamps[i]]['imageUrl'] = me.dataBaseUrl +
+                                            targetDeployment['images'][imageTimestamps[i]]['imageUrl'] = me.dataDirectoryBaseUrl +
                                                 localJPGPath.substring(me.dataDir.length);
                                         }
                                     } else {
@@ -2727,9 +2723,6 @@ function DataAccess(opts, logDir) {
     this.getAncillaryData = function (ancillarySourceID, startTimestampUtc, endTimestampUtc, format, callback) {
         logger.debug('getAncillaryData called for sourceID ' + ancillarySourceID);
 
-        // Grab a reference to self for callbacks
-        var self = this;
-
         // If there are dates specified, try and parse them
         var startDate = null;
         var endDate = null;
@@ -2737,14 +2730,16 @@ function DataAccess(opts, logDir) {
             try {
                 startDate = moment(startTimestampUtc);
             } catch (error) {
-
+                logger.error('Error caught in query:');
+                logger.error(error);
             }
         }
         if (endTimestampUtc) {
             try {
                 endDate = moment(endTimestampUtc);
             } catch (error) {
-
+                logger.error('Error caught in query:');
+                logger.error(error);
             }
         }
 
@@ -2900,8 +2895,8 @@ function DataAccess(opts, logDir) {
                                                 i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
                                                 // Return the ID to the caller
                                                 if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                        (null, result.rows[0].id, deploymentID, espName,
+                                                    me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i](
+                                                        null, result.rows[0].id, deploymentID, espName,
                                                             sourceName, varName, varLongName, varUnits,
                                                             logUnits, timestamp, data);
                                             }
@@ -2939,6 +2934,7 @@ function DataAccess(opts, logDir) {
                                                         function (err) {
                                                             logger.error("Error while pushing source ID " +
                                                                 result.rows[0].id + " into the cache");
+                                                            logger.error(err);
                                                         });
 
                                                     // Loop over the callback cache and return the results
@@ -2946,8 +2942,8 @@ function DataAccess(opts, logDir) {
                                                         i < me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits].length; i++) {
                                                         // Return the ID to the caller
                                                         if (me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i])
-                                                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i]
-                                                                (null, result.rows[0].id, deploymentID, espName,
+                                                            me.ancillaryDataSourceIDLookupCallbackQueue[deploymentID][espName][sourceName][logUnits][i](
+                                                                null, result.rows[0].id, deploymentID, espName,
                                                                     sourceName, varName, varLongName, varUnits,
                                                                     logUnits, timestamp, data);
                                                     }
@@ -3422,9 +3418,6 @@ function DataAccess(opts, logDir) {
         if (deployment.ancillaryData) {
             // Make sure there is at least one ancillary data source
             if (Object.keys(deployment.ancillaryData).length > 0) {
-                // This is the object to hold the sources and their associated writeStreams
-                var sourceStreams = {};
-
                 // A counter to keep track of how many sources are currently in process
                 var sourceCounter = 0;
 
@@ -3557,11 +3550,11 @@ function DataAccess(opts, logDir) {
                                         callback(err);
                                 });
                             } else {
-                                var errorMessage = 'No source ID array was returned, that is just not right!';
+                                let errorMessage = 'No source ID array was returned, that is just not right!';
                                 logger.error(errorMessage);
 
                                 // Clean the entry from the tracker
-                                var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                                let filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
                                 logger.debug("File path was found at index " + filePathIndex + ", will remove it");
                                 self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                                 logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
@@ -3573,12 +3566,12 @@ function DataAccess(opts, logDir) {
                         } else {
                             // The file already existed, but there was no latest epoch timestamp
                             // found.  This should not really happen, so we will send back an error
-                            var errorMessage = 'While file ' + filePath + ' already exists, it did not seem ' +
+                            let errorMessage = 'While file ' + filePath + ' already exists, it did not seem ' +
                                 ' to have any existing data.  That is very strange';
                             logger.error(errorMessage);
 
                             // Remove it from the tracker
-                            var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                            let filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
                             logger.debug("File path was found at index " + filePathIndex + ", will remove it");
                             self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                             logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
@@ -3637,11 +3630,11 @@ function DataAccess(opts, logDir) {
                                         callback(err);
                                 });
                             } else {
-                                var errorMessage = 'No source ID array was returned, that is just not right!';
+                                let errorMessage = 'No source ID array was returned, that is just not right!';
                                 logger.error(errorMessage);
 
                                 // Clean the entry from the tracker
-                                var filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
+                                let filePathIndex = self.ancillaryFilesBeingSyncd.indexOf(filePath);
                                 logger.debug("File path was found at index " + filePathIndex + ", will remove it");
                                 self.ancillaryFilesBeingSyncd.splice(filePathIndex, 1);
                                 logger.debug("ancillaryFileBeingSyncd:", self.ancillaryFilesBeingSyncd);
@@ -3849,6 +3842,6 @@ function DataAccess(opts, logDir) {
 }
 
 // Export the factory method
-exports.createDataAccess = function (opts, logDir) {
-    return new DataAccess(opts, logDir);
+exports.createDataAccess = function (config, dataDir,  dataDirectoryBaseUrl, slackUsername, slackWebHookURL, logDir,logLevel) {
+    return new DataAccess(config, dataDir,  dataDirectoryBaseUrl, slackUsername, slackWebHookURL, logDir, logLevel);
 }

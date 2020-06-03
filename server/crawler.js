@@ -4,7 +4,9 @@
 
 // Read in the ESP application configuration
 var espCfg = require('./config.js');
-espCfg.init();
+var crawlerCfg = espCfg.crawler;
+
+//espCfg.init();
 
 // Import the Axios library for HTTP interaction
 const axios = require('axios');
@@ -16,25 +18,25 @@ var log4js = require('log4js');
 log4js.loadAppender('file');
 
 // Set log directory
-log4js.addAppender(log4js.appenders.file(espCfg.logDir + '/crawler.log'), 'crawler');
+log4js.addAppender(log4js.appenders.file(crawlerCfg.logDir + '/crawler.log'), 'crawler');
 
 // Grab the logger
 var logger = log4js.getLogger('crawler');
 
 // Set the default logging level from the config
-if (espCfg.crawlerOptions.loggerLevel) {
-    logger.setLevel(espCfg.crawlerOptions.loggerLevel);
+if (crawlerCfg && crawlerCfg.loggingLevels && crawlerCfg.loggingLevels.crawler) {
+    logger.setLevel(crawlerCfg.loggingLevels.crawler);
 }
 
 // Create the object that will be responsible for handling the
 // synchronization of files from FTP servers
-var dfs = require('./DeploymentFileSync').createDeploymentFileSync(espCfg.deploymentFileSyncOptions, espCfg.dataDir, espCfg.logDir);
+var dfs = require('./DeploymentFileSync').createDeploymentFileSync(crawlerCfg.dataDir, crawlerCfg.logDir, crawlerCfg.loggingLevels.deploymentFileSync);
 
 // Set up the interval to walk through the list of deployments for processing
 setInterval(function () {
     try {
         // Call the API to get a list of the open deployments
-        axios.get(espCfg.hostBaseUrl + '/deployments?openOnly=true')
+        axios.get(crawlerCfg.apiBaseUrl + '/deployments?openOnly=true')
             .then(function (response) {
                 // Grab the array of Deployments
                 var openDeployments = response.data;
@@ -61,7 +63,7 @@ setInterval(function () {
         logger.error('Error caught trying to process deployments');
         logger.error(error);
     }
-}, espCfg.crawlerOptions.ftpSyncIntervalMillis);
+}, crawlerCfg.ftpSyncIntervalMillis);
 
 
 // **************************************************************************************************

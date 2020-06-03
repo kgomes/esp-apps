@@ -6,10 +6,10 @@ log4js.loadAppender('file');
 var logger = log4js.getLogger('ESPRouter');
 
 // The constructor function
-function ESPRouter(dataAccess, opts, logDir) {
+function ESPRouter(dataAccess, logDir, logLevel) {
     // If the options specify a logger level, set it
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
     logger.debug("Creating ESPRouter");
 
@@ -48,7 +48,7 @@ function ESPRouter(dataAccess, opts, logDir) {
 }
 
 // Export the factory method
-exports.createESPRouter = function (dataAccess, opts, logDir) {
+exports.createESPRouter = function (dataAccess, logDir, logLevel) {
     // Create the new ESPRouter
-    return new ESPRouter(dataAccess, opts, logDir);
+    return new ESPRouter(dataAccess, logDir, logLevel);
 }

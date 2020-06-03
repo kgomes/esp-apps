@@ -9,7 +9,8 @@
 
 // First, let's red in the configuration file and initialize the configuration
 var espCfg = require('./config.js');
-espCfg.init();
+var parseDeploymentsCfg = espCfg.parseDeployments;
+//espCfg.init();
 
 // Import the Axios library for HTTP interaction
 const axios = require('axios');
@@ -22,14 +23,14 @@ const path = require('path');
 
 // Some utilities for dealing with deployments
 const deploymentUtils = require('./DeploymentUtils');
-deploymentUtils.setLogDirectory(espCfg['logDir']);
-deploymentUtils.setLogLevel('info');
+deploymentUtils.setLogDirectory(parseDeploymentsCfg.logDir);
+deploymentUtils.setLogLevel(parseDeploymentsCfg.loggingLevels.parseDeployments);
 
 // The parser for .out files
 const outParser = require('./OutParser');
-outParser.setLogDirectory(espCfg['logDir']);
-outParser.setLogLevel('info');
-outParser.setAncillaryDataLookup(espCfg['ancillaryDataLookup']);
+outParser.setLogDirectory(parseDeploymentsCfg.logDir);
+outParser.setLogLevel(parseDeploymentsCfg.loggingLevels.outParser);
+outParser.setAncillaryDataLookup(parseDeploymentsCfg.ancillaryDataLookup);
 
 // Import the logging library
 var log4js = require('log4js');
@@ -38,14 +39,14 @@ var log4js = require('log4js');
 log4js.loadAppender('file');
 
 // Set log directory
-log4js.addAppender(log4js.appenders.file(path.join(espCfg.logDir, 'parseDeployment.log')), 'parseDeployment');
+log4js.addAppender(log4js.appenders.file(path.join(parseDeploymentsCfg.logDir, 'parseDeployment.log')), 'parseDeployment');
 
 // Grab the logger
 var logger = log4js.getLogger('parseDeployment');
 
 // Set the default logging level from the config
-if (espCfg.parseDeploymentOptions.loggerLevel) {
-    logger.setLevel(espCfg.parseDeploymentOptions.loggerLevel);
+if (parseDeploymentsCfg.loggingLevels.parseDeployments) {
+    logger.setLevel(parseDeploymentsCfg.loggingLevels.parseDeployments);
 }
 logger.info('Starting parse deployment run at ' + new Date());
 
@@ -59,7 +60,7 @@ var parseDeploymentData = function (deployment) {
         deployment['esp']['dataDirectory']) {
 
         // Using the ESP and Deployment name, find the local data directory for this deployment
-        var localDataDirectory = path.join(espCfg['dataDir'], 'instances',
+        var localDataDirectory = path.join(parseDeploymentsCfg.dataDir, 'instances',
             deployment['esp']['name'], 'deployments', deployment['name'], 'data', 'raw', 'esp');
         logger.debug('Deployment ' + deployment['name'] + ' of ESP ' +
             deployment['esp']['name'] + ' data is located locally at:');
@@ -118,7 +119,7 @@ var parseDeploymentData = function (deployment) {
 };
 
 // Call the API to get a list of the open deployments
-axios.get(espCfg.hostBaseUrl + '/deployments?openOnly=true')
+axios.get(parseDeploymentsCfg.apiBaseUrl + '/deployments?openOnly=true')
     .then(function (response) {
         // Grab the array of Deployments
         var openDeployments = response.data;
@@ -132,7 +133,7 @@ axios.get(espCfg.hostBaseUrl + '/deployments?openOnly=true')
                 // Now the deployment object should have all the information from all
                 // parsed files.
                 // Now call the API to persist any changes to the deployment
-                var patchUrl = espCfg.hostBaseUrl + '/deployments/' + openDeployments[i]['_id'];
+                var patchUrl = parseDeploymentsCfg.apiBaseUrl + '/deployments/' + openDeployments[i]['_id'];
                 axios.patch(patchUrl, openDeployments[i])
                     .then(function (response) {
                         logger.debug('Done processing deployment');

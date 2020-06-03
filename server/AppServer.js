@@ -1,6 +1,5 @@
 // Load any dependencies
 var express = require('express');
-var csv = require('express-csv');
 const body_parser = require('body-parser');
 
 // Configure logging
@@ -11,10 +10,10 @@ log4js.loadAppender('file');
 var logger = log4js.getLogger('AppServer');
 
 // The constructor function
-function AppServer(dataAccess, dataDir, opts, logDir) {
+function AppServer(dataAccess, dataDir, port, logDir, logLevel) {
     // Grab the logging level from the options
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
 
     // And set log directory
@@ -23,28 +22,25 @@ function AppServer(dataAccess, dataDir, opts, logDir) {
     // A reference to the instance for scoping
     var me = this;
 
-    // Grab the host base URL
-    this.hostBaseUrl = opts.hostBaseUrl;
-
     // Grab the port number from the options, the environment, or a default of 8081
-    this.port = (opts.port || process.env.PORT || 8081);
+    this.port = (port || process.env.PORT || 8081);
 
     // Grab the DataAccess
     this.dataAccess = dataAccess;
 
     // Create the UserRouter
-    this.userRouter = require('./routes/UserRouter').createUserRouter(dataAccess, opts.userRouterOptions, logDir);
+    this.userRouter = require('./routes/UserRouter').createUserRouter(dataAccess, logDir, logLevel);
 
     // Create the ESPRouter
-    this.espRouter = require('./routes/ESPRouter').createESPRouter(dataAccess, opts.espRouterOptions, logDir);
+    this.espRouter = require('./routes/ESPRouter').createESPRouter(dataAccess, logDir, logLevel);
 
     // Create the deployment router
     this.deploymentRouter =
-        require('./routes/DeploymentRouter').createDeploymentRouter(dataAccess, opts.deploymentRouterOptions, logDir);
+        require('./routes/DeploymentRouter').createDeploymentRouter(dataAccess, logDir, logLevel);
 
     // Create the AncillaryData router
     this.ancillaryDataRouter =
-        require('./routes/AncillaryDataRouter').createAncillaryDataRouter(dataAccess, opts.ancillaryDataRouterOptions, logDir);
+        require('./routes/AncillaryDataRouter').createAncillaryDataRouter(dataAccess, logDir, logLevel);
 
     // Create the express server
     this.server = express();
@@ -134,7 +130,7 @@ function AppServer(dataAccess, dataDir, opts, logDir) {
 }
 
 // The factory method for constructing the server
-exports.createAppServer = function (dataAccess, dataDir, opts, logDir) {
+exports.createAppServer = function (dataAccess, dataDir, port, logDir, logLevel) {
     // Create the new AppServer
-    return new AppServer(dataAccess, dataDir, opts, logDir);
+    return new AppServer(dataAccess, dataDir, port, logDir, logLevel);
 }

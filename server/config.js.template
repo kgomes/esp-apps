@@ -1,462 +1,217 @@
-// Import libraries
-var fs = require('fs');
-
-// Now export the configuration object
+// Export the configuration
 module.exports = {
 
-    // This is the location where the data for all the ESPs will be stored
-    dataDir: './data',
-
-    // And logs
-    logDir: './data/logs/server',
-
-    // The web hood URL for Slack
-    slackWebHookURL: '',
-
-    // The base URL of the web portal
-    hostBaseUrl: 'http://localhost:8081',
-
-    // The port of the web portal
-    port: 8081,
-
-    // The object which contains the lookup for mapping a ancillary data sources and units
-    ancillaryDataLookup: {
-        CTD: {
-            'C': {
-                varName: 'Temp',
-                varLongName: 'Temperature',
-                units: 'Degrees C'
-            },
-            'm': {
-                varName: 'Depth',
-                varLongName: 'Depth',
-                units: 'meters'
-            },
-            'psu': {
-                varName: 'Sal',
-                varLongName: 'Salinity',
-                units: 'psu'
-            },
-            'mg/m^3': {
-                varName: 'Chl',
-                varLongName: 'Chlorophyll',
-                units: 'mg/m^3'
-            },
-            '%': {
-                varName: 'Light Tx',
-                varLongName: 'Light Transmission',
-                units: '%'
-            },
-            'ml/L': {
-                varName: 'Diss O2',
-                varLongName: 'Computed Dissolved Oxygen',
-                units: 'ml/L'
-            },
-            'decibars': {
-                varName: 'Press',
-                varLongName: 'Pressure',
-                units: 'decibars'
-            },
-            'S/m': {
-                varName: 'Cond',
-                varLongName: 'Conductivity',
-                units: 'S/m'
-            }
+    // These are configurations that are specific to the server.js application and relative to
+    // where that application is running
+    server: {
+        dataDir: './data',
+        logDir: './logs',
+        apiBaseUrl: 'http://localhost:8081',
+        port: 8081,
+        slackUsername: '',
+        slackWebHookURL: '',
+        dataAccessOptions: {
+            couchHost: 'localhost',
+            couchPort: 5984,
+            couchSSL: false,
+            couchUsername: '',
+            couchPassword: '',
+            couchDatabase: 'esp',
+            pgProtocol: 'postgres',
+            pgHost: 'localhost',
+            pgPort: 5432,
+            pgUsername: '',
+            pgPassword: '',
+            pgDatabase: 'esp_ancillary',
+            numAncillaryPointsToBatch: 1000
         },
-        Can: {
-            'C': {
-                varName: 'Temp',
-                varLongName: 'Temperature',
-                units: 'Degrees C'
-            },
-            '% Wet!': {
-                varName: '% Wet!',
-                varLongName: 'Percent Wet',
-                units: '%'
-            },
-            '% humidity': {
-                varName: '% Humidity',
-                varLongName: 'Percent Humidity',
-                units: '%'
-            },
-            'psia': {
-                varName: 'Press',
-                varLongName: 'Pressure',
-                units: 'psia'
-            },
-            'V': {
-                varName: 'Volt',
-                varLongName: 'Battery Voltage',
-                units: 'V'
-            },
-            'A': {
-                varName: 'Inst Curr',
-                varLongName: 'Instantaneous Current',
-                units: 'A'
-            },
-            'A avg': {
-                varName: 'Avg Curr',
-                varLongName: 'Average Current',
-                units: 'A'
-            },
-            'W': {
-                varName: 'Power',
-                varLongName: 'Power',
-                units: 'W'
-            },
-            '% flow': {
-                varName: '% Flow',
-                varLongName: 'Percent Flow',
-                units: '%'
-            },
-            'L/min': {
-                varName: 'Flow',
-                varLongName: 'Flow rate',
-                units: 'L/min'
-            }
-        },
-        ISUS: {
-            'uM/L no^3': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM/L no^3'
-            },
-            'uM/L no3': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM/L no3'
-            },
-            'uM no^3': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM no^3'
-            },
-            'uM no3': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM no3'
-            },
-            'uM/L hs': {
-                varName: 'Nitrate 2',
-                varLongName: 'Nitrate 2',
-                units: 'uM/L hs'
-            },
-            'uM hs': {
-                varName: 'Nitrate 2',
-                varLongName: 'Nitrate 2',
-                units: 'uM hs'
-            },
-            'psu': {
-                varName: 'PSU',
-                varLongName: 'PSU',
-                units: 'psu'
-            }
-        },
-        SatlanticISUS: {
-            'uM/L': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM/L'
-            },
-            'psu': {
-                varName: 'PSU',
-                varLongName: 'PSU',
-                units: 'psu'
-            }
-        },
-        SUNA: {
-            'uM': {
-                varName: 'Nitrate',
-                varLongName: 'Nitrate',
-                units: 'uM'
-            },
-            'psu': {
-                varName: 'Salinity',
-                varLongName: 'Salinity',
-                units: ''
-            }
+        loggingLevels: {
+            server: 'info',
+            dataAccess: 'info',
+            appServer: 'info'
         }
     },
 
-    // Options for the data crawling service
-    crawlerOptions: {
+    // These are configurations that are specific to the crawler.js application and relative to
+    // where that application is running
+    crawler: {
+        dataDir: './data',
+        logDir: './logs',
+        apiBaseUrl: 'http://localhost:8081',
         ftpSyncIntervalMillis: 60000,
-        loggerLevel: 'info'
-    },
-
-    // Options for the server
-    serverOptions: {
-        loggerLevel: 'info'
-    },
-
-    // Application server options
-    appServerOptions: {
-        loggerLevel: 'info',
-        // The UserRouter options
-        userRouterOptions: {
-            loggerLevel: 'info'
-        },
-        // The ESPRouter options
-        espRouterOptions: {
-            loggerLevel: 'info'
-        },
-        // The DeploymentRouter options
-        deploymentRouterOptions: {
-            loggerLevel: 'info'
-        },
-        // The AncillaryDataRouter options
-        ancillaryDataRouterOptions: {
-            loggerLevel: 'info'
+        loggingLevels: {
+            crawler: 'info',
+            deploymentFileSync: 'info'
         }
     },
 
-
-    // Datastore connection options
-    dataStoreOptions: {
-        couchHost: 'localhost',
-        couchPort: 5984,
-        couchSSL: false,
-        couchUsername: 'espadm',
-        couchPassword: 'espadmpw',
-        couchDatabase: 'esp',
-        pgProtocol: 'postgres',
-        pgHost: 'localhost',
-        pgPort: 5432,
-        pgUsername: 'espadm',
-        pgPassword: 'espadmpw',
-        pgDatabase: 'esp_ancillary',
-        loggerLevel: 'info',
-        numAncillaryPointsToBatch: 1000
-    },
-
-    // The options for the FTPSync class
-    deploymentFileSyncOptions: {
-        loggerLevel: 'info'
-    },
-
-    // The LogParser options
-    logParserOptions: {
-        loggerLevel: 'info',
-        useAncillaryTimestamps: true,
-        numberOfTicksPerSecond: 100,
-        numberOfAncillaryRecordsToBatch: 1000,
-        // The timezone lookup table
-        timezoneLookup: {
-            'EDT': {
-                stringRep: '-0400',
-                hourOffset: -4
+    // These are configuration that are specific to the parseDeployments.js application and relative
+    // to where that application is running
+    parseDeployments: {
+        dataDir: './data',
+        logDir: './logs',
+        apiBaseUrl: 'http://localhost:8081',
+        ancillaryDataLookup: {
+            CTD: {
+                'C': {
+                    varName: 'Temp',
+                    varLongName: 'Temperature',
+                    units: 'Degrees C'
+                },
+                'm': {
+                    varName: 'Depth',
+                    varLongName: 'Depth',
+                    units: 'meters'
+                },
+                'psu': {
+                    varName: 'Sal',
+                    varLongName: 'Salinity',
+                    units: 'psu'
+                },
+                'mg/m^3': {
+                    varName: 'Chl',
+                    varLongName: 'Chlorophyll',
+                    units: 'mg/m^3'
+                },
+                '%': {
+                    varName: 'Light Tx',
+                    varLongName: 'Light Transmission',
+                    units: '%'
+                },
+                'ml/L': {
+                    varName: 'Diss O2',
+                    varLongName: 'Computed Dissolved Oxygen',
+                    units: 'ml/L'
+                },
+                'decibars': {
+                    varName: 'Press',
+                    varLongName: 'Pressure',
+                    units: 'decibars'
+                },
+                'S/m': {
+                    varName: 'Cond',
+                    varLongName: 'Conductivity',
+                    units: 'S/m'
+                }
             },
-            'EST': {
-                stringRep: '-0500',
-                hourOffset: -5
+            Can: {
+                'C': {
+                    varName: 'Temp',
+                    varLongName: 'Temperature',
+                    units: 'Degrees C'
+                },
+                '% Wet!': {
+                    varName: '% Wet!',
+                    varLongName: 'Percent Wet',
+                    units: '%'
+                },
+                '% humidity': {
+                    varName: '% Humidity',
+                    varLongName: 'Percent Humidity',
+                    units: '%'
+                },
+                'psia': {
+                    varName: 'Press',
+                    varLongName: 'Pressure',
+                    units: 'psia'
+                },
+                'V': {
+                    varName: 'Volt',
+                    varLongName: 'Battery Voltage',
+                    units: 'V'
+                },
+                'A': {
+                    varName: 'Inst Curr',
+                    varLongName: 'Instantaneous Current',
+                    units: 'A'
+                },
+                'A avg': {
+                    varName: 'Avg Curr',
+                    varLongName: 'Average Current',
+                    units: 'A'
+                },
+                'W': {
+                    varName: 'Power',
+                    varLongName: 'Power',
+                    units: 'W'
+                },
+                '% flow': {
+                    varName: '% Flow',
+                    varLongName: 'Percent Flow',
+                    units: '%'
+                },
+                'L/min': {
+                    varName: 'Flow',
+                    varLongName: 'Flow rate',
+                    units: 'L/min'
+                }
             },
-            'CEST': {
-                stringRep: '+0200',
-                hourOffset: 2
+            ISUS: {
+                'uM/L no^3': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM/L no^3'
+                },
+                'uM/L no3': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM/L no3'
+                },
+                'uM no^3': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM no^3'
+                },
+                'uM no3': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM no3'
+                },
+                'uM/L hs': {
+                    varName: 'Nitrate 2',
+                    varLongName: 'Nitrate 2',
+                    units: 'uM/L hs'
+                },
+                'uM hs': {
+                    varName: 'Nitrate 2',
+                    varLongName: 'Nitrate 2',
+                    units: 'uM hs'
+                },
+                'psu': {
+                    varName: 'PSU',
+                    varLongName: 'PSU',
+                    units: 'psu'
+                }
             },
-            'GMT': {
-                stringRep: '0000',
-                hourOffset: 0
+            SatlanticISUS: {
+                'uM/L': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM/L'
+                },
+                'psu': {
+                    varName: 'PSU',
+                    varLongName: 'PSU',
+                    units: 'psu'
+                }
             },
-            'PDT': {
-                stringRep: '-0700',
-                hourOffset: -7
-            },
-            'PST': {
-                stringRep: '-0800',
-                hourOffset: -8
-            },
-            'MDT': {
-                stringRep: '-0600',
-                hourOffset: -6
-            },
-            'UTC': {
-                stringRep: '0000',
-                hourOffset: 0
+            SUNA: {
+                'uM': {
+                    varName: 'Nitrate',
+                    varLongName: 'Nitrate',
+                    units: 'uM'
+                },
+                'psu': {
+                    varName: 'Salinity',
+                    varLongName: 'Salinity',
+                    units: ''
+                }
             }
         },
-        // The ancillary data lookup table
-        ancillaryLookup: {}
-    },
-
-    // The EventHandler options
-    eventHandlerOptions: {
-        loggerLevel: 'info'
-    },
-
-    // The parseDeployment options
-    parseDeploymentOptions: {
-        loggerLevel: 'debug'
-    },
-
-    // The function to setup files paths and check for environmental overrides
-    init: function () {
-        // First see if the ESP base directory was defined in the environment
-        if (process.env['ESP_APPS_BASEDIR']) {
-            this.dataDir = process.env['ESP_APPS_BASEDIR'] + '/data';
-            this.logDir = process.env['ESP_APPS_BASEDIR'] + '/logs/server';
-        }
-
-        // Now check to see if the log file directory was specifically called out in the environment variables
-        if (process.env['ESP_APPS_LOG_DIRECTORY']) {
-            this.logDir = process.env['ESP_APPS_LOG_DIRECTORY'];
-        }
-
-        // Now check to see if Slack Webhook URL was defined in the environment
-        if (process.env['ESP_APPS_SLACK_WEBHOOK_URL']) {
-            this.slackWebHookURL = process.env['ESP_APPS_SLACK_WEBHOOK_URL'];
-        }
-
-        // And the URL and port
-        if (process.env['ESP_APPS_HOST_BASE_URL']) {
-            this.hostBaseUrl = process.env['ESP_APPS_HOST_BASE_URL'];
-        }
-        if (process.env['ESP_APPS_PORT']) {
-            this.port = process.env['ESP_APPS_PORT'];
-        }
-
-        // Now check for crawlerOptions overrides
-        if (process.env['ESP_APPS_FTP_SYNC_INTERVAL_MILLIS']) {
-            this.crawlerOptions.ftpSyncIntervalMillis = parseInt(process.env['ESP_APPS_FTP_SYNC_INTERVAL_MILLIS']);
-        }
-        if (process.env['ESP_APPS_CRAWLER_LOGGER_LEVEL']) {
-            this.crawlerOptions.loggerLevel = process.env['ESP_APPS_CRAWLER_LOGGER_LEVEL'];
-        }
-
-        // Now check for server option overrides
-        if (process.env['ESP_APPS_SERVER_LOGGER_LEVEL']) {
-            this.serverOptions.loggerLevel = process.env['ESP_APPS_SERVER_LOGGER_LEVEL'];
-        }
-
-        // Now check for appServerOption overrides
-        if (process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL']) {
-            this.appServerOptions.loggerLevel = process.env['ESP_APPS_APP_SERVER_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_USER_ROUTER_LOGGER_LEVEL']) {
-            this.appServerOptions.userRouterOptions.loggerLevel = process.env['ESP_APPS_USER_ROUTER_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_ESP_ROUTER_LOGGER_LEVEL']) {
-            this.appServerOptions.espRouterOptions.loggerLevel = process.env['ESP_APPS_ESP_ROUTER_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_DEPLOYMENT_ROUTER_LOGGER_LEVEL']) {
-            this.appServerOptions.deploymentRouterOptions.loggerLevel = process.env['ESP_APPS_DEPLOYMENT_ROUTER_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL']) {
-            this.appServerOptions.ancillaryDataRouterOptions = process.env['ESP_APPS_ANCILLARY_DATA_ROUTER_LOGGER_LEVEL'];
-        }
-
-        // Set the hostBaseUrl and port on the app server options
-        this.appServerOptions['hostBaseUrl'] = this.hostBaseUrl;
-        this.appServerOptions['port'] = this.port;
-
-        // Now check for dataStoreOption overrides
-        if (process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL']) {
-            this.dataStoreOptions.loggerLevel = process.env['ESP_APPS_DATASTORE_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_COUCH_HOST']) {
-            this.dataStoreOptions.couchHost = process.env['ESP_APPS_COUCH_HOST'];
-        }
-        if (process.env['ESP_APPS_COUCH_PORT']) {
-            this.dataStoreOptions.couchPort = parseInt(process.env['ESP_APPS_COUCH_PORT']);
-        }
-        if (process.env['ESP_APPS_COUCH_SSL']) {
-            this.dataStoreOptions.couchSSL = (process.env['ESP_APPS_COUCH_SSL'] == 'true');
-        }
-        if (process.env['ESP_APPS_COUCH_USERNAME']) {
-            this.dataStoreOptions.couchUsername = process.env['ESP_APPS_COUCH_USERNAME'];
-        }
-        if (process.env['ESP_APPS_COUCH_PASSWORD']) {
-            this.dataStoreOptions.couchPassword = process.env['ESP_APPS_COUCH_PASSWORD'];
-        }
-        if (process.env['ESP_APPS_COUCH_DATABASE']) {
-            this.dataStoreOptions.couchDatabase = process.env['ESP_APPS_COUCH_DATABASE'];
-        }
-        if (process.env['ESP_APPS_PG_PROTOCOL']) {
-            this.dataStoreOptions.pgProtocol = process.env['ESP_APPS_PG_PROTOCOL'];
-        }
-        if (process.env['ESP_APPS_PG_HOST']) {
-            this.dataStoreOptions.pgHost = process.env['ESP_APPS_PG_HOST'];
-        }
-        if (process.env['ESP_APPS_PG_PORT']) {
-            this.dataStoreOptions.pgPort = parseInt(process.env['ESP_APPS_PG_PORT'])
-        }
-        if (process.env['ESP_APPS_PG_USERNAME']) {
-            this.dataStoreOptions.pgUsername = process.env['ESP_APPS_PG_USERNAME'];
-        }
-        if (process.env['ESP_APPS_PG_PASSWORD']) {
-            this.dataStoreOptions.pgPassword = process.env['ESP_APPS_PG_PASSWORD'];
-        }
-        if (process.env['ESP_APPS_PG_DATABASE']) {
-            this.dataStoreOptions.pgDatabase = process.env['ESP_APPS_PG_DATABASE'];
-        }
-        if (process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']) {
-            this.dataStoreOptions.numAncillaryPointsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']);
-        }
-
-        // The data stores need a copy of a couple of properties from the parent config so attach those
-        this.dataStoreOptions['dataDir'] = this.dataDir;
-        this.dataStoreOptions['dataBaseUrl'] = this.hostBaseUrl;
-        this.dataStoreOptions['dataBaseUrl'] += '/data';
-        this.dataStoreOptions['slackWebHookURL'] = this.slackWebHookURL;
-
-        // Now look for deploymentFileSync overrides
-        if (process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL']) {
-            this.deploymentFileSyncOptions.loggerLevel = process.env['ESP_APPS_DEPLOYMENT_FILE_SYNC_LOGGER_LEVEL'];
-        }
-
-        // Now look for logParser overrides
-        if (process.env['ESP_APPS_LOG_PARSER_LOGGER_LEVEL']) {
-            this.logParserOptions.loggerLevel = process.env['ESP_APPS_LOG_PARSER_LOGGER_LEVEL'];
-        }
-        if (process.env['ESP_APPS_TEMP_DIR']) {
-            this.logParserOptions.tempDir = process.env['ESP_APPS_TEMP_DIR'];
-        }
-        if (process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH']) {
-            this.logParserOptions.numberOfAncillaryRecordsToBatch = parseInt(process.env['ESP_APPS_NUM_ANCILLARY_POINT_TO_BATCH'])
-        }
-        this.logParserOptions.ancillaryLookup = this.ancillaryDataLookup;
-        this.logParserOptions.tempDir = this.dataDir + '/tmp';
-
-        // Now look for eventHandler overrides
-        if (process.env['ESP_APPS_EVENT_HANDLER_LOGGER_LEVEL']) {
-            this.eventHandlerOptions.loggerLevel = process.env[''];
-        }
-        // Add the host base URL
-        this.eventHandlerOptions['hostBaseUrl'] = this.hostBaseUrl;
-
-        // Add the Slack web hook URL
-        this.eventHandlerOptions['slackWebHookURL'] = this.slackWebHookURL;
-
-        // Before we start, we should look to make sure the paths for data and logs exist and if not, create them
-        if (!fs.existsSync(this.dataDir)) {
-            console.log("Data directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.dataDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
-        }
-        if (!fs.existsSync(this.logParserOptions.tempDir)) {
-            console.log("Temp directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.logParserOptions.tempDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
-        }
-        if (!fs.existsSync(this.logDir)) {
-            console.log("Log directory does not exist, will try to create it");
-            var dirName = "";
-            var filePathSplit = this.logDir.split('/');
-            for (var index = 0; index < filePathSplit.length; index++) {
-                dirName += filePathSplit[index] + '/';
-                if (!fs.existsSync(dirName))
-                    fs.mkdirSync(dirName);
-            }
+        loggingLevels: {
+            parseDeployments: 'info',
+            outParser: 'info',
+            deploymentUtils: 'info'
         }
     }
 };

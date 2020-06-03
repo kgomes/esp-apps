@@ -12,10 +12,10 @@ var moment = require('moment');
 //var Deployment = require('../models/Deployment');
 
 // The constructor function
-function DeploymentRouter(dataAccess, opts, logDir) {
+function DeploymentRouter(dataAccess, logDir, logLevel) {
     // If the options specify a logger level, set it
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
     logger.debug('Creating DeploymentRouter');
 
@@ -586,7 +586,7 @@ function DeploymentRouter(dataAccess, opts, logDir) {
 }
 
 // Export the factory method
-exports.createDeploymentRouter = function (dataAccess, opts, logDir) {
+exports.createDeploymentRouter = function (dataAccess, logDir, logLevel) {
     // Create the new DeploymentRouter
-    return new DeploymentRouter(dataAccess, opts, logDir);
+    return new DeploymentRouter(dataAccess, logDir, logLevel);
 }

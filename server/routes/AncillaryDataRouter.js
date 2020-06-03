@@ -9,10 +9,10 @@ log4js.loadAppender('file');
 var logger = log4js.getLogger('AncillaryDataRouter');
 
 // The constructor function
-function AncillaryDataRouter(dataAccess, opts, logDir) {
+function AncillaryDataRouter(dataAccess, logDir, logLevel) {
     // If the options specify a logger level, set it
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
     logger.debug('Creating AncillaryDataRouter');
 
@@ -79,7 +79,7 @@ function AncillaryDataRouter(dataAccess, opts, logDir) {
 }
 
 // Export the factory method
-exports.createAncillaryDataRouter = function (dataAccess, opts, logDir) {
+exports.createAncillaryDataRouter = function (dataAccess, logDir, logLevel) {
     // Create the new AncillaryDataRouter
-    return new AncillaryDataRouter(dataAccess, opts, logDir);
+    return new AncillaryDataRouter(dataAccess, logDir, logLevel);
 }

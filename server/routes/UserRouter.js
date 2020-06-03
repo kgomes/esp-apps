@@ -6,10 +6,10 @@ log4js.loadAppender('file');
 var logger = log4js.getLogger('UserRouter');
 
 // The constructor function
-function UserRouter(dataAccess, opts, logDir) {
+function UserRouter(dataAccess, logDir, logLevel) {
     // If the options specify a logger level, set it
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
     logger.debug("Creating UserRouter");
 
@@ -78,7 +78,7 @@ function UserRouter(dataAccess, opts, logDir) {
 }
 
 // Export the factory method
-exports.createUserRouter = function (dataAccess, opts, logDir) {
+exports.createUserRouter = function (dataAccess, logDir, logLevel) {
     // Create the new UserRouter
-    return new UserRouter(dataAccess, opts, logDir);
+    return new UserRouter(dataAccess, logDir, logLevel);
 }

@@ -1,5 +1,4 @@
 // Grab all dependencies
-var util = require('util');
 var fs = require('fs');
 var path = require('path');
 var im = require('imagemagick');
@@ -16,14 +15,11 @@ log4js.loadAppender('file');
 var logger = log4js.getLogger('DeploymentFileSync');
 
 // The constructor function
-function DeploymentFileSync(opts, basedir, logDir) {
-
-    // Grab a handle for scoping
-    var me = this;
+function DeploymentFileSync(dataDir, logDir, logLevel) {
 
     // Set the log level if sent in
-    if (opts.loggerLevel) {
-        logger.setLevel(opts.loggerLevel);
+    if (logLevel) {
+        logger.setLevel(logLevel);
     }
 
     // Set the log directory
@@ -36,12 +32,12 @@ function DeploymentFileSync(opts, basedir, logDir) {
     var deploymentsToSync = [];
 
     // This is the base directory where all deployment files will be synchronized to locally
-    var basedir = basedir;
+    var dataDir = dataDir;
 
     // This is the method that takes in a Deployment and synchronizes the
     // files that are on the remote server to the local base directory
     this.syncDeployment = function (deployment, callback) {
-        logger.debug("syncDeployment called with deployment " + deployment.name + "(basedir=" + basedir + ")");
+        logger.debug("syncDeployment called with deployment " + deployment.name + "(basedir=" + dataDir + ")");
 
         // First check to see if the deployment is in the queue for processing
         if (checkForDeploymentInQueue(deployment)) {
@@ -127,7 +123,7 @@ function DeploymentFileSync(opts, basedir, logDir) {
                 });
 
                 // Create the local path where the files for the deployment should go
-                var localDirectory = path.join(basedir, 'instances', deploymentToSync.esp.name, 'deployments',
+                var localDirectory = path.join(dataDir, 'instances', deploymentToSync.esp.name, 'deployments',
                     deploymentToSync.name, 'data', 'raw');
 
                 // Call the method to grab the full list of all the files that need to be sync'd between
@@ -337,7 +333,7 @@ function DeploymentFileSync(opts, basedir, logDir) {
                 callback(new Error("The local directory " + localDirectory +
                     " appears to have not been created successfully"));
         }
-    };
+    }
 
     /**
      * TODO kgomes document this
@@ -478,7 +474,7 @@ function DeploymentFileSync(opts, basedir, logDir) {
                 return;
             }
         }
-    };
+    }
 
     /**
      * This method takes in an FTPClient, closes the client and then clears out the currently processing deployment,
@@ -505,6 +501,6 @@ function DeploymentFileSync(opts, basedir, logDir) {
 }
 
 // Export the factory method
-exports.createDeploymentFileSync = function (opts, basedir, logDir) {
-    return new DeploymentFileSync(opts, basedir, logDir);
+exports.createDeploymentFileSync = function (dataDir, logDir, logLevel) {
+    return new DeploymentFileSync(dataDir, logDir, logLevel);
 }
