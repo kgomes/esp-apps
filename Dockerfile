@@ -35,15 +35,17 @@ COPY ./app/templates /opt/esp/app/templates/
 RUN yum upgrade -y && \
     yum update -y && \
     curl --silent --location https://rpm.nodesource.com/setup_12.x | bash - && \
-    yum install -y nodejs ImageMagick cronie && \
+    yum install -y nodejs ImageMagick crontabs && \
     cd /opt/esp/server && \
     npm install && \
     cd /opt/esp/app && \
     npm install
 
 # Add the cron job to run the deployment parser
+RUN sed -i -e '/pam_loginuid.so/s/^/#/' /etc/pam.d/crond
 COPY parser-cron /etc/cron.d/parser-cron
 RUN chmod 0644 /etc/cron.d/parser-cron
+RUN crontab /etc/cron.d/parser-cron
 
 ADD run.sh /run.sh
 RUN chmod -v +x /run.sh
