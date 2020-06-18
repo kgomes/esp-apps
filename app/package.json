@@ -13,7 +13,7 @@
   "author": "Kevin Gomes (kgomes@mbari.org)",
   "license": "MIT",
   "dependencies": {
-    "angular": "^1.7.5",
+    "angular": "^1.8.0",
     "angular-ui": "^1.0.0",
     "angular-ui-bootstrap": "^2.5.6",
     "bootstrap": "^3.3.7",
